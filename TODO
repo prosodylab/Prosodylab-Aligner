@@ -1,0 +1,3 @@
+8/1/09 <kgorman@ling.upenn.edu>
+- reconsider the use of pci; maybe do it with a slicing function
+- is the NAN-for-linterp thing necessary? 
