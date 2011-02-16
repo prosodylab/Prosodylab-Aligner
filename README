@@ -1,0 +1,77 @@
+SWIPE' pitch estimator, v. 1.0
+
+Based on Camacho, Arturo. A sawtooth waveform inspired pitch estimator for
+speech and music. Doctoral dissertation, University of Florida. 2007.
+
+Implemented in C by Kyle Gorman <kgorman@ling.upenn.edu>
+
+HOW TO CITE:
+
+Please cite this dissertation, and if possible include a URL to this program
+source, the most-recent version of which will always be at:
+
+    http://ling.upenn.edu/~kgorman/c/swipe/
+
+HOW TO INSTALL:
+
+Read the included INSTALL file
+
+AUDIO FILE FORMATS:
+
+All mono-channel audio recognized by libsndfile is accepted. For a list, see:
+
+    http://www.mega-nerd.com/libsndfile/#Features
+
+A1. SYNPOSIS:
+
+swipe -i FILE [-b FLIST] [-o FILE] [-r MIN:MAX] [-s ST] [-t DT] [-mnhv]
+
+-i FILE     input file (must be specified
+-o FILE     output file (default: standard output)
+-b FLIST    batch mode [FLIST is a file containing one whitespace-delimited
+            "INPUT OUTPUT" pair per line] (not compatible with -i/-o)
+
+-r MIN:MAX  pitch range in Hertz (default: 100:600)
+-s THRSHLD  strength threshold [0 <= x <= 1] (default: 0.3)
+-t SECONDS  timestep in seconds [must be < sf/2] (default: 0.001)
+
+-m          Output Mel pitch [= 1127.01048 ln(1 + hz / 700)] (default: no)
+-n          Don't output voiceless frames (default: no)
+-h          Display this message and output info, then quit
+-v          Display version info, then quit
+
+A2. OUTPUT:
+
+pitch_0 time_0
+pitch_1 time_1
+... ...
+pitch_N time_N
+
+A3. A Python wrapper, swipe.py, is also included:
+
+    class swipe --> __getitem__, __iter__, __str__, bounds(), slice(), regress()
+
+It requires the stats.py and pstat.py packages, available at the following URLs:
+
+    http://www.nmr.mgh.harvard.edu/Neural_Systems_Group/gary/python/stats.py
+    http://www.nmr.mgh.harvard.edu/Neural_Systems_Group/gary/python/pstat.py
+
+By default, the binary for swipe is "swipe": this will only work if the binary 
+is in your $PATH. 
+
+Example code:
+
+<code>
+#!/usr/bin/env python
+from swipe import swipe
+(start, stop) = (.2., .6) # a region of interest
+pitch = swipe('test.wav', 75, 500) # read in pitch track via swipe
+pAt1 = swipe[.6] # get the pitch nearest to 600 ms
+pitch.slice(start, stop) # inline, chop it down to the interval [.5, .7]
+print pitch.bounds() # prints the closest boundaries
+(slope, intercept, r2) = pitch.regress() # lin. regression on sliced interval
+</code>
+
+A3. I also included the original MATLAB code from Camacho as swipe.m
+
+A4. Questions, comments, bugs? Email kgorman@ling.upenn.edu
