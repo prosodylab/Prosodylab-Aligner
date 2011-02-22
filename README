@@ -47,30 +47,14 @@ pitch_1 time_1
 ... ...
 pitch_N time_N
 
-A3. A Python wrapper, swipe.py, is also included:
-
-    class swipe --> __getitem__, __iter__, __str__, bounds(), slice(), regress()
+A3. A Python wrapper, Swipe.py, is also included:
 
 It requires the stats.py and pstat.py packages, available at the following URLs:
 
     http://www.nmr.mgh.harvard.edu/Neural_Systems_Group/gary/python/stats.py
     http://www.nmr.mgh.harvard.edu/Neural_Systems_Group/gary/python/pstat.py
 
-By default, the binary for swipe is "swipe": this will only work if the binary 
-is in your $PATH. 
-
-Example code:
-
-<code>
-#!/usr/bin/env python
-from swipe import swipe
-(start, stop) = (.2., .6) # a region of interest
-pitch = swipe('test.wav', 75, 500) # read in pitch track via swipe
-pAt1 = swipe[.6] # get the pitch nearest to 600 ms
-pitch.slice(start, stop) # inline, chop it down to the interval [.5, .7]
-print pitch.bounds() # prints the closest boundaries
-(slope, intercept, r2) = pitch.regress() # lin. regression on sliced interval
-</code>
+See Swipe.py for some sample usage.
 
 A3. I also included the original MATLAB code from Camacho as swipe.m
 

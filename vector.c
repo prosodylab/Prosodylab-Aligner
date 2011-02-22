@@ -482,8 +482,8 @@ vector spline(vector x, vector y) {
     double* u = malloc((unsigned) (x.x - 1) * sizeof(double));
 
     y2.v[0] = -.5; // Left boundary
-    u[0] = (3. / (x.v[1] - x.v[0])) * ((y.v[1] - y.v[0]) /                                                    (x.v[1] - x.v[0]) - YP1);
-
+    u[0] = (3. / (x.v[1] - x.v[0])) * ((y.v[1] - y.v[0]) /
+                                       (x.v[1] - x.v[0]) - YP1);
     
     for (i = 1; i < x.x - 1; i++) { // Decomp loop
         sig = (x.v[i] - x.v[i - 1]) / (x.v[i + 1] - x.v[i - 1]);

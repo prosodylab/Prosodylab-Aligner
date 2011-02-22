@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 """ Copyright (c) 2009 Kyle Gorman
 
  Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -20,76 +21,105 @@
 
  SWIPE' wrapper
  Kyle Gorman <kgorman@ling.upenn.edu>
+ Modifications and SD and mean functions kindly contributed by Josef Fruehwald
 
  This program is to be distributed with the C implementation of SWIPE', 
  available at the following URL:
 
     http://ling.upenn.edu/~kgorman/c/swipe/ """
 
-from os import popen3
 from bisect import bisect
-from stats import llinregress
+from subprocess import Popen, PIPE
+from stats import llinregress, mean, stdev
 
-class swipe:
+
+class Swipe:
     """ Wrapper class for SWIPE' pitch extractions """
 
-    def __init__(self, file, pMin = 100.0, pMax = 600.0, s = 0.3, t = 0.01, 
-                                                mel = False, bin = 'swipe'):
-        fin = ''
-        fot = ''
-        fer = ''
+    def __init__(self, file, pMin=100.0, pMax=600.0, s=0.3, t=0.01, mel=False, 
+                                                                bin = 'swipe'):
         if mel:
-            (fin, fot, fer) = popen3('%s -i %s -r %f:%f -s %f -t %f -nm' % 
-                                                (bin, file, pMin, pMax, s, t))
+            P = Popen('%s -i %s -r %f:%f -s %f -t %f -nm' % (bin, file, pMin, 
+                                       pMax, s, t), shell=True,
+                                           stdin=PIPE, stdout=PIPE, stderr=PIPE)
         else:
-            (fin, fot, fer) = popen3('%s -i %s -r %f:%f -s %f -t %f -n' % 
-                                                (bin, file, pMin, pMax, s, t))
+            P = Popen('%s -i %s -r %f:%f -s %f -t %f -n' % (bin, file, pMin, 
+                                       pMax, s, t), shell=True,
+                                           stdin=PIPE, stdout=PIPE, stderr=PIPE)
+        (fin, fot, fer) = (P.stdin, P.stdout, P.stderr)
         assert not fer.readline(), 'Err: %s' % fer.readlines()[-1]
-        self.__data = []
+        self.data = []
         for line in fot: # Data is represented as list of (time, pitch) pairs
             (t, p) = line.split()
-            self.__data.append((float(t), float(p)))
+            self.data.append((float(t), float(p)))
 
 
     def __str__(self):
-        return '<swipe pitch extraction with %d points>' % len(self.__data)
+        return '<Swipe pitch track with %d points>' % len(self.data)
 
 
     def __len__(self):
-        return len(self.__data)
+        return len(self.data)
 
 
     def __iter__(self):
-        return iter(self.__data)
+        return iter(self.data)
 
 
     def __getitem__(self, time):
         """ Takes a time argument and gives the nearest sample """
-        assert self.__data[0][0] <= time, 'Err: time < %f' % self.__data[0][0]
-        assert self.__data[-1][0] >= time, 'Err: time > %f' % self.__data[-1][0]
-        index = bisect([t for (t, p) in self.__data], time)
-        if self.__data[index][0] - time > time - self.__data[index - 1][0]:
-            return self.__data[index - 1][1]
+        assert self.data[0][0] <= time, 'Err: time < %f' % self.data[0][0]
+        assert self.data[-1][0] >= time, 'Err: time > %f' % self.data[-1][0]
+        index = bisect([t for (t, p) in self.data], time)
+        if self.data[index][0] - time > time - self.data[index - 1][0]:
+            return self.data[index - 1][1]
         else:
-            return self.__data[index][1]
+            return self.data[index][1]
 
 
     def slice(self, tmin, tmax):
-        """ Inline, chop out samples outside the range [tmin, tmax] """
-        i = bisect([t for (t, p) in self.__data], tmin)
-        j = bisect([t for (t, p) in self.__data], tmax)
-        self.__data = self.__data[i:j]
+        """ return only samples within the range [tmin, tmax] """
+        i = bisect([t for (t, p) in self.data], tmin)
+        j = bisect([t for (t, p) in self.data], tmax)
+        return self.data[i:j]
 
 
     def bounds(self):
         """ Returns first and last time sample """
-        return (self.__data[0][0], self.__data[-1][0]) 
+        return (self.data[0][0], self.data[-1][0]) 
 
 
     def regress(self):
         """ Returns the linear regression slope, intercept, and r^2 """
-        voiced = [(t, p) for (t, p) in self.__data if p > 0.0]
-        ptch = [p for (t, p) in voiced]
-        time = [t for (t, p) in voiced]
+        ptch = [p for (t, p) in self.data]
+        time = [t for (t, p) in self.data]
         (slope, intercept, r, t, err) = llinregress(ptch, time)
         return (slope, intercept, pow(r, 2))
+
+
+    def mean(self, tmin=0, tmax=0):
+        """ Returns mean pitch """
+        if tmax == 0:
+            ptch = [p for (t, p) in self.data]
+        else:
+            ptch = [p for (t, p) in self.slice(tmin, tmax)]
+        return mean(ptch)
+
+    
+    def sd(self, tmin=0, tmax=0):
+        """ Returns pitch standard deviation """
+        if tmax == 0:
+            ptch = [p for (t,p) in self.data]
+        else:
+            ptch = [p for (t, p) in self.slice(tmin, tmax)]
+        return stdev(ptch)
+
+
+# just some testing code
+if __name__ == '__main__':
+    from Swipe import Swipe
+    (start, stop) = (.2, .6) # a region of interest
+    pitch = Swipe('test.wav', 75, 500) # of course, you must provide "test.wav"
+    pAt1 = pitch[.6] # get the pitch nearest to 600 ms
+    (slope, intercept, r2) = pitch.regress() # regression on sliced interval
+    print pAt1, slope, r2
