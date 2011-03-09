@@ -47,14 +47,7 @@ pitch_1 time_1
 ... ...
 pitch_N time_N
 
-A3. A Python wrapper, Swipe.py, is also included:
-
-It requires the stats.py and pstat.py packages, available at the following URLs:
-
-    http://www.nmr.mgh.harvard.edu/Neural_Systems_Group/gary/python/stats.py
-    http://www.nmr.mgh.harvard.edu/Neural_Systems_Group/gary/python/pstat.py
-
-See Swipe.py for some sample usage.
+A3. A Python wrapper, Swipe.py, is also included. See it for some sample usage.
 
 A3. I also included the original MATLAB code from Camacho as swipe.m
 

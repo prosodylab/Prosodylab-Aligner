@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-""" Copyright (c) 2009 Kyle Gorman
+""" Copyright (c) 2009-2011 Kyle Gorman
 
  Permission is hereby granted, free of charge, to any person obtaining a copy
  of this software and associated documentation files (the "Software"), to deal
@@ -21,16 +21,58 @@
 
  SWIPE' wrapper
  Kyle Gorman <kgorman@ling.upenn.edu>
- Modifications and SD and mean functions kindly contributed by Josef Fruehwald
+ Statistical functions based on stats.py by Gary Strangman
+ Modifications kindly contributed by Josef Fruehwald
 
  This program is to be distributed with the C implementation of SWIPE', 
  available at the following URL:
 
     http://ling.upenn.edu/~kgorman/c/swipe/ """
 
+from math import sqrt
 from bisect import bisect
 from subprocess import Popen, PIPE
-from stats import llinregress, mean, stdev
+
+def ss(x):
+    """ compute the sum of all squared values in x """
+    s = 0.
+    for i in x:
+        s += i * i
+    return s
+
+
+def mean(x):
+    """ compute x's mean """
+    return float(sum(x)) / len(x)
+    
+
+def var(x):
+    """ compute x's variance """
+    my_mean = mean(x)
+    s = 0.
+    for i in x:
+        s += (i - my_mean) ** 2
+    return s / len(x) - 1
+
+
+def regress(x, y):
+    """ compute the slope, intercept, and R^2 for y ~ x """
+    n = float(len(x))
+    if n == 0:
+        raise ValueError, 'empty vector(s)'
+    if n != len(y):
+        raise ValueError, 'x and y must be the same length'
+    x_sum = sum(x)
+    y_sum = sum(y)
+    r = 0 # being built up iteratively
+    for (i, j) in zip(x, y):
+        r += i * j
+    r *= n 
+    r -= (x_sum * y_sum)
+    q = n * ss(x) - (x_sum ** 2)
+    slope = r / q
+    r /= sqrt(q * (n * ss(y) - (y_sum ** 2))) # now it's done!
+    return slope, y_sum / n - slope * x_sum / n, r ** 2
 
 
 class Swipe:
@@ -46,80 +88,103 @@ class Swipe:
             P = Popen('%s -i %s -r %f:%f -s %f -t %f -n' % (bin, file, pMin, 
                                        pMax, s, t), shell=True,
                                            stdin=PIPE, stdout=PIPE, stderr=PIPE)
-        (fin, fot, fer) = (P.stdin, P.stdout, P.stderr)
-        assert not fer.readline(), 'Err: %s' % fer.readlines()[-1]
-        self.data = []
-        for line in fot: # Data is represented as list of (time, pitch) pairs
+        assert not P.stderr.readline(), 'Err: %s' % P.stderr.readlines()[-1]
+        self.time = []
+        self.pitch = []
+        for line in P.stdout: # Data is a list of (time, pitch) pairs
             (t, p) = line.split()
-            self.data.append((float(t), float(p)))
+            self.time.append(float(t))
+            self.pitch.append(float(p))
 
 
     def __str__(self):
-        return '<Swipe pitch track with %d points>' % len(self.data)
+        return '<Swipe pitch track with %d points>' % len(self.time)
 
 
     def __len__(self):
-        return len(self.data)
+        return len(self.time)
 
 
     def __iter__(self):
-        return iter(self.data)
+        return iter(zip(self.time, self.pitch))
 
 
     def __getitem__(self, time):
         """ Takes a time argument and gives the nearest sample """
-        assert self.data[0][0] <= time, 'Err: time < %f' % self.data[0][0]
-        assert self.data[-1][0] >= time, 'Err: time > %f' % self.data[-1][0]
-        index = bisect([t for (t, p) in self.data], time)
-        if self.data[index][0] - time > time - self.data[index - 1][0]:
-            return self.data[index - 1][1]
+        if self.time[0] <= 0.:
+            raise ValueError, 'Time less than 0'
+        i = bisect(self.time, time)
+        if self.time[i] - time > time - self.time[i - 1]:
+            return self.pitch[i - 1]
         else:
-            return self.data[index][1]
+            return self.pitch[i]
 
 
-    def slice(self, tmin, tmax):
-        """ return only samples within the range [tmin, tmax] """
-        i = bisect([t for (t, p) in self.data], tmin)
-        j = bisect([t for (t, p) in self.data], tmax)
-        return self.data[i:j]
-
-
-    def bounds(self):
-        """ Returns first and last time sample """
-        return (self.data[0][0], self.data[-1][0]) 
-
-
-    def regress(self):
-        """ Returns the linear regression slope, intercept, and r^2 """
-        ptch = [p for (t, p) in self.data]
-        time = [t for (t, p) in self.data]
-        (slope, intercept, r, t, err) = llinregress(ptch, time)
-        return (slope, intercept, pow(r, 2))
-
-
-    def mean(self, tmin=0, tmax=0):
-        """ Returns mean pitch """
-        if tmax == 0:
-            ptch = [p for (t, p) in self.data]
+    def time_bisect(self, tmin=None, tmax=None):
+        """ not really a user class, but a helper function """
+        if not tmin:
+            if not tmax:
+                raise ValueError, 'At least one of tmin, tmax must be defined'
+            else:
+                return (0, bisect(self.time, tmax))
+        elif not tmax:
+            return (bisect(self.time, tmin), len(self.time))
         else:
-            ptch = [p for (t, p) in self.slice(tmin, tmax)]
-        return mean(ptch)
+            return (bisect(self.time, tmin), bisect(self.time, tmax))
 
-    
-    def sd(self, tmin=0, tmax=0):
+
+    def slice(self, tmin=None, tmax=None):
+        """ slice out samples outside of times [tmin, tmax], operating inline """
+        if tmin or tmax:
+            (i, j) = self.time_bisect(tmin, tmax)
+            self.time = self.time[i:j]
+            self.pitch = self.pitch[i:j]
+        else:
+            raise ValueError, 'At least one of tmin, tmax must be defined'
+
+
+    def mean(self, tmin=None, tmax=None):
+        """ Returns pitch mean """
+        if tmin or tmax:
+            (i, j) = self.time_bisect(tmin, tmax)
+            return mean(self.pitch[i:j])
+        else:
+            return mean(self.pitch)
+
+
+    def var(self, tmin=None, tmax=None):
+        """ Returns pitch variance """
+        if tmin or tmax:
+            (i, j) = self.time_bisect(tmin, tmax)
+            return var(self.pitch[i:j])
+        else:
+            return var(self.pitch)
+
+
+    def sd(self, tmin=None, tmax=None):
         """ Returns pitch standard deviation """
-        if tmax == 0:
-            ptch = [p for (t,p) in self.data]
+        return sqrt(self.var(tmin, tmax))
+
+
+    def regress(self, tmin=None, tmax=None):
+        """ Returns the linear regression slope, intercept, and R^2. I wouldn't
+        advise using this on raw pitch, but rather the Mel frequency option in
+        swipe: e.g., call Swipe(yourfilename, min, max, mel=True). The reason for
+        this is that Mel frequency is log-proportional to pitch in Hertz, and I find
+        that log-pitch is much closer to satisfying the normality assumption """
+        if tmin or tmax:
+            (i, j) = self.time_bisect(tmin, tmax)
+            return regress(self.time[i:j], self.pitch[i:j])
         else:
-            ptch = [p for (t, p) in self.slice(tmin, tmax)]
-        return stdev(ptch)
+            return regress(self.time, self.pitch)
 
 
 # just some testing code
 if __name__ == '__main__':
     from Swipe import Swipe
-    (start, stop) = (.2, .6) # a region of interest
-    pitch = Swipe('test.wav', 75, 500) # of course, you must provide "test.wav"
-    pAt1 = pitch[.6] # get the pitch nearest to 600 ms
-    (slope, intercept, r2) = pitch.regress() # regression on sliced interval
-    print pAt1, slope, r2
+    pitch = Swipe('test.wav', 75, 500, mel=True) # you must provide a "test.wav"
+    print pitch
+    print pitch[.6] # pitch nearest to 600 ms
+    print pitch.sd()
+    print pitch.mean(.2, 5)
+    print pitch.regress(.2, 5) # regression on sliced interval

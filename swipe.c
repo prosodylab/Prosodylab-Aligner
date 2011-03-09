@@ -488,18 +488,17 @@ vector swipe(char wav[], double min, double max, double st, double dt) {
     // Perform checks on the wav header
     if (info.sections != 1) {
         fprintf(stderr, "This is SWIPE', v%1.1f.\n", VNUM); 
-        if (info.sections == 2) {
-
+        if (info.sections > 1) {
             fprintf(stderr, "File '%s' is multi-channel audio ... \n", wav);
         }
         else {
             fprintf(stderr, "File '%s' could not be read as audio ... \n", wav);
         }
         return makev(0); // This will be detected as an error
-    } 
+    }
 
     double nyquist = info.samplerate / 2.; 
-    double nyquist2 = info.samplerate; 
+    double nyquist2 = info.samplerate; // Used so g.d. often here...
     double nyquist16 = info.samplerate * 8.; 
     if (max > nyquist) { 
         max = nyquist;

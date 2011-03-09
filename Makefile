@@ -1,4 +1,5 @@
 target=swipe
+pyjunk=Swipe.pyc
 prefix=/usr/local
 
 all: swipe
@@ -10,4 +11,4 @@ install: swipe
 	install swipe $(prefix)/bin
 
 clean: swipe
-	rm $(target)
+	rm $(target) $(pyjunk)

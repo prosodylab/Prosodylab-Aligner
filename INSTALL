@@ -49,8 +49,8 @@ Unsupported. Send details of any successes, however.
 
 PYTHON WRAPPER:
 
-A Python wrapper is also available for this program: in addition to making a 
-call to swipe and storing the results in a nice data structure, it also allows 
-you to get the nearest pitch to a given time, slice the pitch space, and 
-calculate the linear regression slope and r^2. It requires a compiled version of
-swipe to be in your $PATH, of course.
+A Python wrapper is also available for this program: in addition to making a call to
+swipe and storing the results in a nice data structure, it also allows you to get 
+the nearest pitch to a given time, slice the pitch space, and calculate the linear 
+regression slope and R-squared. It requires a compiled version of swipe to be in 
+your $PATH, of course.
