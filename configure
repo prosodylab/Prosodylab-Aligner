@@ -1,0 +1,4 @@
+#!/bin/sh
+
+echo "this script does nothing. just run:";
+echo "make; make install";
