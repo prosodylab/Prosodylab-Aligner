@@ -1,4 +1,4 @@
-/* Copyright (c) 2009, 2010 Kyle Gorman
+/* Copyright (c) 2009-2011 Kyle Gorman
 *
 *  Permission is hereby granted, free of charge, to any person obtaining a copy
 *  of this software and associated documentation files (the "Software"), to deal
@@ -83,10 +83,10 @@
 #include <fftw3.h>   // http://www.fftw.org/
 #include <sndfile.h> // http://www.mega-nerd.com/libsndfile/
 
-#include "vector.h"  // http://ling.upenn.edu/c/vector.h
+#include "vector.h"  // comes with release
 
-#define OK                           1
 #define NOK                          0
+
 #define TRUE                         1
 #define FALSE                        0
 
@@ -120,7 +120,7 @@ double log2(double x) { // A base-2 log function
 #endif
 
 #ifndef round
-double round(double x) { // Rounds a double to the nearest integer
+double round(double x) { // Rounds a double to the nearest integer value
     return x >= 0. ? floor(x + .5) : floor(x - .5);
 }
 #endif
@@ -138,18 +138,13 @@ double erb2hz(double erb) { // Converts from ERBs to hertz
 }
 
 double fixnan(double x) { // A silly function that treats NaNs as 0.
-    if (isnan(x)) {
-        return 0.;
-    }
-    else {
-        return x;
-    }
+    return isnan(x) ? 0. : x;
 }
 
 // A helper function for loudness() for individual fft slices
 
-void La(matrix L, vector f, vector fERBs, fftw_plan plan, fftw_complex* fo, 
-                                                       int w2, int hi, int i) {
+void La(matrix L, vector f, vector fERBs, fftw_plan plan, 
+                                   fftw_complex* fo, int w2, int hi, int i) {
 
     int j;
     fftw_execute(plan);
@@ -325,9 +320,9 @@ Sadd(matrix S, matrix L, vector fERBs, vector pci, vector mu, intvector ps,
 
 // Helper function for populating the strength matrix for the left boundary case
 
-Sfirst(matrix S, vector x, vector pc, vector fERBs, vector d, intvector ws,
-                            intvector ps, double nyquist, double nyquist2, 
-                                                            double dt, int n) {
+Sfirst(matrix S, vector x, vector pc, vector fERBs, vector d, 
+                                  intvector ws, intvector ps, double nyquist, 
+                                            double nyquist2, double dt, int n) {
     
     int i; 
     int w2 = ws.v[n] / 2;
@@ -351,7 +346,7 @@ Sfirst(matrix S, vector x, vector pc, vector fERBs, vector d, intvector ws,
 
 // Generic helper function for populating the strength matrix
 
-Snth(matrix S, vector x, vector pc, vector fERBs, vector d, intvector ws, 
+Snth(matrix S, vector x, vector pc, vector fERBs, vector d, intvector ws,
                                 intvector ps, double nyquist, double nyquist2, 
                                                              double dt, int n) {
 
@@ -379,9 +374,9 @@ Snth(matrix S, vector x, vector pc, vector fERBs, vector d, intvector ws,
 
 // Helper function for populating the strength matrix from the right boundary
 
-Slast(matrix S, vector x, vector pc, vector fERBs, vector d, intvector ws, 
-                                intvector ps, double nyquist, double nyquist2, 
-                                                             double dt, int n) {
+Slast(matrix S, vector x, vector pc, vector fERBs, vector d, 
+                                 intvector ws, intvector ps, double nyquist, 
+                                            double nyquist2, double dt, int n) {
 
     int i;
     int w2 = ws.v[n] / 2;
@@ -407,7 +402,7 @@ Slast(matrix S, vector x, vector pc, vector fERBs, vector d, intvector ws,
 
 // Peforms polynomial tuning on the strength matrix to determine the pitch
 
-vector pitch(matrix S, vector pc, double st) { 
+vector pitch(matrix S, vector pc, double st) {
 
     int i;
     int j;

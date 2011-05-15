@@ -1,4 +1,4 @@
 #!/bin/sh
 
-echo "this script does nothing. just run:";
+echo "This script does nothing. Just run:";
 echo "make; make install";

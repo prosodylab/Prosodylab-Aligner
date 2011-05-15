@@ -47,7 +47,7 @@ pitch_1 time_1
 ... ...
 pitch_N time_N
 
-A3. A Python wrapper, Swipe.py, is also included. See it for some sample usage.
+A3. A Python wrapper, swipe.py, is also included. See it for some sample usage.
 
 A3. I also included the original MATLAB code from Camacho as swipe.m
 
