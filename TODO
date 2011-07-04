@@ -1,6 +1,3 @@
 8/1/09 <kgorman@ling.upenn.edu>
 - reconsider the use of pci; maybe do it with a slicing function
 - is the NAN-for-linterp thing necessary? 
-
-3/8/11 <kgorman@ling.upenn.edu>
-- create boolvector functions in vector.c and use them for the sieve

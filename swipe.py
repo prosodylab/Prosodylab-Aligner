@@ -29,8 +29,8 @@
 
     http://ling.upenn.edu/~kgorman/c/swipe/ """
 
-from math import sqrt
 from bisect import bisect
+from math import sqrt, fsum
 from subprocess import Popen, PIPE
 
 def ss(x):
@@ -43,7 +43,7 @@ def ss(x):
 
 def mean(x):
     """ compute x's mean """
-    return float(sum(x)) / len(x)
+    return fsum(x) / len(x)
     
 
 def var(x):
@@ -62,8 +62,8 @@ def regress(x, y):
         raise ValueError, 'empty vector(s)'
     if n != len(y):
         raise ValueError, 'x and y must be the same length'
-    x_sum = sum(x)
-    y_sum = sum(y)
+    x_sum = fsum(x)
+    y_sum = fsum(y)
     r = 0 # being built up iteratively
     for (i, j) in zip(x, y):
         r += i * j

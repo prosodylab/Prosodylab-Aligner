@@ -24,21 +24,21 @@ All mono-channel audio recognized by libsndfile is accepted. For a list, see:
 
 A1. SYNPOSIS:
 
-swipe -i FILE [-b FLIST] [-o FILE] [-r MIN:MAX] [-s ST] [-t DT] [-mnhv]
+FLAG:       DESCRIPTION:                            DEFAULT:
 
--i FILE     input file (must be specified
--o FILE     output file (default: standard output)
--b FLIST    batch mode [FLIST is a file containing one whitespace-delimited
-            "INPUT OUTPUT" pair per line] (not compatible with -i/-o)
+-i FILE     input file                              STDIN
+-o FILE     output file                             STDOUT
+-b LIST     batch mode: [LIST is a file containing
+            one "INPUT OUTPUT" pair per line]
 
--r MIN:MAX  pitch range in Hertz (default: 100:600)
--s THRSHLD  strength threshold [0 <= x <= 1] (default: 0.3)
--t SECONDS  timestep in seconds [must be < sf/2] (default: 0.001)
+-r MIN:MAX  pitch range in Hertz                    100:600
+-s THRSHLD  strength threshold  [0 <= x <= 1]       0.300
+-t SECONDS  timestep in seconds [must be < SF / 2]  0.001
 
--m          Output Mel pitch [= 1127.01048 ln(1 + hz / 700)] (default: no)
--n          Don't output voiceless frames (default: no)
--h          Display this message and output info, then quit
--v          Display version info, then quit
+-m          Output Mel pitch                        no
+-n          Don't output voiceless frames           no
+-h          Display this message, then quit
+-v          Display version number, then quit
 
 A2. OUTPUT:
 
