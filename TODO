@@ -1,0 +1,4 @@
+6/22/11 (KG):
+
+- implement Unicode support
+- implement speaker-dependent training with the -T flag
