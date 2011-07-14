@@ -567,15 +567,15 @@ if __name__ == '__main__':
     if len(argv) < 2:
         error('no test directory specified')
     try:
-        (opts, args) = getopt(argv[1:], 'd:m:n:s:t:huS')
+        (opts, args) = getopt(argv[1:], 'd:m:n:s:t:T:hu')
         # default opts values
         dictionary = 'dictionary.txt' # -d
         tr_dir = None
         ood_mode = 0 # -m
         n_per_round = 4 # -n
         sr = 22050 # -s
-        use_unicode = False # -U
-        speaker_dependent = False # -S
+        use_unicode = False # -u
+        speaker_dependent = False # -T
         require_training = False # to keep track of if -n, -s used
         # go through args
         for (opt, val) in opts:
@@ -612,14 +612,14 @@ if __name__ == '__main__':
                     error('-t path %s does not exist', tr_dir)
             elif opt == '-h':
                 error('-h requests usage message')
-            elif opt == '-S':
+            elif opt == '-T':
                 speaker_dependent = True
                 raise NotImplementedError('Not yet implemented.') #FIXME
-            elif opt == '-U':
+            elif opt == '-u':
                 use_unicode = True
                 raise NotImplementedError('Not yet implemented') #FIXME
             else:
-                raise GetoptError # tricky
+                raise GetoptError
     except GetoptError, err:
         error(str(err))
     ts_dir = args.pop()
