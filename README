@@ -1,4 +1,4 @@
-align.py, v. 0.1
+align.py, v. 0.3
 
 Kyle Gorman <kgorman@ling.upenn.edu>, Michael Wagner <chael@mcgill.ca>
 
@@ -130,11 +130,11 @@ $ sort dictionary.txt outofdict.txt > tmp; mv tmp dictionary.txt
 
 If you call align.py with the argument -m 1, each word in outofdict.txt is paired with a list of .lab files where it occurs. This may be useful for fixing typos in the .lab files. If you have a lot of files to fix a typo in, the fix_lab.py script may be useful for you, as well. Here is the usage of this tool.
 
-$ ./fixlab.py
+$ ./fix_lab.py
 
-    fixlab.py: a script for fixing typos in .lab files
+    fix_lab.py: a script for fixing typos in .lab files
 
-    USAGE: ./fixlab.py 'TYPO' 'CORRECTION' FOLDER
+    USAGE: ./fix_lab.py 'TYPO' 'CORRECTION' FOLDER
 
     TYPO and CORRECTION will be treated as strings. FOLDER is a path where the 
     .lab files can be found. If TYPO or CORRECTION contains whitespace, delimit
