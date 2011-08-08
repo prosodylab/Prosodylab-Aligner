@@ -16,7 +16,7 @@ USAGE:
 
 Option                  Function
 
--d dictionary        specify a dictionary fil e      [default: dictionary.txt]
+-d dictionary        specify a dictionary file       [default: dictionary.txt]
 -h                   display this message
 -m DICTIONARY_MODE   0: complain                     [default: 0]
                      1: complain with more info      
