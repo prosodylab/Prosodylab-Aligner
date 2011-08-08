@@ -59,10 +59,10 @@ vFloors   = 'vFloors'
 unpaired  = 'unpaired.txt'
 outofdict = 'outofdict.txt'
 
-# values
+# values, all of which have to be strings for call()
 f          = str(0.01)
 samplerate = str(22050)
-pruning    = [str(i) for i in (250.0, 150.0, 2000.0)] # gotta be strings, y'all
+pruning    = [str(i) for i in (250.0, 150.0, 2000.0)]
 
 # hidden, but useful files
 align_mlf  = '.ALIGN.mlf'

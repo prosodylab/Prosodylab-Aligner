@@ -1,4 +1,4 @@
-align.py, v. 0.3
+align.py, v. 0.4
 
 Kyle Gorman <kgorman@ling.upenn.edu>, Michael Wagner <chael@mcgill.ca>
 
@@ -126,7 +126,7 @@ $ rm `xargs -d '\n' < unpaired`
 
 Secondly, a word in your .lab files may be missing from the dictionary. Such words are written to outofdict.txt. You can transcribe these in outofdict.txt using a text editor, then mix them back in like so:
 
-$ sort dictionary.txt outofdict.txt > tmp; mv tmp dictionary.txt
+$ ./sort.py dictionary.txt outofdict.txt > tmp; mv tmp dictionary.txt
 
 If you call align.py with the argument -m 1, each word in outofdict.txt is paired with a list of .lab files where it occurs. This may be useful for fixing typos in the .lab files. If you have a lot of files to fix a typo in, the fix_lab.py script may be useful for you, as well. Here is the usage of this tool.
 
