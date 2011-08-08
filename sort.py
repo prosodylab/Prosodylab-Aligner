@@ -1,7 +1,9 @@
 #!/usr/bin/env python
+# A script for sorting according to HTK principles
+# Kyle Gorman <kgorman@ling.upenn.edu>
 
 from sys import argv
-from glob import glob
+
 
 def error():
     print """
@@ -11,6 +13,7 @@ def error():
 
     """
     exit(1)
+
 
 if __name__ == '__main__':
 

@@ -6,13 +6,14 @@ from os import path
 from sys import argv
 from glob import glob
 
+
 def error():
     print """
     fix_lab.py: a script for fixing typos in .lab files
 
     USAGE: ./fix_lab.py TYPO CORRECTION FOLDER
 
-    TYPO and CORRECTION will be treated as strings. FOLDER is a path where the 
+    TYPO and CORRECTION will be treated as strings. FOLDER is a path where the
     .lab files can be found. If TYPO or CORRECTION contains whitespace, delimit
     them with a single (right) quote (e.g., the <'> character)
     """

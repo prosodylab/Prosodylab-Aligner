@@ -1,4 +1,0 @@
-#!/bin/sh
-
-echo "This script does nothing. Just run:";
-echo "make; sudo make install";
