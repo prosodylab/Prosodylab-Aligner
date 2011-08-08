@@ -4,8 +4,14 @@
 
 # check args
 if [ $# != 2 ]; then
-    echo "USAGE: ./align_ex.sh WAVFILE LABFILE";
-    exit;
+    echo "USAGE: ./align_ex.sh WAVFILE LABFILE"; exit;
+fi
+
+# check for existence of 1 and 2
+if ! [ -e $1 ]; then
+    echo "File $1 not found"; exit;
+elif ! [ -e $2 ]; then
+    echo "File $2 not found"; exit;
 fi
 
 # make a temp directory to keep outcomes in
@@ -17,14 +23,12 @@ cp $1 $2 .dat;
 # perform alignment
 ./align.py .dat/;
 
-# name of output file
-TextGrid=$(basename $1);
-TextGrid=${TextGrid%.*}.TextGrid;
-
-# report
-if [ $TextGrid != ".TextGrid" ]; then 
-    mv .dat/$TextGrid .;
+if [ $? != 1 ]; then
+    # name of output file
+    TextGrid=$(basename $1  ); TextGrid=${TextGrid%.*}.TextGrid;
+    # move it
+    mv .dat/$TextGrid .; 
     echo "Output is in $TextGrid";
-else # blank
-    echo "Alignment failed";
+else
+    echo "Alignment failed...see above for error message"
 fi
