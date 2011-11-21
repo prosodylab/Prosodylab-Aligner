@@ -1,14 +1,16 @@
 align.py, v. 0.5
 ================
 
-A script for performing alignment of laboratory speech production data, by Kyle
-Gorman <kgorman@ling.upenn.edu> and Michael Wagner <chael@mcgill.ca>
+A script for performing alignment of laboratory speech production data
+
+* Kyle Gorman <kgorman@ling.upenn.edu> 
+* Michael Wagner <chael@mcgill.ca>
 
 ## Funding
 
-FQRSC Nouvelle Chercheur NP-132516
-SSHRC Digging into Data Challenge Grant 869-2009-0004
-SSHRC Canada Research Chair 218503
+* FQRSC Nouvelle Chercheur NP-132516
+* SSHRC Digging into Data Challenge Grant 869-2009-0004
+* SSHRC Canada Research Chair 218503
 
 ## License
 
