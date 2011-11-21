@@ -4,14 +4,14 @@
 
 # check args
 if [ $# != 2 ]; then
-    echo "USAGE: ./align_ex.sh WAVFILE LABFILE"; exit;
+    echo "USAGE: ./align_ex.sh WAVFILE LABFILE"; 
+    exit 1;
 fi
 
 # check for existence of 1 and 2
-if ! [ -e $1 ]; then
-    echo "File $1 not found"; exit;
-elif ! [ -e $2 ]; then
-    echo "File $2 not found"; exit;
+if ! ( [ -e $1 ] && [ -e $1 ] ); then
+    echo "File not found."; 
+    exit 1;
 fi
 
 # make a temp directory to keep outcomes in
@@ -25,10 +25,12 @@ cp $1 $2 .dat;
 
 if [ $? != 1 ]; then
     # name of output file
-    TextGrid=$(basename $1  ); TextGrid=${TextGrid%.*}.TextGrid;
+    TextGrid=$(basename $1 ); TextGrid=${TextGrid%.*}.TextGrid;
     # move it
     mv .dat/$TextGrid .; 
-    echo "Output is in $TextGrid";
+    echo "Output is in $TextGrid.";
+    rm -r .dat;
 else
-    echo "Alignment failed...see above for error message"
+    echo "Alignment failed."
+    exit 1;
 fi

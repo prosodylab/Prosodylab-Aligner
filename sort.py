@@ -17,9 +17,7 @@ def error():
 
 if __name__ == '__main__':
 
-    if len(argv) < 2:
-        error()
-
+    if len(argv) < 1: error()
     # accumulate
     lines = []
     for path in argv[1:]:
