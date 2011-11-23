@@ -383,8 +383,7 @@ NUMCEPS = 12""")
         """
         Destroys the temp directory on the way out
         """
-        #FIXME
-        #rmtree(self.tmp_dir)
+        rmtree(self.tmp_dir)
 
 
 class TrainAligner(Aligner):
