@@ -1,5 +1,4 @@
-align.py, v. 0.5
-================
+# align.py, v. 0.5
 
 A script for performing alignment of laboratory speech production data
 
@@ -26,11 +25,11 @@ See included "LICENSE"
                         w/ or w/o prior training
     -d dictionary       specify a dictionary file     [default: dictionary.txt]
     -h                  display this message
-    -m DICTIONARY_MODE  0: complain                   [default: 0]
-                        1: complain with more info      
+    -m                  list files containing 
+                        out-of-dictionary words
     -n n                number of training iterations [default: 4]
                         for each step of training      
-    -s samplerate (Hz)  Samplerate for models         [default: 25000]
+    -s samplerate (Hz)  Samplerate for models         [default: 8000]
                         (NB: available only with -t)
     -t training_data/   Perform model training
     -u                  Support for UTF-8 and UTF-16 
@@ -182,7 +181,7 @@ If you call align.py with the argument -m, each word in outofdict.txt is paired 
 
 #### SoX not installed
 
-Also, if SoX is not installed, but it needed because the audio is in a different format than the provided models (which are mono and sampled at 25000 Hz), an error will be raised.
+Also, if SoX is not installed, but it needed because the audio is in a different format than the provided models (which are mono and sampled at 8000 Hz), an error will be raised.
 
 #### align.py not executable ("Permission denied")
 

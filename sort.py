@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 # A script for sorting according to HTK principles
 # Kyle Gorman <kgorman@ling.upenn.edu>
+# The UNIX sort utility does not always do the right thing, but this one does.
 
 from sys import argv
 

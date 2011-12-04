@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/python -B
 # 
 # Copyright (c) 2011 Kyle Gorman, Michael Wagner
 # 
@@ -95,11 +95,11 @@ Option              Function
                     w/ or w/o prior training
 -d dictionary       specify a dictionary file     [default: dictionary.txt]
 -h                  display this message
--m                  give file names for out-of-
-                    dictionary words
+-m                  list files containing 
+                    out-of-dictionary words
 -n n                number of training iterations [default: 4]
                     for each step of training
--s samplerate (Hz)  Samplerate for models         [default: 25000]
+-s samplerate (Hz)  Samplerate for models         [default: 8000]
                     (NB: available only with -t)
 -t training_data/   Perform model training
 -u                  Support for UTF-8 and UTF-16
@@ -182,7 +182,7 @@ class Aligner(object):
         the_dict = {}
         for line in open(self.dictionary, 'r'):
             line = line.rstrip().split()
-            the_dict[line[0]] = line[1:] # HTK can sort out the overwriting
+            the_dict[line[0]] = line[1:] # We'll take care of overwriting later
         return the_dict
 
     def _check(self, ts_dir, ood_mode):
@@ -264,8 +264,8 @@ class Aligner(object):
             with open(outofdict, 'w') as sink:
                 if ood_mode:
                     for word in ood:
-                       sink.write('{0}\t{1}\n'.format(word, 
-                                                      ' '.join(ood[word])))
+                        sink.write('{0}\t{1}\n'.format(word, 
+                                                ' '.join(ood[word])))
                 else:
                     for word in ood:
                        sink.write('{0}\n'.format(word))
@@ -299,10 +299,10 @@ class Aligner(object):
                 head = os.path.splitext(os.path.split(wav)[1])[0]
                 mfc = os.path.join(self.aud_dir, head + '.mfc')
                 w = wave.open(wav, 'r')
-                if (w.getframerate() != self.sr) or (w.getnchannels() != 1):
+                if (w.getframerate() != self.sr) or (w.getnchannels() > 1):
                     new_wav = os.path.join(self.aud_dir, head + '.wav')
-                    call(['sox', wav, '-r', str(self.sr), new_wav, 'remix', 
-                                                         '-'], stderr=PIPE)
+                    call(['sox', '-G', wav, '-b', '16', new_wav, 'remix', '-',
+                          'rate', str(self.sr), 'dither', '-s'], stderr=PIPE)
                     wav = new_wav
                 copy_scp.write('{0} {1}\n'.format(wav, mfc))
                 check_scp.write('{0}\n'.format(mfc))
@@ -570,7 +570,7 @@ if __name__ == '__main__':
         (opts, args) = getopt(argv[1:], 'd:n:s:t:amhu')
         # default opts values
         dictionary = 'dictionary.txt' # -d
-        sr = 25000
+        sr = 8000
         tr_dir = None
         ood_mode = False
         n_per_round = 4 # -n
@@ -589,10 +589,10 @@ if __name__ == '__main__':
                 try:
                     n_per_round = int(val)
                     require_training = True
-                    if not (0 < n_per_round < 25):
+                    if not (0 < n_per_round):
                         raise ValueError
                 except ValueError:
-                    error('-n value must be 0 < n < 25')
+                    error('-n value must be > 0')
             elif opt == '-s':
                 try:
                     sr = int(val)
@@ -606,7 +606,7 @@ if __name__ == '__main__':
                     i = bisect(SRs, sr)
                     if i == 0: sr = SRs[0]
                     elif i == len(SRs): sr = SRs[-1]
-                    elif SRs[i] - sr > sr - SRs[i - 1]: sr = SRs[i]
+                    elif SRs[i] - sr > sr - SRs[i - 1]: sr = SRs[i - 1]
                     else: sr = SRs[i]
                     stderr.write('Nearest viable SR is {0} Hz\n'.format(sr))
             elif opt == '-t':
