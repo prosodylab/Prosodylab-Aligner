@@ -108,6 +108,12 @@ Option              Function
 """)
     exit('Error: ' + msg.format(*args))
 
+def resolve(path):
+    """
+    Returns path string with user/tilde and environmental variables converted
+    """
+    return os.path.expandvars(os.path.expanduser(path))
+
 
 ### CLASSES
 
@@ -550,7 +556,7 @@ TI silst {{{1}.state[3],{0}.state[2]}}
         call(['HHEd', '-H', os.path.join(self.cur_dir, macro), '-H',
                             os.path.join(self.cur_dir, hmmdf), '-M', 
                                          self.nxt_dir, hed, self.phons])
-        #FIXME
+        #FIXME this seems to not be necessary, but I'm not sure why.
         """ 
         # run HLEd
         sink = open(temp, 'w')
@@ -567,7 +573,7 @@ if __name__ == '__main__':
     ## parse arguments
     # complain if no test directory specification
     try:
-        (opts, args) = getopt(argv[1:], 'd:n:s:t:amhu')
+        (opts, args) = getopt(argv[1:], 'd:n:s:t:aAmhu')
         # default opts values
         dictionary = 'dictionary.txt' # -d
         sr = 8000
@@ -610,7 +616,7 @@ if __name__ == '__main__':
                     else: sr = SRs[i]
                     stderr.write('Nearest viable SR is {0} Hz\n'.format(sr))
             elif opt == '-t':
-                tr_dir = val
+                tr_dir = resolve(val)
                 if not os.access(tr_dir, os.F_OK):
                     error('-t path {0} cannot be read', tr_dir)
             elif opt == '-h':
@@ -626,7 +632,7 @@ if __name__ == '__main__':
     except GetoptError, err:
         error(str(err))
     if len(args) == 0: error('No test directory specified')
-    ts_dir = args.pop()
+    ts_dir = resolve(args.pop())
 
     ## do the model
     path_to_mlf = os.path.join(ts_dir, align_mlf)
