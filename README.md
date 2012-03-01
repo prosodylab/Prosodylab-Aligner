@@ -81,13 +81,13 @@ Once you extract the application, navigate into the resulting directory:
     $ cd htk
 
 #### 64-bit x86 Linux 
-    
+
 Edit the file `configure`, making the following changes:
 
 * On line 5507, replace "-m32" with "-s" (make 64-bit stripped binaries instead of 32-bit unstripped binaries)
 * On line 6788, replace "-O2" with "-O3" (make fully optimmized binaries)
 
-Then run the following commands
+This will produce smaller, faster binaries than otherwise. Then run the following commands
 
     $ ./configure --disable-hslab --disable-hlmtools
     ...
@@ -98,7 +98,9 @@ Then run the following commands
 
 #### Mac OS X
 
-Execute the following commands in the "htk/" directory you just navigated to:
+By default, no C compiler is installed on Mac OS X. There are a few quick ways to get one. You can get a full set of compilers by downloading [Xcode](http://itunes.apple.com/us/app/xcode/id497799835?ls=1&mt=12) from the Mac App Store. This package is really quite gigantic (a concern for those users who have capped bandwidth), and may take days(!) to download. An excellent alternative is to download the new [Command Line Tools for Xcode](http://developer.apple.com/downloads) package on the Mac App Store, which is much smaller. You will need a free registration to download either package.
+
+Once that's taken care of, execute the following commands in the "htk/" directory you just navigated to:
 
     $ ./configure --disable-hslab --disable-hlmtools
     ...
