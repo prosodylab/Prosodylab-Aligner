@@ -20,9 +20,8 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 # 
-# align.py:
+# align.py: text/speech alignment for speech production experiments
 # Kyle Gorman <kgorman@ling.upenn.edu>, Michael Wagner <chael@mcgill.ca>
-# A script for performing alignment of laboratory speech production data
 # 
 # See README.md for usage information and a tutorial.
 # 
@@ -185,7 +184,7 @@ class Aligner(object):
         """
         Compute a Python representation of the dictionary
         """
-        the_dict = {}
+        the_dict = {'sil': 'sil'}
         for line in open(self.dictionary, 'r'):
             line = line.rstrip().split()
             the_dict[line[0]] = line[1:] # We'll take care of overwriting later
@@ -241,7 +240,7 @@ class Aligner(object):
         found_words = set()
         with open(self.word_mlf, 'w') as word_mlf:
             word_mlf.write('#!MLF!#\n')
-            ood = defaultdict(list) # maybe redundant if not -m, but cheap
+            ood = defaultdict(set) # maybe redundant if not -m, but cheap
             for lab in lab_list:
                 lab_name = os.path.split(lab)[1]
                 # new lab file at the phone level, in self.aud_dir
@@ -260,7 +259,7 @@ class Aligner(object):
                         word_lab.write('{0} '.format(word))
                         word_mlf.write('{0}\n'.format(word))
                     else: # missing
-                        ood[word].append(lab)
+                        ood[word].add(lab)
                 phon_lab.write('{0}\n'.format(sil))
                 word_mlf.write('.\n')
                 phon_lab.close()
