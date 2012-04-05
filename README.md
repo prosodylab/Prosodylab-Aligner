@@ -81,13 +81,13 @@ Once you extract the application, navigate into the resulting directory:
     $ cd htk
 
 #### 64-bit x86 Linux 
-
+    
 Edit the file `configure`, making the following changes:
 
 * On line 5507, replace "-m32" with "-s" (make 64-bit stripped binaries instead of 32-bit unstripped binaries)
-* On line 6788, replace "-O2" with "-O3" (make fully optimmized binaries)
+* On line 6788, replace "-O2" with "-O3" (make fully optimized binaries)
 
-This will produce smaller, faster binaries than otherwise. Then run the following commands
+Then run the following commands
 
     $ ./configure --disable-hslab --disable-hlmtools
     ...
@@ -98,9 +98,7 @@ This will produce smaller, faster binaries than otherwise. Then run the followin
 
 #### Mac OS X
 
-By default, no C compiler is installed on Mac OS X. There are a few quick ways to get one. You can get a full set of compilers by downloading [Xcode](http://itunes.apple.com/us/app/xcode/id497799835?ls=1&mt=12) from the Mac App Store. This package is really quite gigantic (a concern for those users who have capped bandwidth), and may take days(!) to download. An excellent alternative is to download the new [Command Line Tools for Xcode](http://developer.apple.com/downloads) package on the Mac App Store, which is much smaller. You will need a free registration to download either package.
-
-Once that's taken care of, execute the following commands in the "htk/" directory you just navigated to:
+Execute the following commands in the "htk/" directory you just navigated to:
 
     $ ./configure --disable-hslab --disable-hlmtools
     ...
@@ -221,9 +219,9 @@ Note that the slash character </> is not obligatory in specifying directories: a
     $ ./align.py -d MY_DICTIONARY.txt -t data data
     ...
 
-Lastly, the `-n` flag may be used to specify the number of training iterations per "round": align.py performs three rounds of training, each of which take approximately the same time, so the effect of increasing this value by one is approximately 3-fold. By default, `-n` is 4 (so 12 iterations of training in all), but the following command would set it at 5 (or 15 rounds of training):
+Lastly, the `-n` flag may be used to specify the number of training iterations per "round": align.py performs three rounds of training, each of which take approximately the same time, so the effect of increasing this value by one is approximately 3-fold. By default, `-n` is 4 (so 12 iterations of training in all), but the following command would set it at 5 (or 15 rounds of training in all):
 
-    $ ./align.py -n 4 -t data data
+    $ ./align.py -n 5 -t data data
     ...
 
 Other options are documented above.
