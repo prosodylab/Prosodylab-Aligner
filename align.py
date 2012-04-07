@@ -93,6 +93,7 @@ Option              Function
 -a                  Perform speaker adaptation,   
                     w/ or w/o prior training
 -d dictionary       specify a dictionary file     [default: dictionary.txt]
+-f                  Parallelize when possible
 -h                  display this message
 -m                  list files containing 
                     out-of-dictionary words
@@ -118,7 +119,7 @@ def resolve(path):
 
 class Aligner(object):
     """
-    Basic class for performing alignment, using Americna English lab speech 
+    Basic class for performing alignment, using Montreal English lab speech 
     models shipped with this package and stored in the directory MOD/.  
     """
 
@@ -156,14 +157,17 @@ class Aligner(object):
         self.pron_mlf = os.path.join(self.tmp_dir, 'pron.mlf')
         self.word_mlf = os.path.join(self.tmp_dir, 'words.mlf')
         self.phon_mlf = os.path.join(self.tmp_dir, 'phones.mlf')
-        self._subclass_specific_init(ts_dir, tr_dir, ood_mode)
+        # other options
+        self.ood_mode = ood_mode
+        # initializing
+        self._subclass_specific_init(ts_dir, tr_dir)
 
-    def _subclass_specific_init(self, ts_dir, tr_dir, ood_mode):
+    def _subclass_specific_init(self, ts_dir, tr_dir):
         """
         Performs subclass-specific initialization operations
         """
         ## perform checks on data
-        self._check(ts_dir, ood_mode)
+        self._check(ts_dir)
         ## make audio copies
         self._HCopy()
         ## where trained models can be found...
@@ -179,7 +183,6 @@ class Aligner(object):
                 return True
         return False
 
-
     def _the_dict(self):
         """
         Compute a Python representation of the dictionary
@@ -190,7 +193,7 @@ class Aligner(object):
             the_dict[line[0]] = line[1:] # We'll take care of overwriting later
         return the_dict
 
-    def _check(self, ts_dir, ood_mode):
+    def _check(self, ts_dir):
         """
         Performs checks on .wav and .lab files in the folder indicated by 
         ts_dir. If any problem arises, an error results.
@@ -198,7 +201,7 @@ class Aligner(object):
         ## check for missing, unpaired data
         (self.wav_list, lab_list) = self._lists(ts_dir)
         ## check dictionary
-        self._check_dct(lab_list, ood_mode)
+        self._check_dct(lab_list, self.ood_mode)
         ## check audio
         self._check_aud(self.wav_list)
 
@@ -230,7 +233,7 @@ class Aligner(object):
                 error('Missing .wav or .lab files; see {0}', unpaired)
         return (wav_list, lab_list)
 
-    def _check_dct(self, lab_list, ood_mode):
+    def _check_dct(self, lab_list):
         """
         Checks the label files to confirm that all words are found in the 
         dictionary, while building new .lab and .mlf files silently
@@ -267,7 +270,7 @@ class Aligner(object):
         ## now complain if any found
         if ood:
             with open(outofdict, 'w') as sink:
-                if ood_mode:
+                if self.ood_mode:
                     for word in ood:
                         sink.write('{0}\t{1}\n'.format(word, 
                                                 ' '.join(ood[word])))
@@ -299,16 +302,20 @@ class Aligner(object):
         """
         copy_scp = open(self.copy_scp, 'a')
         check_scp = open(self.train_scp if training else self.test_scp, 'w')
+        i = 0
         if self.has_sox:
             for wav in wav_list:
                 head = os.path.splitext(os.path.split(wav)[1])[0]
                 mfc = os.path.join(self.aud_dir, head + '.mfc')
                 w = wave.open(wav, 'r')
+                pids = [] # pids
                 if (w.getframerate() != self.sr) or (w.getnchannels() > 1):
                     new_wav = os.path.join(self.aud_dir, head + '.wav')
-                    call(['sox', '-G', wav, '-b', '16', new_wav, 'remix', '-',
-                          'rate', str(self.sr), 'dither', '-s'], stderr=PIPE)
+                    pids.append(Popen(['sox', '-G', wav, '-b', '16', new_wav,                                         'remix', '-', 'rate', str(self.sr), 
+                                       'dither', '-s'], stderr=PIPE))
                     wav = new_wav
+                for pid in pids: # "join"
+                    pid.wait()
                 copy_scp.write('{0} {1}\n'.format(wav, mfc))
                 check_scp.write('{0}\n'.format(mfc))
                 w.close()
@@ -398,12 +405,12 @@ class TrainAligner(Aligner):
     models
     """
         
-    def _subclass_specific_init(self, ts_dir, tr_dir, ood_mode):
+    def _subclass_specific_init(self, ts_dir, tr_dir):
         """
         Performs subclass-specific initialization operations
         """
         ## perform checks on data
-        self._check(ts_dir, tr_dir, ood_mode)
+        self._check(ts_dir, tr_dir)
         ## run HCopy
         self._HCopy()
         ## create the next HMM directory
@@ -466,7 +473,7 @@ class TrainAligner(Aligner):
             source.close()
         sink.close()
 
-    def _check(self, ts_dir, tr_dir, ood_mode):
+    def _check(self, ts_dir, tr_dir):
         """
         Performs checks on .wav and .lab files in the folders indicated by 
         dir1 and dir2, combining them to eliminate any redundant computations.
@@ -474,7 +481,7 @@ class TrainAligner(Aligner):
         if ts_dir == tr_dir: # if training on testing
             (self.wav_list, lab_list) = self._lists(ts_dir)
             ## check and make dictionary
-            self._check_dct(lab_list, ood_mode)
+            self._check_dct(lab_list)
             ## inspect audio
             self._check_aud(self.wav_list)
             ## IMPORTANT
@@ -483,7 +490,7 @@ class TrainAligner(Aligner):
             (self.wav_list, ts_lab_list) = self._lists(ts_dir)
             (tr_wav_list, tr_lab_list) = self._lists(tr_dir)
             ## check and make dictionary
-            self._check_dct(ts_lab_list + tr_lab_list, ood_mode)
+            self._check_dct(ts_lab_list + tr_lab_list)
             ## inspect test audio
             self._check_aud(self.wav_list)
             ## inspect training audio
