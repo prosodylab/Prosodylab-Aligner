@@ -41,23 +41,15 @@ The scripts included here assume that HTK and SoX are installed on your system. 
 
 ### Installing SoX
 
-SoX: Source for SoX, which is under the GNU General Public License, can be found at the following URL:
-
-    http://sourceforge.net/projects/sox/files/
-
-#### Linux
+SoX: Source for SoX, which is under the GNU General Public License, can be found at <http://sourceforge.net/projects/sox/files/>
 
 On Linux or similar POSIX-based systems, SoX can be obtained from the distribution-specific package manager (`apt-get`, `yum`, etc.), or can be compiled from source without too much difficulty. 
-
-#### Mac OS X
 
 On Mac OS X it may be obtained from Fink or DarwinPorts, though compiling by hand may be somewhat difficult. Fortunately, the SoX maintainers provide compiled binaries for Mac OS X. You can simply download these binaries from the above URL (click on the link after the text "Looking for the latest version?"). The zip file can be expanded by double-clicking on it. The resulting files must be placed in your `$PATH`. A simple way to do this is to navigate to the resulting directory, and issue the following command:
 
     $ sudo mv rec play sox soxi /usr/local/bin
 
 This will prompt for your password; type it in (it will not "echo", as `***`), and hit Enter when you're done. 
-
-#### Checking installation
 
 You can confirm that SoX is installed by issuing the following command in any directory:
 
@@ -68,24 +60,17 @@ Note that your version may be different: `align.py` has been tested for this ver
 
 ### Installing HTK
 
-Source for HTK can be obtained at the following URL:
+Source for HTK can be obtained at <http://htk.eng.cam.ac.uk/download.shtml>. Note that you will have to make an account and agree to their restricted distribution license. Once you obtain the "tarball", the following command (adjusting for version number) should unpack it:
 
-    $ http://htk.eng.cam.ac.uk/download.shtml
-
-Note that you will have to make an account and agree to their restricted distribution license. Once you obtain the "tarball", the following command (adjusting for version number) should unpack it:
-
-    $ tar -fvxz htk-3.4.1.tar.gz
+    $ tar -xvzf htk-3.4.1.tar.gz
 
 Once you extract the application, navigate into the resulting directory:
 
     $ cd htk
 
-#### 64-bit x86 Linux 
-    
-Edit the file `configure`, making the following changes:
+On 64-bit x86 Linux, edit the file `configure`, making the following changes:
 
 * On line 5507, replace "-m32" with "-s" (make 64-bit stripped binaries instead of 32-bit unstripped binaries)
-* On line 6788, replace "-O2" with "-O3" (make fully optimized binaries)
 
 Then run the following commands
 
@@ -96,9 +81,7 @@ Then run the following commands
     $ sudo make install
     ...
 
-#### Mac OS X
-
-Execute the following commands in the "htk/" directory you just navigated to:
+On Mac OS X, execute the following commands in the "htk/" directory:
 
     $ ./configure --disable-hslab --disable-hlmtools
     ...
@@ -158,28 +141,20 @@ This will compute the best alignments, and then place then in Praat TextGrids in
 
 Several errors can occur at this stage. 
 
-#### Unpaired data
-
-First, if a .lab file in data/ is not paired with a .wav file in the same directory, or vis versa, then align.py will quit and report the unpaired data to unpaired.txt. You can read this file to figure out what files are missing, or use it to delete present, but unpaired, files. The following will delete unpaired files, after they are found by align.py and written to unpaired.txt.
+* Unpaired data: if a .lab file in data/ is not paired with a .wav file in the same directory, or vis versa, then align.py will quit and report the unpaired data to unpaired.txt. You can read this file to figure out what files are missing, or use it to delete present, but unpaired, files. The following will delete unpaired files, after they are found by align.py and written to unpaired.txt.
 
     $ rm `xargs -d '\n' < unpaired`
 
-#### Out of dictionary words
-
-Secondly, a word in your .lab files may be missing from the dictionary. Such words are written to outofdict.txt. You can transcribe these in outofdict.txt using a text editor, then mix them back in like so:
+* Out of dictionary words: a word in your .lab files may be missing from the dictionary. Such words are written to outofdict.txt. You can transcribe these in outofdict.txt using a text editor, then mix them back in like so:
 
     $ ./sort.py dictionary.txt outofdict.txt > tmp; 
     $ mv tmp dictionary.txt
 
 If you call align.py with the argument -m, each word in outofdict.txt is paired with a list of .lab files where it occurs. This may be useful for fixing typos in the .lab files. 
 
-#### SoX not installed
+* SoX not installed: if SoX is not installed, but it needed because the audio is in a different format than the provided models (which are mono and sampled at 8000 Hz), an error will be raised.
 
-Also, if SoX is not installed, but it needed because the audio is in a different format than the provided models (which are mono and sampled at 8000 Hz), an error will be raised.
-
-#### align.py not executable ("Permission denied")
-
-Lastly, the file `align.py` may not be marked as executable on your system, in which case you'll get an error like the following:
+* align.py not executable ("Permission denied"): the file `align.py` may not be marked as executable on your system, in which case you'll get an error like the following:
 
     $ ./align.py data/ 
     -bash: ./align.py: Permission denied
@@ -190,9 +165,7 @@ On Linux or Mac OS X, the following command should do the trick:
 
 Then, run `align.py` like above.  
 
-#### Out of space error
-
-The `align.py` script makes prodigious use of "temporary" disk space. On Linux (in particular), it is possible that this space is limited by the OS, and `align.py` will fail with number of cascading errors referring to disc space. A simple way to fix this is to use a temporary directory located somewhere else. If the environmental variable `$TMPDIR` is defined and it points to a writeable directory, `align.py` will use it.
+* Out of space error: the `align.py` script makes prodigious use of "temporary" disk space. On Linux (in particular), it is possible that this space is limited by the OS, and `align.py` will fail with number of cascading errors referring to disc space. A simple way to fix this is to use a temporary directory located somewhere else. If the environmental variable `$TMPDIR` is defined and it points to a writeable directory, `align.py` will use it.
 
     $ mkdir ~/tmpdir
     $ export TMPDIR=~/tmpdir
@@ -225,7 +198,3 @@ Lastly, the `-n` flag may be used to specify the number of training iterations p
     ...
 
 Other options are documented above.
-
-## Importing the module
-
-Users who are familiar with Python are encouraged to import `align.py` as a Python module if it makes sense for their application. 
