@@ -90,8 +90,6 @@ On Mac OS X, execute the following commands in the "htk/" directory:
     $ sudo make install
     ...
 
-#### Checking installation
-
 You can confirm that HTK is installed by issuing the following command in any directory:
 
     $ HCopy -V
@@ -139,7 +137,7 @@ This will compute the best alignments, and then place then in Praat TextGrids in
 
 ### Likely errors
 
-Several errors can occur at this stage. 
+Several errors can occur at this stage:
 
 * Unpaired data: if a .lab file in data/ is not paired with a .wav file in the same directory, or vis versa, then align.py will quit and report the unpaired data to unpaired.txt. You can read this file to figure out what files are missing, or use it to delete present, but unpaired, files. The following will delete unpaired files, after they are found by align.py and written to unpaired.txt.
 
@@ -150,20 +148,11 @@ Several errors can occur at this stage.
     $ ./sort.py dictionary.txt outofdict.txt > tmp; 
     $ mv tmp dictionary.txt
 
-If you call align.py with the argument -m, each word in outofdict.txt is paired with a list of .lab files where it occurs. This may be useful for fixing typos in the .lab files. 
-
 * SoX not installed: if SoX is not installed, but it needed because the audio is in a different format than the provided models (which are mono and sampled at 8000 Hz), an error will be raised.
 
-* align.py not executable ("Permission denied"): the file `align.py` may not be marked as executable on your system, in which case you'll get an error like the following:
-
-    $ ./align.py data/ 
-    -bash: ./align.py: Permission denied
-
-On Linux or Mac OS X, the following command should do the trick:
+* align.py not executable ("Permission denied"): the file `align.py` may not be marked as executable on your system. The following commmand should do the trick:
 
     $ chmod +x ./align.py
-
-Then, run `align.py` like above.  
 
 * Out of space error: the `align.py` script makes prodigious use of "temporary" disk space. On Linux (in particular), it is possible that this space is limited by the OS, and `align.py` will fail with number of cascading errors referring to disc space. A simple way to fix this is to use a temporary directory located somewhere else. If the environmental variable `$TMPDIR` is defined and it points to a writeable directory, `align.py` will use it.
 
@@ -182,7 +171,7 @@ This requires a lot of data to work well, and further takes a long time when the
     $ ./align.py -t data/ data/
     ...
 
-When `-t` is specified, a few other command-line options to `align.py    become available. The `-s` flag specifies samplerate for the models used, and if SoX is installed, both training and testing data will be resampled to this rate, if they do not match it. For instance, to use 44010 Hz models, you could say:
+When `-t` is specified, a few other command-line options to `align.py` become available. The `-s` flag specifies samplerate for the models used, and if SoX is installed, both training and testing data will be resampled to this rate, if they do not match it. For instance, to use 44010 Hz models, you could say:
 
     $ ./align.py -s 44010 -t data data
     ...
