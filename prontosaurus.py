@@ -173,6 +173,7 @@ class BaseProjPronDict(PronDict):
     >>> print ' '.join(pd['EXCRETING'].pop())  # observed: 'EXCRETE'
     IH0 K S K R IY1 T IH0 NG
 
+    ## these tests don't work yet as base inference is not yet implemented
     ## direct base inference
     #>>> print ' '.join(pd['UNFLAG'].pop())     # * observed: 'UNFLAGGING' 
     #AH0 N F L AE1 G
