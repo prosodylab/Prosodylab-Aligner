@@ -92,6 +92,7 @@ def _strip_d(orth):
         if orth[-3] == orth[-4]: # e.g., "dog"/"dogged"
             queries.append(orth[:-3])
         queries.append(orth[:-2])
+    queries.append(orth[:-1])
     return queries
 
 
@@ -153,24 +154,24 @@ class BaseProjPronDict(PronDict):
     >>> pd = BaseProjPronDict('dictionary.txt', RegularAffixes)
 
     ## projection from observed bases (-Z, -S, -IH0 Z, -D, -T, -IH0 D, -IH0 NG)
-    #>>> print ' '.join(pd['STYLINGS'].pop())   # observed: 'STYLING'
-    #S T AY1 L IH0 NG Z
-    #>>> print ' '.join(pd['ABROGATES'].pop())  # observed: 'ABROGATE'
-    #AE1 B R AH0 G EY2 T S
-    #>>> print ' '.join(pd['CONDENSES'].pop())  # observed: 'CONDENSE'
-    #K AH0 N D EH1 N S IH0 Z
-    #>>> print ' '.join(pd['SEVERITIES'].pop()) # observed: 'SEVERITY'
-    #S IH0 V EH1 R IH0 T IY0 Z
-    #>>> print ' '.join(pd['COLLAGED'].pop())   # observed: 'COLLAGE'
-    #K AH0 L AA1 ZH D
-    #>>> print ' '.join(pd['POGGED'].pop())     # * observed: 'POG'
-    #P AA1 G D
-    #>>> print ' '.join(pd['ABSCESSED'].pop())  # observed: 'ABSCESS'
-    #AE1 B S EH2 S T
-    #>>> print ' '.join(pd['EXCRETED'].pop())   # observed: 'EXCRETE'
-    #IH0 K S K R IY1 T IH0 D
-    #>>> print ' '.join(pd['EXCRETING'].pop())  # observed: 'EXCRETE'
-    #IH0 K S K R IY1 T IH0 NG
+    >>> print ' '.join(pd['STYLINGS'].pop())   # observed: 'STYLING'
+    S T AY1 L IH0 NG Z
+    >>> print ' '.join(pd['ABROGATES'].pop())  # observed: 'ABROGATE'
+    AE1 B R AH0 G EY2 T S
+    >>> print ' '.join(pd['CONDENSES'].pop())  # observed: 'CONDENSE'
+    K AH0 N D EH1 N S IH0 Z
+    >>> print ' '.join(pd['SEVERITIES'].pop()) # observed: 'SEVERITY'
+    S IH0 V EH1 R IH0 T IY0 Z
+    >>> print ' '.join(pd['COLLAGED'].pop())   # observed: 'COLLAGE'
+    K AH0 L AA1 ZH D
+    >>> print ' '.join(pd['POGGED'].pop())     # * observed: 'POG'
+    P AA1 G D
+    >>> print ' '.join(pd['ABSCESSED'].pop())  # observed: 'ABSCESS'
+    AE1 B S EH2 S T
+    >>> print ' '.join(pd['EXCRETED'].pop())   # observed: 'EXCRETE'
+    IH0 K S K R IY1 T IH0 D
+    >>> print ' '.join(pd['EXCRETING'].pop())  # observed: 'EXCRETE'
+    IH0 K S K R IY1 T IH0 NG
 
     ## direct base inference
     #>>> print ' '.join(pd['UNFLAG'].pop())     # * observed: 'UNFLAGGING' 
