@@ -45,8 +45,10 @@ from getopt import getopt, GetoptError
 from subprocess import call, Popen, PIPE
 
 # should be in the current directory
-from textgrid import MLF
-# get it at https://raw.github.com/kylebgorman/textgrid.py/master/textgrid.py
+from textgrid import MLF   
+# http://github.com/kylebgorman/textgrid.py/
+from prontosaurus import PronDict, BaseProjPronDict, RegularAffixes
+# http://github.com/kylebgorman/prontosaurus/
 
 ### GLOBAL VARS
 # You can change these if you know HTK well
@@ -90,16 +92,17 @@ USAGE: ./align.py [OPTIONS] data_to_be_aligned/
 
 Option              Function
 
--a                  Perform speaker adaptation,   
+-a                  Perform speaker adaptation,
                     w/ or w/o prior training
--d dictionary       specify a dictionary file     [default: dictionary.txt]
--f                  Parallelize when possible
--h                  display this message
--m                  list files containing 
+-d dictionary       specify a dictionary file       [default: dictionary.txt]
+-h                  Display this message
+-m                  List files containing 
                     out-of-dictionary words
--n n                number of training iterations [default: 4]
+-n n                Number of training iterations   [default: 4]
                     for each step of training
--s samplerate (Hz)  Samplerate for models         [default: 8000]
+-p                  Guess unseen words with base
+                    projection (CMU English only)
+-s samplerate (Hz)  Samplerate for models           [default: 8000]
                     (NB: available only with -t)
 -t training_data/   Perform model training
 -u                  Support for UTF-8 and UTF-16
@@ -123,7 +126,7 @@ class Aligner(object):
     models shipped with this package and stored in the directory MOD/.  
     """
 
-    def __init__(self, ts_dir, tr_dir, dictionary, sr, ood_mode):
+    def __init__(self, ts_dir, tr_dir, dictionary, sr, ood_mode, use_baseproj):
         ## class variables
         self.sr = sr
         self.has_sox = self._has_sox()
@@ -139,7 +142,11 @@ class Aligner(object):
         os.mkdir(self.hmm_dir)
         ## dictionary reps
         self.dictionary = dictionary     # string where dict can be found
-        self.the_dict = self._the_dict() # python representation thereof
+        if use_baseproj:
+            self.the_dict = BaseProjPronDict(dictionary, RegularAffixes)
+        else:
+            self.the_dict = PronDict(dictionary)
+        self.the_dict['sil'] = 'sil'
         # lists
         self.words = os.path.join(self.tmp_dir, 'words')
         self.phons = os.path.join(self.tmp_dir, 'phones')
@@ -183,16 +190,6 @@ class Aligner(object):
                 return True
         return False
 
-    def _the_dict(self):
-        """
-        Compute a Python representation of the dictionary
-        """
-        the_dict = {'sil': 'sil'}
-        for line in open(self.dictionary, 'r'):
-            line = line.rstrip().split()
-            the_dict[line[0]] = line[1:] # We'll take care of overwriting later
-        return the_dict
-
     def _check(self, ts_dir):
         """
         Performs checks on .wav and .lab files in the folder indicated by 
@@ -201,7 +198,7 @@ class Aligner(object):
         ## check for missing, unpaired data
         (self.wav_list, lab_list) = self._lists(ts_dir)
         ## check dictionary
-        self._check_dct(lab_list, self.ood_mode)
+        self._check_dct(lab_list)
         ## check audio
         self._check_aud(self.wav_list)
 
@@ -579,13 +576,14 @@ if __name__ == '__main__':
     ## parse arguments
     # complain if no test directory specification
     try:
-        (opts, args) = getopt(argv[1:], 'd:n:s:t:aAmhu')
+        (opts, args) = getopt(argv[1:], 'd:n:s:t:aAmhpu')
         # default opts values
         dictionary = 'dictionary.txt' # -d
         sr = 8000
         tr_dir = None
         ood_mode = False
         n_per_round = 4 # -n
+        use_baseproj = False # -p
         use_unicode = False # -u
         speaker_dependent = False # -T
         require_training = False # to keep track of if -n, -s used
@@ -605,6 +603,8 @@ if __name__ == '__main__':
                         raise ValueError
                 except ValueError:
                     error('-n value must be > 0')
+            elif opt == '-p':
+                use_baseproj = True
             elif opt == '-s':
                 try:
                     sr = int(val)
@@ -644,7 +644,8 @@ if __name__ == '__main__':
     path_to_mlf = os.path.join(ts_dir, align_mlf)
     if tr_dir: 
         print 'Initializing...'
-        aligner = TrainAligner(ts_dir, tr_dir, dictionary, sr, ood_mode)
+        aligner = TrainAligner(ts_dir, tr_dir, dictionary, sr, ood_mode, 
+                                                               use_baseproj)
         print 'Training...'
         aligner.train(n_per_round) # start training
         print 'Modeling silence...'
@@ -664,7 +665,8 @@ if __name__ == '__main__':
         if require_training:
             error('-n, -s only available in training (-t) mode')
         print 'Initializing...'
-        aligner = Aligner(ts_dir, 'MOD', dictionary, sr, ood_mode)
+        aligner = Aligner(ts_dir, 'MOD', dictionary, sr, ood_mode,
+                                                         use_baseproj)
         print 'Aligning...'
         aligner.align_and_score(path_to_mlf, os.path.join(ts_dir, scores_txt))
         print 'Making TextGrids...'

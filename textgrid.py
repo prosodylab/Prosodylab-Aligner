@@ -66,7 +66,7 @@ def readFile(f):
 class Point(object):
     """ 
     Represents a point in time with an associated textual mark, as stored in a
-    PointInterval.
+    PointTier.
 
     # Point/Point comparison
     >>> foo = Point(3.0, 'foo')
@@ -116,6 +116,12 @@ class Point(object):
                    cmp(self.time, other.maxTime)
         else: # hopefully numerical
             return cmp(self.time, other)
+
+    def __iadd__(self, other):
+        self.time += other
+
+    def __isub__(self, other):
+        self.time -= other
 
 
 class Interval(object):
@@ -178,6 +184,14 @@ class Interval(object):
             return self.minTime < other.time < self.maxTime
         else:
             return False
+
+    def __iadd__(self, other):
+        self.minTime += other
+        self.maxTime += other
+
+    def __isub__(self, other):
+        self.minTime -= other
+        self.maxTime -= other
 
     def overlaps(self, other):
         """
@@ -487,7 +501,7 @@ class IntervalTier(object):
         sink.close()
 
     def bounds(self):
-        return self.minTime, self.maxTime or interval[-1].maxTime
+        return self.minTime, self.maxTime or self.intervals[-1].maxTime
 
 
 class IntervalTierFromFile(IntervalTier):

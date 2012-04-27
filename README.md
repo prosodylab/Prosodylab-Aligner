@@ -1,6 +1,7 @@
-# align.py, v. 0.5
+# align.py, v. 0.8
 
-A script for performing alignment of laboratory speech production data
+A script for performing alignment of laboratory speech production data, using
+HTK, SoX, textgrid.py <https://github.com/kylebgorman/textgrid.py>, 
 
 * Kyle Gorman <kgorman@ling.upenn.edu> 
 * Michael Wagner <chael@mcgill.ca>
@@ -19,21 +20,23 @@ See included "LICENSE"
 
     ./align.py [options] data_to_be_aligned/ 
 
-    Option              Function
+Option              Function
 
-    -a                  Perform speaker adaptation,
-                        w/ or w/o prior training
-    -d dictionary       specify a dictionary file     [default: dictionary.txt]
-    -h                  display this message
-    -m                  list files containing 
-                        out-of-dictionary words
-    -n n                number of training iterations [default: 4]
-                        for each step of training      
-    -s samplerate (Hz)  Samplerate for models         [default: 8000]
-                        (NB: available only with -t)
-    -t training_data/   Perform model training
-    -u                  Support for UTF-8 and UTF-16 
-                        label files
+-a                  Perform speaker adaptation,
+                    w/ or w/o prior training
+-d dictionary       specify a dictionary file       [default: dictionary.txt]
+-h                  Display this message
+-m                  List files containing 
+                    out-of-dictionary words
+-n n                Number of training iterations   [default: 4]
+                    for each step of training
+-p                  Guess unseen words with base
+                    projection (CMU English only)
+-s samplerate (Hz)  Samplerate for models           [default: 8000]
+                    (NB: available only with -t)
+-t data/            Perform model training
+-u                  Support for UTF-8 and UTF-16
+                    label files
 
 ## Installing
 
@@ -107,6 +110,10 @@ First, obtain an appropriate pronunciation dictionary. Since many of the intende
     ./get_dict.sh
 
 Other dictionaries can be found online, or written in the CMU format for specific tasks. If you're working with RP speakers, CELEX might be a good one.
+
+By using the `-p` flag, you can use the included `prontosaurus.py` package to
+project pronunciations of regularly inflected words not listed in the CMU
+dictionary. This is a work in progress and should get more interesting soon.
 
 ### Aligning one pair
 
