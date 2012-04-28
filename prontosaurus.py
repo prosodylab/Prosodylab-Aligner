@@ -29,6 +29,7 @@ from collections import defaultdict
 
 ## container for affixes
 
+
 class Affix(object):
     """
     Container for functions associated with individual affixes:
@@ -54,6 +55,7 @@ _id_ing = lambda x: len(x) > 4 and x[-3:] == 'ING'
 ## pronunciation affixation functions
 _voiceless_obstruents = ('P', 'T', 'K', 'CH', 'F', 'TH', 'S', 'SH')
 
+
 def _affix_z(pron):
     if pron[-1] in ('S', 'SH', 'Z', 'ZH'):
         return pron + ['IH0', 'Z']
@@ -76,12 +78,13 @@ _affix_ing = lambda x: x + ['IH0', 'NG']
 
 ## orthographic stripping functions, returning iterables
 
+
 def _strip_z(orth):
     queries = []
     if orth[-3:-1] == 'IE': # e.g., "severity"/"severities"
         queries.append(orth[:-3] + 'Y')
     elif orth[-2] == "'": # e.g., "bathroom's"
-        queries.append(orth[:-2])
+        return [orth[:-2]] # only reasonable one
     queries.append(orth[:-1])
     return queries
 
@@ -127,6 +130,7 @@ class PronDict(object):
                 pron = pron.split()
                 self.d[word].append(pron)
         sink.close()
+        self.ood = set()
 
     def __contains__(self, key):
         return key in self.d and self.d[key] != []
@@ -136,6 +140,7 @@ class PronDict(object):
         if getlist or key:
             return getlist
         else:
+            self.ood.add(key)
             raise(KeyError(key))
 
     def __str__(self):
@@ -154,23 +159,25 @@ class BaseProjPronDict(PronDict):
     >>> pd = BaseProjPronDict('dictionary.txt', RegularAffixes)
 
     ## projection from observed bases (-Z, -S, -IH0 Z, -D, -T, -IH0 D, -IH0 NG)
-    >>> print ' '.join(pd['STYLINGS'].pop())   # observed: 'STYLING'
+    >>> print ' '.join(pd['STYLINGS'][0])   # observed: 'STYLING'
     S T AY1 L IH0 NG Z
-    >>> print ' '.join(pd['ABROGATES'].pop())  # observed: 'ABROGATE'
+    >>> print ' '.join(pd['ABROGATES'][0])  # observed: 'ABROGATE'
     AE1 B R AH0 G EY2 T S
-    >>> print ' '.join(pd['CONDENSES'].pop())  # observed: 'CONDENSE'
+    >>> print ' '.join(pd['CONDENSES'][0])  # observed: 'CONDENSE'
     K AH0 N D EH1 N S IH0 Z
-    >>> print ' '.join(pd['SEVERITIES'].pop()) # observed: 'SEVERITY'
+    >>> print ' '.join(pd['SEVERITIES'][0]) # observed: 'SEVERITY'
     S IH0 V EH1 R IH0 T IY0 Z
-    >>> print ' '.join(pd['COLLAGED'].pop())   # observed: 'COLLAGE'
+    >>> print ' '.join(pd['COLLAGED'][0])   # observed: 'COLLAGE'
     K AH0 L AA1 ZH D
-    >>> print ' '.join(pd['POGGED'].pop())     # * observed: 'POG'
+    >>> print ' '.join(pd['POGGED'][0])     # * observed: 'POG'
     P AA1 G D
-    >>> print ' '.join(pd['ABSCESSED'].pop())  # observed: 'ABSCESS'
+    >>> print ' '.join(pd['ABSCESSED'][0])  # observed: 'ABSCESS'
     AE1 B S EH2 S T
-    >>> print ' '.join(pd['EXCRETED'].pop())   # observed: 'EXCRETE'
+    >>> print ' '.join(pd['EXCRETED'][0])   # observed: 'EXCRETE'
     IH0 K S K R IY1 T IH0 D
-    >>> print ' '.join(pd['EXCRETING'].pop())  # observed: 'EXCRETE'
+    >>> print ' '.join(pd['EXCRETING'][0])  # observed: 'EXCRETE'
+    IH0 K S K R IY1 T IH0 NG
+    >>> print ' '.join(pd['EXCRETING'][0])  # check to see if it takes
     IH0 K S K R IY1 T IH0 NG
 
     ## these tests don't work yet as base inference is not yet implemented
@@ -186,15 +193,19 @@ class BaseProjPronDict(PronDict):
     """
 
     def __init__(self, f, affixes):
-        sink = f if hasattr(f, 'read') else open(f, 'r')
         self.affixes = affixes
+        # collect known pronunciations
         self.d = defaultdict(list)
+        sink = f if hasattr(f, 'read') else open(f, 'r')
         for line in sink:
             if line[0] != ';':
                 (word, pron) = line.rstrip().split(None, 1)
                 pron = pron.split()
                 self.d[word].append(pron)
-        self.projection_failures = set()
+        sink.close()
+        # store unknown and projected pronunciations
+        self.ood = set()
+        self.projected = defaultdict(list)
 
     def project(self, key):
         """
@@ -205,33 +216,41 @@ class BaseProjPronDict(PronDict):
             if affix.identify(key):
                 for query in affix.strip(key):
                     if query in self.d:
-                        addto = self.d[key]
+                        addto = self.projected[key]
                         for base_pron in self.d[query]:
                             projected = affix.affix(base_pron)
                             addto.append(projected)
-                            print >> stderr, 'Prontosaurus: {0} -> {1}'.format(
-                                              key, ' '.join(projected))
+                            proj_string = ' '.join(projected)
+                            print >> stderr, 'Prontosaurus:',
+                            print >> stderr, '{0} -> {1}'.format(key,
+                                                             proj_string)
                         return True
                 break # FIXME only one affix can ever match...remove otherwise
         # bomb out
-        self.projection_failures.add(key)
+        self.ood.add(key)
         return False
 
     def __contains__(self, key):
-        if key in self.d:
-            return True
-        elif key in self.projection_failures:
+        if key in self.ood:
             return False
+        elif key in self.d or key in self.projected:
+            return True
         else:
-            return self.project(key)
+            if self.project(key):
+                return True
+            else:
+                raise(KeyError(key))
 
     def __getitem__(self, key):
-        getlist = self.d[key]
-        if getlist or key in self.projection_failures:
-            return getlist
-        else: # try to project it
+        if key in self.ood:
+            raise(ValueError)
+        elif key in self.d:
+            return self.d[key]
+        elif key in self.projected:
+            return self.projected[key]
+        else:
             if self.project(key):
-                return self.d[key]
+                return self.projected[key]
             else:
                 raise(KeyError(key))
 

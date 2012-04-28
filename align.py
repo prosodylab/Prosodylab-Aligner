@@ -239,8 +239,8 @@ class Aligner(object):
         """
         found_words = set()
         with open(self.word_mlf, 'w') as word_mlf:
+            ood = defaultdict(list)
             word_mlf.write('#!MLF!#\n')
-            ood = defaultdict(set) # maybe redundant if not -m, but cheap
             for lab in lab_list:
                 lab_name = os.path.split(lab)[1]
                 # new lab file at the phone level, in self.aud_dir
@@ -258,8 +258,8 @@ class Aligner(object):
                             phon_lab.write('{0}\n'.format(phon))
                         word_lab.write('{0} '.format(word))
                         word_mlf.write('{0}\n'.format(word))
-                    else: # missing
-                        ood[word].add(lab)
+                    else:
+                        ood[word].append(lab)
                 phon_lab.write('{0}\n'.format(sil))
                 word_mlf.write('.\n')
                 phon_lab.close()
@@ -268,12 +268,11 @@ class Aligner(object):
         if ood:
             with open(outofdict, 'w') as sink:
                 if self.ood_mode:
-                    for word in ood:
-                        sink.write('{0}\t{1}\n'.format(word, 
-                                                ' '.join(ood[word])))
+                    for (word, flist) in ood.iteritems():
+                        print >> sink, '{0}\t{1}'.format(word, ' '.join(flist))
                 else:
-                    for word in ood:
-                       sink.write('{0}\n'.format(word))
+                    for word in self.the_dict.ood:
+                        print >> sink, word
             error('Out of dictionary word(s), see {0}', outofdict)
         ## make word
         open(self.words, 'w').write('\n'.join(found_words))
@@ -282,10 +281,13 @@ class Aligner(object):
         open(ded, 'w').write("""AS {0}\nMP {1} {1} {0}""".format(sp, sil))
         call(['HDMan', '-m', '-g', ded, '-w', self.words, '-n', self.phons, 
                                               self.taskdict, self.dictionary])
-        ## add sil to self.phons
-        open(self.phons, 'a').write('sil\n')
-        ## add sil to self.taskdict
-        open(self.taskdict, 'a').write('sil sil\n') 
+        ## add sil and projected words to self.taskdict
+        with open(self.taskdict, 'a') as sink:
+            print >> sink, 'sil sil'
+            for (key, pronlist) in self.the_dict.projected.iteritems():
+                for pron in pronlist:
+                    print >> sink, '{0} {1}'.format(key, 
+                                             ' '.join(pron + ['sp']))
         ## run HLEd
         led = os.path.join(self.tmp_dir, temp)
         open(led, 'w').write('EX\nIS {1} {1}\nDE {0}\n'.format(sp, sil))
@@ -294,7 +296,7 @@ class Aligner(object):
 
     def _check_aud(self, wav_list, training=False):
         """
-        Check audio files, remixing down to mono and the correct sample rate if
+        Check audio files, mixing down to mono and the correct sample rate if
         necessary. copy_scp and the training or testing SCP files are written.
         """
         copy_scp = open(self.copy_scp, 'a')
