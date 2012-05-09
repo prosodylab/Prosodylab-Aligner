@@ -20,23 +20,23 @@ See included "LICENSE"
 
     ./align.py [options] data_to_be_aligned/ 
 
-Option              Function
-
--a                  Perform speaker adaptation,
-                    w/ or w/o prior training
--d dictionary       specify a dictionary file       [default: dictionary.txt]
--h                  Display this message
--m                  List files containing 
-                    out-of-dictionary words
--n n                Number of training iterations   [default: 4]
-                    for each step of training
--p                  Guess unseen words with base
-                    projection (CMU English only)
--s samplerate (Hz)  Samplerate for models           [default: 8000]
-                    (NB: available only with -t)
--t data/            Perform model training
--u                  Support for UTF-8 and UTF-16
-                    label files
+    Option              Function
+    
+    -a                  Perform speaker adaptation,
+                        w/ or w/o prior training
+    -d dictionary       specify a dictionary file       [default: dictionary.txt]
+    -h                  Display this message
+    -m                  List files containing 
+                        out-of-dictionary words
+    -n n                Number of training iterations   [default: 4]
+                        for each step of training
+    -p                  Guess unseen words with base
+                        projection (CMU English only)
+    -s samplerate (Hz)  Samplerate for models           [default: 8000]
+                        (available only with -t)
+    -t data/            Perform model training
+    -u                  Support for UTF-8 and UTF-16
+                        label files
 
 ## Installing
 
