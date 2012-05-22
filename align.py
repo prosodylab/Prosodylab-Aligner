@@ -251,7 +251,9 @@ class Aligner(object):
                 word_mlf.write('"{0}"\n'.format(word_lab.name))
                 # sil
                 phon_lab.write('{0}\n'.format(sil))
-                for word in open(lab, 'r').readline().rstrip().split():
+                # look up words
+                for word in open(lab, 'r'):
+                    word = word.rstrip()
                     if word in self.the_dict:
                         found_words.add(word)
                         for phon in self.the_dict[word]:
@@ -281,13 +283,16 @@ class Aligner(object):
         open(ded, 'w').write("""AS {0}\nMP {1} {1} {0}""".format(sp, sil))
         call(['HDMan', '-m', '-g', ded, '-w', self.words, '-n', self.phons, 
                                               self.taskdict, self.dictionary])
+        # add sil
+        print >> open(self.phons, 'a'), '{0}'.format(sil)
         ## add sil and projected words to self.taskdict
         with open(self.taskdict, 'a') as sink:
-            print >> sink, 'sil sil'
-            for (key, pronlist) in self.the_dict.projected.iteritems():
-                for pron in pronlist:
-                    print >> sink, '{0} {1}'.format(key, 
-                                             ' '.join(pron + ['sp']))
+            print >> sink, '{0} {1}'.format(sil, sil)
+            if hasattr(self.the_dict, 'projected'):
+                for (key, pronlist) in self.the_dict.projected.iteritems():
+                    for pron in pronlist:
+                        print >> sink, '{0} {1}'.format(key, 
+                                       ' '.join(pron + ['sp']))
         ## run HLEd
         led = os.path.join(self.tmp_dir, temp)
         open(led, 'w').write('EX\nIS {1} {1}\nDE {0}\n'.format(sp, sil))
@@ -378,7 +383,7 @@ NUMCEPS = 12""")
         i = 0
         sink = open(score, 'w')
         for line in Popen(['HVite', '-T', '1', '-a', '-m', '-y', 'lab', 
-                       '-o', 'SM', '-b', sil, '-i', mlf, '-L', self.lab_dir, 
+                       '-o', 'SM', '-b', sil, '-i', mlf, '-L', self.lab_dir,
                        '-C', self.cfg, '-S', self.test_scp,
                        '-H', os.path.join(self.cur_dir, macro),
                        '-H', os.path.join(self.cur_dir, hmmdf),
@@ -562,7 +567,7 @@ TI silst {{{1}.state[3],{0}.state[2]}}
                             os.path.join(self.cur_dir, hmmdf), '-M', 
                                          self.nxt_dir, hed, self.phons])
         #FIXME this seems to not be necessary, but I'm not sure why.
-        """ 
+        """
         # run HLEd
         sink = open(temp, 'w')
         sink.write('EX\nIS {0} {0}\n'.format(sil))
