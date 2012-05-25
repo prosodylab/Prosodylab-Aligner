@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 # Example that does a single alignment
 # Kyle Gorman <kgorman@ling.upenn.edu>
 
@@ -34,7 +34,7 @@ mkdir -p .dat;
 cp $WAV $LAB .dat;
 
 # perform alignment
-echo ./align.py ${ARGS[@]:0:$#-2} .dat/;
+./align.py ${ARGS[@]:0:$#-2} .dat/;
 
 if [ $? != 1 ]; then
     # name of output file

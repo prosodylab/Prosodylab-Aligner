@@ -23,6 +23,8 @@
 # align.py: text/speech alignment for speech production experiments
 # Kyle Gorman <kgorman@ling.upenn.edu>, Michael Wagner <chael@mcgill.ca>
 # 
+# Requires Python 2.5-2.7; not compatible with earlier versions or Python 3.
+# 
 # See README.md for usage information and a tutorial.
 # 
 # This project was funded by: 
@@ -30,6 +32,8 @@
 # FQRSC Nouvelle Chercheur NP-132516
 # SSHRC Digging into Data Challenge Grant 869-2009-0004
 # SSHRC Canada Research Chair 218503
+
+from __future__ import with_statement        # compatible with python 2.5 and later
 
 import os
 import re

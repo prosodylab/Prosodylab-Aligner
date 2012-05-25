@@ -39,7 +39,7 @@ See included "LICENSE"
 
 ## Installing
 
-The scripts included here assume that HTK and SoX are installed on your system. While these can also be made to work on Windows computers, it is non-trivial and not described here.
+The scripts require a version of Python 2 no earlier than 2.5, a BASH-compatible shell in /bin/sh, and curl. All these will be installed on recent Macintosh computers as well as most computers running Linux. The scripts included here assume that HTK and SoX are installed on your system. While these scripts can also be made to work on Windows computers, it is non-trivial and not described here.
 
 ### Installing SoX
 
