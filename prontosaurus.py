@@ -28,8 +28,6 @@ from sys import stderr
 from collections import defaultdict
 
 ## container for affixes
-
-
 class Affix(object):
     """
     Container for functions associated with individual affixes:
@@ -239,7 +237,7 @@ class BaseProjPronDict(PronDict):
             if self.project(key):
                 return True
             else:
-                raise(KeyError(key))
+                return False
 
     def __getitem__(self, key):
         if key in self.ood:

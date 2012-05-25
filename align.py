@@ -240,7 +240,7 @@ class Aligner(object):
         found_words = set()
         with open(self.word_mlf, 'w') as word_mlf:
             ood = defaultdict(list)
-            word_mlf.write('#!MLF!#\n')
+            print >> word_mlf, '#!MLF!#'
             for lab in lab_list:
                 lab_name = os.path.split(lab)[1]
                 # new lab file at the phone level, in self.aud_dir
@@ -248,22 +248,21 @@ class Aligner(object):
                 # new lab file at the word level, in self.lab_dir
                 word_lab = open(os.path.join(self.lab_dir, lab_name), 'w')
                 # .mlf headers
-                word_mlf.write('"{0}"\n'.format(word_lab.name))
+                print >> word_mlf, '"{0}"'.format(word_lab.name)
                 # sil
-                phon_lab.write('{0}\n'.format(sil))
+                print >> phon_lab, sil
                 # look up words
-                for word in open(lab, 'r'):
-                    word = word.rstrip()
+                for word in open(lab, 'r').readline().rstrip().split():
                     if word in self.the_dict:
                         found_words.add(word)
                         for phon in self.the_dict[word]:
-                            phon_lab.write('{0}\n'.format(phon))
+                            print >> phon_lab, phon
                         word_lab.write('{0} '.format(word))
-                        word_mlf.write('{0}\n'.format(word))
+                        print >> word_mlf, word
                     else:
                         ood[word].append(lab)
-                phon_lab.write('{0}\n'.format(sil))
-                word_mlf.write('.\n')
+                print >> phon_lab, sil
+                print >> word_mlf, '.'
                 phon_lab.close()
                 word_lab.close()
         ## now complain if any found
@@ -273,7 +272,7 @@ class Aligner(object):
                     for (word, flist) in ood.iteritems():
                         print >> sink, '{0}\t{1}'.format(word, ' '.join(flist))
                 else:
-                    for word in self.the_dict.ood:
+                    for word in ood:
                         print >> sink, word
             error('Out of dictionary word(s), see {0}', outofdict)
         ## make word
