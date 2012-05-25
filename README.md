@@ -133,7 +133,7 @@ Other dictionaries can be found online, or written in the CMU format for specifi
 
 ### Aligning one pair
 
-Imagine you simply want to align multiple audio files with their associated label files, in the following format:
+Imagine you simply want to align multiple audio files with their associated label files, in the following format(uppercase, without punctuation):
 
     file data/myexp_1_1_1.*
     data/myexp_1_1_1.lab: ASCII text
