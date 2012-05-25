@@ -784,7 +784,7 @@ class MLF(object):
                         if line[2] == 'sp' and pmin != pmax:
                             if wmrk:
                                 word.add(wsrt, wend, wmrk)
-                            wmrk = 'sil'
+                            wmrk = line[2]
                             wsrt = pmin
                             wend = pmax
                         elif pmin != pmax:
