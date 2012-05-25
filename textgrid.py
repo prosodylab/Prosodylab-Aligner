@@ -22,26 +22,14 @@
 # 
 # textgrid.py
 # Classes for Praat TextGrid data structures, and HTK .mlf files
+# Handles UTF-8
 # 
 # Max Bane <bane@uchicago.edu>
 # Kyle Gorman <kgorman@ling.upenn.edu>
 # Morgan Sonderegger <morgan@cs.uchicago.edu>
 
-# TODO: UTF-8 and UTF-16 reading
-# TODO: UTF-8 and UTF-16 writing
+# TODO: UTF-8 writing
 
-"""
-This module is designed for manipulation of Praat TextGrid, PointTier, and
-IntervalTier files in Python. A class interface is also provided for the .mlf
-files created by HTK (with HVite -o SM), and can be easily used to generate 
-TextGrid files:
-
-#>>> from textgrid import MLF
-#>>> MLF('your_mlf_file.mlf').write('your_output_dir')
-
-This reads the MLF file in 'your_mlf_file.mlf', and writes TextGrids into
-the directory 'your_output_dir/'. 
-"""
 
 import re
 import codecs
@@ -54,13 +42,9 @@ from bisect import bisect_left
 def readFile(f):
     """
     This helper method returns an appropriate file handle given a path f.
-    If f points to a UTF-16 file, this is done with codecs.open, otherwise it 
-    is treated as ASCII.
+    This handles UTF-8, which is itself an ASCII extension, so also ASCII.
     """
-    if open(f, 'r').read(2) in ('\xFE\xFF', '\xFF\xFE'):
-        return codecs.open(f, 'r', encoding='UTF16')
-    else:
-        return open(f, 'r')
+    return codecs.open(f, 'r', encoding='UTF8')
 
 
 class Point(object):
@@ -787,7 +771,7 @@ class MLF(object):
                         pmin = round(float(line[0]) / samplerate, 5)
                         pmax = round(float(line[1]) / samplerate, 5)
                         if pmin == pmax:
-                            raise ValueError(0.) # null duration interval
+                            raise ValueError('null duration interval')
                         phon.add(pmin, pmax, line[2])
                         if wmrk:
                             word.add(wsrt, wend, wmrk)
@@ -797,7 +781,13 @@ class MLF(object):
                     elif len(line) == 3: # just phone
                         pmin = round(float(line[0]) / samplerate, 5)
                         pmax = round(float(line[1]) / samplerate, 5)
-                        if pmin != pmax:
+                        if line[2] == 'sp' and pmin != pmax:
+                            if wmrk:
+                                word.add(wsrt, wend, wmrk)
+                            wmrk = 'sil'
+                            wsrt = pmin
+                            wend = pmax
+                        elif pmin != pmax:
                             phon.add(pmin, pmax, line[2])
                         wend = pmax
                     else: # it's a period
