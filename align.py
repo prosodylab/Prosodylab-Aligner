@@ -49,7 +49,7 @@ from getopt import getopt, GetoptError
 from subprocess import call, Popen, PIPE
 
 # should be in the current directory
-from textgrid import MLF   
+from textgrid import MLF
 # http://github.com/kylebgorman/textgrid.py/
 from prontosaurus import PronDict, BaseProjPronDict, RegularAffixes
 # http://github.com/kylebgorman/prontosaurus/
@@ -259,8 +259,7 @@ class Aligner(object):
                 for word in open(lab, 'r').readline().rstrip().split():
                     if word in self.the_dict:
                         found_words.add(word)
-                        for phon in self.the_dict[word]:
-                            print >> phon_lab, phon
+                        print >> phon_lab, '\n'.join(self.the_dict[word][0])
                         word_lab.write('{0} '.format(word))
                         print >> word_mlf, word
                     else:
@@ -449,7 +448,7 @@ class TrainAligner(Aligner):
  0.0 0.0 0.6 0.4 0.0
  0.0 0.0 0.0 0.7 0.3
  0.0 0.0 0.0 0.0 0.0
-<ENDHMM>""")
+<ENDHMM>\n""")
         sink.close()
         ## make vFloors
         call(['HCompV', '-f', str(f), '-C', self.cfg, '-S', self.train_scp,
