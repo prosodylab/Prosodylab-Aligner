@@ -1,31 +1,31 @@
 #!/usr/bin/env python
 # 
-# Copyright (c) 2011 Kyle Gorman, Max Bane, Morgan Sonderegger
+# Copyright (c) 2011-2013 Kyle Gorman, Max Bane, Morgan Sonderegger
 # 
-# Permission is hereby granted, free of charge, to any person obtaining a copy
-# of this software and associated documentation files (the "Software"), to deal
-# in the Software without restriction, including without limitation the rights
-# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-# copies of the Software, and to permit persons to whom the Software is
-# furnished to do so, subject to the following conditions:
-#
-# The above copyright notice and this permission notice shall be included in
-# all copies or substantial portions of the Software.
-#
-# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
-# THE SOFTWARE.
+# Permission is hereby granted, free of charge, to any person obtaining a
+# copy of this software and associated documentation files (the
+# "Software"), to deal in the Software without restriction, including
+# without limitation the rights to use, copy, modify, merge, publish,
+# distribute, sublicense, and/or sell copies of the Software, and to
+# permit persons to whom the Software is furnished to do so, subject to
+# the following conditions:
 # 
+# The above copyright notice and this permission notice shall be included
+# in all copies or substantial portions of the Software.
+# 
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+# OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+# MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
+# IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY
+# CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
+# TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
+# SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+#
 # textgrid.py
 # Classes for Praat TextGrid data structures, and HTK .mlf files
-# Handles UTF-8
 # 
 # Max Bane <bane@uchicago.edu>
-# Kyle Gorman <kgorman@ling.upenn.edu>
+# Kyle Gorman <gormanky@ohsu.edu>
 # Morgan Sonderegger <morgan@cs.uchicago.edu>
 
 # TODO: UTF-8 writing
@@ -49,8 +49,8 @@ def readFile(f):
 
 class Point(object):
     """ 
-    Represents a point in time with an associated textual mark, as stored in a
-    PointTier.
+    Represents a point in time with an associated textual mark, as stored 
+    in a PointTier.
 
     # Point/Point comparison
     >>> foo = Point(3.0, 'foo')
@@ -85,13 +85,14 @@ class Point(object):
         self.mark = mark
 
     def __repr__(self):
-        return 'Point(%r, %r)' % (self.time, self.mark)
+        return 'Point({}, {})'.format(self.time, 
+                                      self.mark if self.mark else None)
 
     def __cmp__(self, other):
         """
-        In addition to the obvious semantics, Point/Interval comparison is 0 
-        iff the point is inside the interval (non-inclusively), if you need
-        inclusive membership, use Interval.__contains__
+        In addition to the obvious semantics, Point/Interval comparison is
+        0 iff the point is inside the interval (non-inclusively), if you 
+        need inclusive membership, use Interval.__contains__
         """
         if hasattr(other, 'time'):
             return cmp(self.time, other.time)
@@ -110,8 +111,8 @@ class Point(object):
 
 class Interval(object):
     """ 
-    Represents an interval of time, with an associated textual mark, as stored
-    in an IntervalTier.
+    Represents an interval of time, with an associated textual mark, as 
+    stored in an IntervalTier.
 
     >>> foo = Point(3.0, 'foo')
     >>> bar = Point(4.0, 'bar')
@@ -134,7 +135,8 @@ class Interval(object):
         self.mark = mark
 
     def __repr__(self):
-        return 'Interval(%r, %r, %r)' % (self.minTime, self.maxTime, self.mark)
+        return 'Interval({}, {}, {})'.format(self.minTime, self.maxTime, 
+                                      self.mark if self.mark else None)
 
     def duration(self):
         """ 
@@ -157,8 +159,8 @@ class Interval(object):
 
     def __eq__(self, other):
         """
-        This might seem superfluous but not that a ValueError will be raised
-        if you compare two intervals to each other...not anymore though
+        This might seem superfluous but not that a ValueError will be 
+        raised if you compare two intervals to each other...not anymore
         """
         if hasattr(other, 'minTime') and hasattr(other, 'maxTime'):
             if self.minTime == other.minTime:
@@ -180,9 +182,10 @@ class Interval(object):
     def overlaps(self, other):
         """
         Tests whether self overlaps with the given interval. Symmetric.
-        How elegant: http://www.rgrjr.com/emacs/overlap.html
+        See: http://www.rgrjr.com/emacs/overlap.html
         """
-        return other.minTime < self.maxTime and self.minTime < other.maxTime
+        return other.minTime < self.maxTime and \
+               self.minTime < other.maxTime 
 
     def __contains__(self, other):
         """
@@ -211,11 +214,11 @@ class PointTier(object):
     >>> foo.add(4.0, 'bar')
     >>> foo.add(2.0, 'baz')
     >>> foo
-    PointTier('foo', [Point(2.0, 'baz'), Point(4.0, 'bar')])
+    PointTier(foo, [Point(2.0, baz), Point(4.0, bar)])
     >>> foo.remove(4.0, 'bar')
     >>> foo.add(6.0, 'bar')
     >>> foo
-    PointTier('foo', [Point(2.0, 'baz'), Point(6.0, 'bar')])
+    PointTier(foo, [Point(2.0, baz), Point(6.0, bar)])
     """ 
 
     def __init__(self, name=None, minTime=0., maxTime=None):
@@ -225,10 +228,10 @@ class PointTier(object):
         self.points = []
 
     def __str__(self):
-        return '<PointTier %r with %d points>' % (self.name, len(self))
+        return '<PointTier {} with {} points>'.format(self.name, len(self))
 
     def __repr__(self):
-        return 'PointTier(%r, %r)' % (self.name, self.points)
+        return 'PointTier({}, {})'.format(self.name, self.points)
 
     def __iter__(self):
         return iter(self.points)
@@ -272,10 +275,9 @@ class PointTier(object):
 
     def read(self, f):
         """
-        Read the Points contained in the Praat-formated PointTier/TextTier file
-        indicated by string f
+        Read the Points contained in the Praat-formated PointTier/TextTier 
+        file indicated by string f
         """
-        # read BOM, if it's there
         source = readFile(f)
         source.readline() # header junk 
         source.readline()
@@ -290,19 +292,21 @@ class PointTier(object):
 
     def write(self, f):
         """
-        Write the current state into a Praat-format PointTier/TextTier file. f
-        may be a file object to write to, or a string naming a path for writing
+        Write the current state into a Praat-format PointTier/TextTier 
+        file. f may be a file object to write to, or a string naming a 
+        path for writing
         """
         sink = f if hasattr(f, 'write') else open(f, 'w')
-        sink.write('File type = "ooTextFile"\n')
-        sink.write('Object class = "TextTier"\n\n')
-        sink.write('xmin = %f\n' % min(self))
-        sink.write('xmax = %f\n' % max(self))
-        sink.write('points: size = %d\n' % len(self))
-        for (i, point) in enumerate(self.points):
-            sink.write('points [%d]:\n' % i + 1)
-            sink.write('\ttime = %f\n' % point.time)
-            sink.write('\mark = "%s"\n' % point.mark)
+        print >> sink, 'File type = "ooTextFile"'
+        print >> sink, 'Object class = "TextTier"'
+        print >> sink
+        print >> sink, 'xmin = {}'.format(min(self))
+        print >> sink, 'xmax = {}'.format(max(self))
+        print >> sink, 'points: size = {}'.format(len(self))
+        for (i, point) in enumerate(self.points, 1):
+            print >> sink, 'points [{}]:'.format(i)
+            print >> sink, '\ttime = {}'.format(point.time)
+            print >> sink, '\tmark = {}'.format(point.mark)
         sink.close()
 
     def bounds(self):
@@ -330,19 +334,19 @@ class IntervalTier(object):
     >>> foo.add(0.0, 2.0, 'bar')
     >>> foo.add(2.0, 2.5, 'baz')
     >>> foo
-    IntervalTier('foo', [Interval(0.0, 2.0, 'bar'), Interval(2.0, 2.5, 'baz')])
+    IntervalTier(foo, [Interval(0.0, 2.0, bar), Interval(2.0, 2.5, baz)])
     >>> foo.remove(0.0, 2.0, 'bar')
     >>> foo
-    IntervalTier('foo', [Interval(2.0, 2.5, 'baz')])
+    IntervalTier(foo, [Interval(2.0, 2.5, baz)])
     >>> foo.add(0.0, 1.0, 'bar')
     >>> foo
-    IntervalTier('foo', [Interval(0.0, 1.0, 'bar'), Interval(2.0, 2.5, 'baz')])
+    IntervalTier(foo, [Interval(0.0, 1.0, bar), Interval(2.0, 2.5, baz)])
     >>> foo.add(1.0, 3.0, 'baz')
     Traceback (most recent call last):
         ...
-    ValueError: (Interval(2.0, 2.5, 'baz'), Interval(1.0, 3.0, 'baz'))
+    ValueError: (Interval(2.0, 2.5, baz), Interval(1.0, 3.0, baz))
     >>> foo.intervalContaining(2.25)
-    Interval(2.0, 2.5, 'baz')
+    Interval(2.0, 2.5, baz)
     >>> foo = IntervalTier('foo', maxTime=3.5)
     >>> foo.add(2.7, 3.7, 'bar')
     Traceback (most recent call last):
@@ -352,11 +356,11 @@ class IntervalTier(object):
     >>> foo.add(2.7, 3.3, 'baz')
     >>> temp = foo._fillInTheGaps('') # not for users, but a good quick test
     >>> temp[0]
-    Interval(0.0, 1.3, '')
+    Interval(0.0, 1.3, None)
     >>> temp[-1]
-    Interval(3.3, 3.5, '')
+    Interval(3.3, 3.5, None)
     >>> temp[2]
-    Interval(2.4, 2.7, '')
+    Interval(2.4, 2.7, None)
     """
 
     def __init__(self, name=None, minTime=0., maxTime=None):
@@ -366,10 +370,11 @@ class IntervalTier(object):
         self.intervals = []
 
     def __str__(self):
-        return '<IntervalTier %r with %d intervals>' % (self.name, len(self))
+        return '<IntervalTier {} with {} intervals>'.format(self.name, 
+                                                            len(self))
 
     def __repr__(self):
-        return 'IntervalTier(%r, %r)' % (self.name, self.intervals)
+        return 'IntervalTier({}, {})'.format(self.name, self.intervals)
 
     def __iter__(self):
         return iter(self.intervals)
@@ -408,20 +413,21 @@ class IntervalTier(object):
 
     def indexContaining(self, time):
         """
-        Returns the index of the interval containing the given time point, or 
-        None if the time point is outside the bounds of this tier. The argument
-        can be a numeric type, or a Point object.
+        Returns the index of the interval containing the given time point, 
+        or None if the time point is outside the bounds of this tier. The 
+        argument can be a numeric type, or a Point object.
         """
         i = bisect_left(self.intervals, time) 
         if i != len(self.intervals):
-            if self.intervals[i].minTime <= time <= self.intervals[i].maxTime:
+            if self.intervals[i].minTime <= time <= \
+                                            self.intervals[i].maxTime:
                 return i
 
     def intervalContaining(self, time):
         """
-        Returns the interval containing the given time point, or None if the
-        time point is outside the bounds of this tier. The argument can be a
-        numeric type, or a Point object.
+        Returns the interval containing the given time point, or None if 
+        the time point is outside the bounds of this tier. The argument 
+        can be a numeric type, or a Point object.
         """
         i = self.indexContaining(time)
         if i: 
@@ -429,8 +435,8 @@ class IntervalTier(object):
 
     def read(self, f):
         """
-        Read the Intervals contained in the Praat-formated IntervalTier file
-        indicated by string f
+        Read the Intervals contained in the Praat-formated IntervalTier 
+        file indicated by string f
         """
         source = readFile(f)
         source.readline() # header junk 
@@ -440,9 +446,9 @@ class IntervalTier(object):
         self.maxTime = float(source.readline().split()[2])
         for i in xrange(int(source.readline().rstrip().split()[3])):
             source.readline().rstrip() # header
-            imin = float(source.readline().rstrip().split()[2]) 
+            imin = float(source.readline().rstrip().split()[2])
             imax = float(source.readline().rstrip().split()[2])
-            imrk = source.readline().rstrip().split()[2].replace('"', '') # txt
+            imrk = source.readline().rstrip().split()[2].replace('"', '')
             self.intervals.append(Interval(imin, imax, imrk))
         source.close()
 
@@ -464,24 +470,25 @@ class IntervalTier(object):
 
     def write(self, f, null=''):
         """
-        Write the current state into a Praat-format IntervalTier file. f may be
-        a file object to write to, or a string naming a path for writing
+        Write the current state into a Praat-format IntervalTier file. f 
+        may be a file object to write to, or a string naming a path for 
+        writing
         """
         sink = f if hasattr(f, 'write') else open(f, 'w')
-        sink.write('File type = "ooTextFile"\n')
-        sink.write('Object class = "IntervalTier"\n\n')
-        sink.write('xmin = %f\n' % self.minTime)
-        sink.write('xmax = %f\n' % (self.maxTime if self.maxTime else 
-                                    self.intervals[-1].maxTime))
+        print >> sink, 'File type = "ooTextFile"'
+        print >> sink, 'Object class = "IntervalTier"\n'
+        print >> sink, 'xmin = {}'.format(self.minTime)
+        print >> sink, 'xmax = {}'.format(self.maxTime if self.maxTime \
+                                   else self.intervals[-1].maxTime)
         # compute the number of intervals and make the empty ones
         output = self._fillInTheGaps(null)
         # write it all out
-        sink.write('intervals: size = %d\n' % len(output))
+        print >> sink, 'intervals: size = {}'.format(len(output))
         for (i, interval) in enumerate(output, 1):
-            sink.write('intervals [%d]:\n' % i)
-            sink.write('\txmin = %f\n' % interval.minTime)
-            sink.write('\txmax = %f\n' % interval.maxTime)
-            sink.write('\ttext = "%s"\n' % interval.mark)
+            print >> sink, 'intervals [{}]'.format(i)
+            print >> sink, '\txmin = {}'.format(interval.minTime)
+            print >> sink, '\txmax = {}'.format(interval.maxTime)
+            print >> sink, '\ttext = "{}"'.format(interval.mark)
         sink.close()
 
     def bounds(self):
@@ -503,12 +510,12 @@ class IntervalTierFromFile(IntervalTier):
 
 class TextGrid(object):
     """ 
-    Represents Praat TextGrids as list of sequence types of tiers (e.g., for
-    tier in textgrid), and as map from names to tiers (e.g.,
-    textgrid['tierName']). Whereas the *Tier classes that make up a TextGrid
-    impose a strict ordering on Points/Intervals, a TextGrid instance is 
-    given order by the user. Like a true Python list, there are append/extend
-    methods for a TextGrid.
+    Represents Praat TextGrids as list of sequence types of tiers (e.g., 
+    for tier in textgrid), and as map from names to tiers (e.g.,
+    textgrid['tierName']). Whereas the *Tier classes that make up a 
+    TextGrid impose a strict ordering on Points/Intervals, a TextGrid 
+    instance is given order by the user. Like a true Python list, there 
+    are append/extend methods for a TextGrid.
 
     >>> foo = TextGrid('foo')
     >>> bar = PointTier('bar')
@@ -523,19 +530,19 @@ class TextGrid(object):
     0.0
     >>> foo.maxTime # nothing
     >>> foo.getFirst('bar')
-    PointTier('bar', [Point(1.0, 'spam'), Point(2.75, 'eggs')])
+    PointTier(bar, [Point(1.0, spam), Point(2.75, eggs)])
     >>> foo.getList('bar')[1]
-    PointTier('bar', [Point(1.0, 'spam'), Point(2.75, 'eggs')])
+    PointTier(bar, [Point(1.0, spam), Point(2.75, eggs)])
     >>> foo.getNames()
     ['bar', 'baz', 'bar']
     """
 
     def __init__(self, name=None, minTime=0., maxTime=None):
         """
-        Construct a TextGrid instance with the given (optional) name (which is
-        only relevant for MLF stuff). If file is given, it is a string naming
-        the location of a Praat-format TextGrid file from which to populate 
-        this instance.
+        Construct a TextGrid instance with the given (optional) name 
+        (which is only relevant for MLF stuff). If file is given, it is a 
+        string naming the location of a Praat-format TextGrid file from 
+        which to populate this instance.
         """
         self.name = name
         self.minTime = minTime
@@ -543,10 +550,10 @@ class TextGrid(object):
         self.tiers = []
 
     def __str__(self):
-        return '<TextGrid %r with %d Tiers>' % (self.name, len(self))
+        return '<TextGrid {} with {} Tiers>'.format(self.name, len(self))
 
     def __repr__(self):
-        return 'TextGrid(%r, %r)' % (self.name, self.tiers)
+        return 'TextGrid({}, {})'.format(self.name, self.tiers)
 
     def __iter__(self):
         return iter(self.tiers)
@@ -580,7 +587,8 @@ class TextGrid(object):
 
     def getNames(self):
         """
-        return a list of the names of the intervals contained in this TextGrid
+        return a list of the names of the intervals contained in this 
+        TextGrid
         """
         return [tier.name for tier in self.tiers]
 
@@ -604,20 +612,20 @@ class TextGrid(object):
 
     def pop(self, i=None):
         """
-        Remove and return tier at index i (default last). Will raise IndexError
-        if TextGrid is empty or index is out of range.
+        Remove and return tier at index i (default last). Will raise 
+        IndexError if TextGrid is empty or index is out of range.
         """
         return (self.tiers.pop(i) if i else self.tiers.pop())
 
     @staticmethod
     def _getMark(text):
-        a = re.search('(\S+) (=) (".*")', text.readline().rstrip()).groups()
+        a = re.search('(\S+) (=) (".*")', text.readline()).groups()
         return a[2][1:-1]
 
     def read(self, f):
         """
-        Read the tiers contained in the Praat-formated TextGrid file indicated 
-        by string f
+        Read the tiers contained in the Praat-formated TextGrid file 
+        indicated by string f
         """
         source = readFile(f)
         source.readline() # header junk
@@ -626,7 +634,7 @@ class TextGrid(object):
         self.minTime = round(float(source.readline().split()[2]), 5)
         self.maxTime = round(float(source.readline().split()[2]), 5)
         source.readline() # more header junk
-        m = int(source.readline().rstrip().split()[2]) # will be self.n soon
+        m = int(source.readline().rstrip().split()[2]) # will be self.n
         source.readline()
         for i in xrange(m): # loop over grids
             source.readline()
@@ -662,47 +670,48 @@ class TextGrid(object):
 
     def write(self, f, null=''):
         """
-        Write the current state into a Praat-format TextGrid file. f may be a
-        file object to write to, or a string naming a path to open for writing.
+        Write the current state into a Praat-format TextGrid file. f may 
+        be a file object to write to, or a string naming a path to open 
+        for writing.
         """
         sink = f if hasattr(f, 'write') else open(f, 'w')
-        sink.write('File type = "ooTextFile"\n')
-        sink.write('Object class = "TextGrid"\n\n')
-        sink.write('xmin = %f\n' % self.minTime)
+        print >> sink, 'File type = "ooTextFile"'
+        print >> sink, 'Object class = "TextGrid"\n'
+        print >> sink, 'xmin = {}'.format(self.minTime)
         # compute max time
         maxT = self.maxTime
         if not maxT:
             maxT = max([t.maxTime if t.maxTime else t[-1].maxTime \
                                                for t in self.tiers])
-        sink.write('xmax = %f\n' % maxT)
-        sink.write('tiers? <exists>\n')
-        sink.write('size = %d\n' % len(self))
-        sink.write('item []:\n')
+        print >> sink, 'xmax = {}'.format(maxT)
+        print >> sink, 'tiers? <exists>'
+        print >> sink, 'size = {}'.format(len(self))
+        print >> sink, 'item []:'
         for (i, tier) in enumerate(self.tiers, 1):
-            sink.write('\titem [%d]:\n' % i)
+            print >> sink, '\titem [{}]:'.format(i)
             if tier.__class__ == IntervalTier: 
-                sink.write('\t\tclass = "IntervalTier"\n')
-                sink.write('\t\tname = "%s"\n' % tier.name)
-                sink.write('\t\txmin = %f\n' % tier.minTime)
-                sink.write('\t\txmax = %f\n' % maxT)
+                print >> sink, '\t\tclass = "IntervalTier"'
+                print >> sink, '\t\tname = "{}"'.format(tier.name)
+                print >> sink, '\t\txmin = {}'.format(tier.minTime)
+                print >> sink, '\t\txmax = {}'.format(maxT)
                 # compute the number of intervals and make the empty ones
                 output = tier._fillInTheGaps(null)
-                sink.write('\t\tintervals: size = %d\n' % len(output))
+                print >> sink, '\t\tintervals: size = {}'.format(len(output))
                 for (j, interval) in enumerate(output, 1):
-                    sink.write('\t\t\tintervals [%d]:\n' % j)
-                    sink.write('\t\t\t\txmin = %f\n' % interval.minTime)
-                    sink.write('\t\t\t\txmax = %f\n' % interval.maxTime)
-                    sink.write('\t\t\t\ttext = "%s"\n' % interval.mark)
+                    print >> sink, '\t\t\tintervals [{}]:'.format(j)
+                    print >> sink, '\t\t\t\txmin = {}'.format(interval.minTime)
+                    print >> sink, '\t\t\t\txmax = {}'.format(interval.maxTime)
+                    print >> sink, '\t\t\t\ttext = "{}"'.format(interval.mark)
             elif tier.__class__ == PointTier: # PointTier
-                sink.write('\t\tclass = "TextTier"\n')
-                sink.write('\t\tname = "%s"\n' % tier.name)
-                sink.write('\t\txmin = %f\n' % min(tier))
-                sink.write('\t\txmax = %f\n' % max(tier))
-                sink.write('\t\tpoints: size = %d\n' % len(tier))
+                print >> sink, '\t\tclass = "TextTier"'
+                print >> sink, '\t\tname = "{}"'.format(tier.name)
+                print >> sink, '\t\txmin = {}'.format(min(tier))
+                print >> sink, '\t\txmax = {}'.format(max(tier))
+                print >> sink, '\t\tpoints: size = {}'.format(len(tier))
                 for (k, point) in enumerate(tier, 1):
-                    sink.write('\t\t\tpoints [%d]:\n' % k)
-                    sink.write('\t\t\t\ttime = %f\n' % point.time)
-                    sink.write('\t\t\t\tmark = "%s"\n' % point.mark)
+                    print >> sink, '\t\t\tpoints [{}]:'.format(k)
+                    print >> sink, '\t\t\t\ttime = {}'.format(point.time)
+                    print >> sink, '\t\t\t\tmark = "{}"'.format(point.mark)
         sink.close()
 
 
@@ -721,10 +730,10 @@ class TextGridFromFile(TextGrid):
 
 class MLF(object):
     """
-    Read in a HTK .mlf file generated with HVite -o SM and turn it into a list 
-    of TextGrids. The resulting class can be iterated over to give one TextGrid
-    at a time, or the write(prefix='') class method can be used to write all 
-    the resulting TextGrids into separate files. 
+    Read in a HTK .mlf file generated with HVite -o SM and turn it into a 
+    list of TextGrids. The resulting class can be iterated over to give 
+    one TextGrid at a time, or the write(prefix='') class method can be 
+    used to write all the resulting TextGrids into separate files.
 
     Unlike other classes, this is always initialized from a text file.
     """
@@ -737,10 +746,10 @@ class MLF(object):
         return iter(self.grids)
 
     def __str__(self):
-        return '<MLF with %d TextGrids>' % len(self)
+        return '<MLF with {} TextGrids>'.format(len(self))
 
     def __repr__(self):
-        return "MLF(%r)" % self.grids
+        return 'MLF({})'.format(self.grids)
 
     def __len__(self):
         return len(self.grids)
@@ -755,7 +764,7 @@ class MLF(object):
         source = open(f, 'r') # HTK only generates ASCII
         samplerate = float(samplerate)
         source.readline() # header
-        while 1: # loop over text
+        while True: # loop over text
             name = re.match('\"(.*)\"', source.readline().rstrip())
             if name:
                 name = name.groups()[0]
@@ -802,17 +811,20 @@ class MLF(object):
 
     def write(self, prefix=''):
         """ 
-        Write the current state into Praat-formatted TextGrids. The filenames
-        that the output is stored in are taken from the HTK label files. If 
-        a string argument is given, then the any prefix in the name of the 
-        label file (e.g., "mfc/myLabFile.lab"), it is truncated and files are 
-        written to the directory given by the prefix. An IOError will result
-        if the folder does not exist. 
+        Write the current state into Praat-formatted TextGrids. The 
+        filenames that the output is stored in are taken from the HTK 
+        label files. If a string argument is given, then the any prefix in 
+        the name of the label file (e.g., "mfc/myLabFile.lab"), it is 
+        truncated and files are written to the directory given by the 
+        prefix. An IOError will result if the folder does not exist.
+    
+        The number of TextGrids is returned.
         """
         for grid in self.grids:
             (junk, tail) = os.path.split(grid.name)
             (root, junk) = os.path.splitext(tail)
             grid.write(open(os.path.join(prefix, root + '.TextGrid'), 'w'))
+        return len(self.grids)
 
 
 if __name__ == '__main__':

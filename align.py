@@ -1,31 +1,32 @@
-#!/usr/bin/python -B
+#!/usr/bin/python
 #
-# Copyright (c) 2012 Kyle Gorman and Michael Wagner
+# Copyright (c) 2012-2013 Kyle Gorman and Michael Wagner
 #
-# Permission is hereby granted, free of charge, to any person obtaining a copy
-# of this software and associated documentation files (the "Software"), to deal
-# in the Software without restriction, including without limitation the rights
-# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-# copies of the Software, and to permit persons to whom the Software is
-# furnished to do so, subject to the following conditions:
-#
-# The above copyright notice and this permission notice shall be included in
-# all copies or substantial portions of the Software.
-#
-# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-# SOFTWARE.
+# Permission is hereby granted, free of charge, to any person obtaining a
+# copy of this software and associated documentation files (the
+# "Software"), to deal in the Software without restriction, including
+# without limitation the rights to use, copy, modify, merge, publish,
+# distribute, sublicense, and/or sell copies of the Software, and to
+# permit persons to whom the Software is furnished to do so, subject to
+# the following conditions:
+# 
+# The above copyright notice and this permission notice shall be included
+# in all copies or substantial portions of the Software.
+# 
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+# OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+# MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
+# IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY
+# CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
+# TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
+# SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #
 # align.py: text/speech alignment for speech production experiments
-# Kyle Gorman <kgorman@ling.upenn.edu> and Michael Wagner <chael@mcgill.ca>
+# Kyle Gorman <gormanky@ohsu.edu> and Michael Wagner <chael@mcgill.ca>
 #
-# Requires Python 2.5-2.7; not compatible with earlier versions or Python 3.
+# Requires Python 2.5-2.7
 #
-# See README.md for usage information and a tutorial.
+# See README.md for usage information and a tutorial. 
 #
 # This project was funded by:
 #
@@ -46,27 +47,25 @@ from tempfile import mkdtemp
 from sys import argv, stderr, exit
 from collections import defaultdict
 from getopt import getopt, GetoptError
-from subprocess import call, Popen, PIPE
+from subprocess import check_call, Popen, CalledProcessError, PIPE
 
 # should be in the current directory
 from textgrid import MLF
 # http://github.com/kylebgorman/textgrid.py/
-from prontosaurus import PronDict, BaseProjPronDict, RegularAffixes
-# http://github.com/kylebgorman/prontosaurus/
 
 ### GLOBAL VARS
 # You can change these if you know HTK well
 
-sp = 'sp'
-sil = 'sil'
-temp = 'temp'
-macro = 'macros'
-hmmdf = 'hmmdefs'
-vFloors = 'vFloors'
-unpaired = 'unpaired.txt'
-outofdict = 'outofdict.txt'
+SP = 'sp'
+SIL = 'sil'
+TEMP = 'temp'
+MACROS = 'macros'
+HMMDEFS = 'hmmdefs'
+VFLOORS = 'vFloors'
+UNPAIRED = 'unpaired.txt'
+OUTOFDICT = 'OUTOFDICT.txt'
 
-# string constants for call()
+# string constants for various shell calls
 f = str(.01)
 sfac = str(5.0)
 pruning = [str(i) for i in (250.0, 150.0, 2000.0)]
@@ -79,7 +78,7 @@ scores_txt = '.SCORES.txt'
 HVite_score = re.compile('.+==  \[\d+ frames\] (-\d+\.\d+)')
 # the rest of the string is: '\[Ac=-\d+\.\d+ LM=0.0\] \(Act=\d+\.\d+\)'
 
-# divisors of 1e7, truncated on either end, to help pick out good samplerates
+# divisors of 1e7, truncated on either end, which make good samplerates
 SRs = [4000, 8000, 10000, 12500, 15625, 16000, 20000, 25000, 31250, 40000,
        50000, 62500, 78125, 80000, 100000, 125000, 156250, 200000]
 
@@ -90,7 +89,7 @@ def error(msg, *args):
     """
     Raises an error in msg, using printf-like args, then exits
     """
-    stderr.write("""
+    print >> stderr, """
 align.py: Forced alignment with HTK and SoX
 Kyle Gorman <kgorman@ling.upenn.edu> and Michael Wagner <chael@mcgill.ca>
 
@@ -106,26 +105,58 @@ Option              Function
                     out-of-dictionary words
 -n n                Number of training iterations   [default: 4]
                     for each step of training
--p                  Guess unseen words with base
-                    projection (CMU English only)
 -s samplerate (Hz)  Samplerate for models           [default: 8000]
                     (NB: available only with -t)
 -t training_data/   Perform model training
--u                  Support for UTF-8 and UTF-16
-                    label files
+-u                  Assume UTF8 label files
 
-""")
+"""
     exit('Error: ' + msg.format(*args))
 
 
 def resolve(path):
     """
-    Returns path string with user/tilde and environmental variables converted
+    Converts path by interpreting tilde and environmental variables
     """
     return os.path.expandvars(os.path.expanduser(path))
 
 
 ### CLASSES
+
+class PronDict(object):
+    """
+    A wrapper for a normal pronunciation dictionary in the CMU style
+    """
+    def __init__(self, f, affixes=None):
+        # affix argument is ignored for compatibility with subclass
+        sink = f if hasattr(f, 'read') else open(f, 'r')
+        self.d = defaultdict(list)
+        for line in sink:
+            if line.startswith(';'): # comment
+                continue
+            (word, pron) = line.rstrip().split(None, 1)
+            pron = pron.split()
+            self.d[word].append(pron)
+        sink.close()
+        self.ood = set()
+
+    def __contains__(self, key):
+        return key in self.d and self.d[key] != []
+
+    def __getitem__(self, key):
+        getlist = self.d[key]
+        if getlist or key:
+            return getlist
+        else:
+            self.ood.add(key)
+            raise(KeyError(key))
+
+    def __str__(self):
+        return 'PronDict({0})'.format(self.d)
+
+    def __setitem__(self, key, value):
+        self.d[key].append(value)
+
 
 class Aligner(object):
     """
@@ -133,7 +164,7 @@ class Aligner(object):
     models shipped with this package and stored in the directory MOD/.
     """
 
-    def __init__(self, ts_dir, tr_dir, dictionary, sr, ood_mode, use_baseproj):
+    def __init__(self, ts_dir, tr_dir, dictionary, sr, ood_mode):
         ## class variables
         self.sr = sr
         self.has_sox = self._has_sox()
@@ -148,12 +179,9 @@ class Aligner(object):
         self.hmm_dir = os.path.join(self.tmp_dir, 'HMM')  # HMM dir
         os.mkdir(self.hmm_dir)
         ## dictionary reps
-        self.dictionary = dictionary     # string where dict can be found
-        if use_baseproj:
-            self.the_dict = BaseProjPronDict(dictionary, RegularAffixes)
-        else:
-            self.the_dict = PronDict(dictionary)
-        self.the_dict[sil] = [sil]
+        self.dictionary = dictionary # string of dict location
+        self.the_dict = PronDict(dictionary)
+        self.the_dict[SIL] = [SIL]
         # lists
         self.words = os.path.join(self.tmp_dir, 'words')
         self.phons = os.path.join(self.tmp_dir, 'phones')
@@ -164,7 +192,7 @@ class Aligner(object):
         # SCP files
         self.copy_scp = os.path.join(self.tmp_dir, 'copy.scp')
         self.test_scp = os.path.join(self.tmp_dir, 'test.scp')
-        self.train_scp = os.path.join(self.tmp_dir, 'train.scp')  # empty often
+        self.train_scp = os.path.join(self.tmp_dir, 'train.scp')
         # CFG
         self.cfg = os.path.join(self.tmp_dir, 'cfg')
         # MLFs
@@ -211,9 +239,9 @@ class Aligner(object):
 
     def _lists(self, path):
         """
-        Checks that the .wav and .lab files are all paired. An error is raised
-        if they are not, and the unpaired data are written to the file pointed
-        to by the string unpaired. Returns the tupel (wav_list, lab_list)
+        Checks that the .wav and .lab files are all paired. An exception is
+        raised if they are not, and the unpaired data are written out. 
+        If no errors result, the tuple (wav_list, lab_list) is returned.
         """
         # glob together the list of source data
         wav_list = glob(os.path.join(os.path.realpath(path), '*.wav'))
@@ -231,10 +259,10 @@ class Aligner(object):
                 if not os.path.exists(lab):
                     unpaired_list.append(lab)
             if unpaired_list:
-                sink = open(unpaired, 'w')
+                sink = open(UNPAIRED, 'w')
                 for path in unpaired_list:
-                    sink.write('{0}\n'.format(path))
-                error('Missing .wav or .lab files; see {0}', unpaired)
+                    print >> sink, path
+                error('Missing .wav or .lab files; see {}', UNPAIRED)
         return (wav_list, lab_list)
 
     def _check_dct(self, lab_list):
@@ -255,68 +283,68 @@ class Aligner(object):
                 # new lab file at the word level, in self.lab_dir
                 word_lab = open(os.path.join(self.lab_dir, lab_name), 'w')
                 # .mlf headers
-                print >> word_mlf, '"{0}"'.format(word_lab.name)
+                print >> word_mlf, '"{}"'.format(word_lab.name)
                 # sil
-                print >> phon_lab, sil
+                print >> phon_lab, SIL
                 # look up words
                 for word in open(lab, 'r').readline().rstrip().split():
                     if word in self.the_dict:
                         found_words.add(word)
-                        print >> phon_lab, '\n'.join(self.the_dict[word][0])
-                        word_lab.write('{0} '.format(word))
+                        print >> phon_lab, '\n'.join(
+                                           self.the_dict[word][0])
+                        print >> word_lab, '{} '.format(word)
                         print >> word_mlf, word
                     else:
                         ood[word].append(lab)
-                print >> phon_lab, sil
+                print >> phon_lab, SIL
                 print >> word_mlf, '.'
                 phon_lab.close()
                 word_lab.close()
         ## now complain if any found
         if ood:
-            with open(outofdict, 'w') as sink:
+            with open(OUTOFDICT, 'w') as sink:
                 if self.ood_mode:
                     for (word, flist) in ood.iteritems():
-                        print >> sink, '{0}\t{1}'.format(word, ' '.join(flist))
+                        print >> sink, '{}\t{}'.format(word, 
+                                                       ' '.join(flist))
                 else:
                     for word in ood:
                         print >> sink, word
-            error('Out of dictionary word(s), see {0}', outofdict)
+            error('Out of dictionary word(s), see {}', OUTOFDICT)
         ## make word
-        open(self.words, 'w').write('\n'.join(found_words))
-        ## run HDMan
-        ded = os.path.join(self.tmp_dir, temp)
-        open(ded, 'w').write("""AS {0}\nMP {1} {1} {0}""".format(sp, sil))
-        call(['HDMan', '-m', '-g', ded, '-w', self.words, '-n', self.phons,
-              self.taskdict, self.dictionary])
+        print >> open(self.words, 'w'), '\n'.join(found_words)
+        ded = os.path.join(self.tmp_dir, TEMP)
+        # make ded
+        print >> open(ded, 'w'), """AS {0}\nMP {1} {1} {0}""".format(SP, 
+                                                                     SIL)
+        check_call(['HDMan', '-m', '-g', ded, '-w', self.words, '-n', 
+                    self.phons, self.taskdict, self.dictionary])
         # add sil
-        print >> open(self.phons, 'a'), '{0}'.format(sil)
+        print >> open(self.phons, 'a'), SIL
         ## add sil and projected words to self.taskdict
+        print >> open(self.taskdict, 'a'), '{} {}'.format(SIL, SIL)
+        """
         with open(self.taskdict, 'a') as sink:
             print >> sink, '{} {}'.format(sil, sil)
             # known entries
             for (key, pronlist) in self.the_dict.d.iteritems():
                 for pron in pronlist:
                     print >> sink, '{} {}'.format(key,
-                                                  ' '.join(pron + ['sp']))
-            # projected entries
-            if hasattr(self.the_dict, 'projected'):
-                for (key, pronlist) in self.the_dict.projected.iteritems():
-                    for pron in pronlist:
-                        print >> sink, '{} {}'.format(key,
-                                       ' '.join(pron + ['sp']))
-        ## run HLEd
-        led = os.path.join(self.tmp_dir, temp)
-        open(led, 'w').write('EX\nIS {0} {0}\nDE {1}\n'.format(sil, sp))
-        call(['HLEd', '-l', self.lab_dir, '-d', self.taskdict, '-i',
-              self.phon_mlf, led, self.word_mlf])
-
-    def _check_aud(self, wav_list, training=False):
+                                                  ' '.join(pron + [sp]))
         """
-        Check audio files, mixing down to mono and the correct sample rate if
-        necessary. copy_scp and the training or testing SCP files are written.
+        ## run HLEd
+        led = os.path.join(self.tmp_dir, TEMP)
+        print >> open(led, 'w'), 'EX\nIS {0} {0}\nDE {1}'.format(SIL, SP)
+        check_call(['HLEd', '-l', self.lab_dir, '-d', self.taskdict,
+                            '-i', self.phon_mlf, led, self.word_mlf])
+
+    def _check_aud(self, wav_list, train=False):
+        """
+        Check audio files, mixing down to mono and downsampling if 
+        necessary. Writes copy_scp and the training or testing SCP files
         """
         copy_scp = open(self.copy_scp, 'a')
-        check_scp = open(self.train_scp if training else self.test_scp, 'w')
+        check_scp = open(self.train_scp if train else self.test_scp, 'w')
         i = 0
         if self.has_sox:
             for wav in wav_list:
@@ -326,25 +354,27 @@ class Aligner(object):
                 pids = []  # pids
                 if (w.getframerate() != self.sr) or (w.getnchannels() > 1):
                     new_wav = os.path.join(self.aud_dir, head + '.wav')
-                    pids.append(
-                        Popen(
-                            ['sox', '-G', wav, '-b', '16', new_wav, 'remix', '-', 'rate', str(self.sr),
-                             'dither', '-s'], stderr=PIPE))
+                    pids.append(Popen(['sox', '-G', wav, '-b', '16',
+                                       new_wav, 'remix', '-',
+                                       'rate', str(self.sr), 
+                                       'dither', '-s'], stderr=PIPE))
                     wav = new_wav
-                for pid in pids:  # "join"
-                    pid.wait()
-                copy_scp.write('{0} {1}\n'.format(wav, mfc))
-                check_scp.write('{0}\n'.format(mfc))
+                for pid in pids:  # do a join
+                    retcode = pid.wait()
+                    if retcode != 0:
+                        raise CalledProcessError(retcode, 'sox')
+                print >> copy_scp, '{} {}'.format(wav, mfc)
+                print >> check_scp, mfc
                 w.close()
         else:
             for wav in wav_list:
                 head = os.path.splitext(wav)[0]
                 mfc = os.path.join(self.aud_dir, head + '.mfc')
                 w = wave.open(wav, 'r')
-                if (w.getframerate() != self.sr) or (w.getnchannels() != 1):
-                    error('File {0} requires resampling but Sox not found', w)
-                copy_scp.write('{0} {1}\n'.format(wav, mfc))
-                check_scp.write('{0}\n'.format(mfc))
+                if (w.getframerate() != self.sr) or (w.getnchannels()!=1):
+                    error('File {} to be resampled but Sox not found ', w)
+                print >> copy_scp, '{} {}'.format(wav, mfc)
+                print >> check_scp, mfc
                 w.close()
         copy_scp.close()
         check_scp.close()
@@ -354,7 +384,7 @@ class Aligner(object):
         Compute MFCCs
         """
         # write a CFG for extracting MFCCs
-        open(self.cfg, 'w').write("""SOURCEKIND = WAVEFORM
+        print >> open(self.cfg, 'w'), """SOURCEKIND = WAVEFORM
 SOURCEFORMAT = WAVE
 TARGETRATE = 100000.0
 TARGETKIND = MFCC_D_A_0
@@ -364,10 +394,10 @@ USEHAMMING = T
 ENORMALIZE = T
 CEPLIFTER = 22
 NUMCHANS = 20
-NUMCEPS = 12""")
-        call(['HCopy', '-C', self.cfg, '-S', self.copy_scp])
+NUMCEPS = 12"""
+        check_call(['HCopy', '-C', self.cfg, '-S', self.copy_scp])
         # write a CFG for what we just built
-        open(self.cfg, 'w').write("""TARGETRATE = 100000.0
+        print >> open(self.cfg, 'w'), """TARGETRATE = 100000.0
 TARGETKIND = MFCC_D_A_0
 WINDOWSIZE = 250000.0
 PREEMCOEF = 0.97
@@ -375,19 +405,19 @@ USEHAMMING = T
 ENORMALIZE = T
 CEPLIFTER = 22
 NUMCHANS = 20
-NUMCEPS = 12""")
+NUMCEPS = 12"""
 
     def align(self, mlf):
         """
         Align using the models in self.cur_dir and MLF to path
         """
-        call(['HVite', '-a', '-m', '-y', 'lab', '-o', 'SM', '-b', sil,
-                       '-i', mlf, '-L', self.lab_dir,
-                       '-C', self.cfg, '-S', self.test_scp,
-                       '-H', os.path.join(self.cur_dir, macro),
-                       '-H', os.path.join(self.cur_dir, hmmdf),
-                       '-I', self.word_mlf, '-t'] + pruning +
-             ['-s', sfac, self.taskdict, self.phons])
+        check_call(['HVite', '-a', '-m', '-y', 'lab', '-o', 'SM', '-b', 
+                    SIL, '-i', mlf, '-L', self.lab_dir,
+                    '-C', self.cfg, '-S', self.test_scp,
+                    '-H', os.path.join(self.cur_dir, MACROS),
+                    '-H', os.path.join(self.cur_dir, HMMDEFS),
+                    '-I', self.word_mlf, '-t'] + pruning +
+                    ['-s', sfac, self.taskdict, self.phons])
 
     def align_and_score(self, mlf, score):
         """
@@ -395,18 +425,24 @@ NUMCEPS = 12""")
         """
         i = 0
         sink = open(score, 'w')
-        for line in Popen(['HVite', '-T', '1', '-a', '-m', '-y', 'lab',
-                           '-o', 'SM', '-b', sil, '-i', mlf, '-L', self.lab_dir,
-                           '-C', self.cfg, '-S', self.test_scp,
-                           '-H', os.path.join(self.cur_dir, macro),
-                           '-H', os.path.join(self.cur_dir, hmmdf),
-                           '-I', self.word_mlf, '-t'] + pruning +
-                          [self.taskdict, self.phons], stdout=PIPE).stdout:
+        proc = Popen(['HVite', '-T', '1', '-a', '-m', '-y', 'lab',
+                      '-o', 'SM', '-b', SIL, '-i', mlf, 
+                      '-L', self.lab_dir,
+                      '-C', self.cfg, '-S', self.test_scp,
+                      '-H', os.path.join(self.cur_dir, MACROS),
+                      '-H', os.path.join(self.cur_dir, HMMDEFS),
+                      '-I', self.word_mlf, '-t'] + pruning +
+                      [self.taskdict, self.phons], stdout=PIPE)
+        for line in proc.stdout:
             mch = HVite_score.match(line)  # check for score line
             if mch:
-                sink.write('{}\t{}\n'.format(self.wav_list[i],
-                                             mch.group(1)))
+                print >> sink, '{}\t{}'.format(self.wav_list[i], 
+                                               mch.group(1))
                 i += 1
+        # make sure no errors in decoding...
+        retcode = proc.wait()
+        if retcode != 0:
+            raise CalledProcessError(retcode, 'HVite')
         sink.close()
 
     def __del__(self):
@@ -441,51 +477,51 @@ class TrainAligner(Aligner):
         # compute the path for the new one
         self.nxt_dir = os.path.join(self.hmm_dir, str(self.n).zfill(3))
         # make the new directory
-        os.mkdir(self.nxt_dir)  # from now on, can just call self._nxt_dir()
+        os.mkdir(self.nxt_dir)  # from now on, just call self._nxt_dir()
         ## make proto
         sink = open(self.proto, 'w')
         means = ' '.join(['0.0' for i in xrange(39)])
         varg = ' '.join(['1.0' for i in xrange(39)])
-        sink.write("""~o <VECSIZE> 39 <MFCC_D_A_0>
+        print >> sink, """~o <VECSIZE> 39 <MFCC_D_A_0>
 ~h "proto"
 <BEGINHMM>
-<NUMSTATES> 5
-""")
+<NUMSTATES> 5"""
         for i in xrange(2, 5):
-            sink.write('<STATE> {0}\n<MEAN> 39\n{1}\n'.format(i, means))
-            sink.write('<VARIANCE> 39\n{0}\n'.format(varg))
-        sink.write("""<TRANSP> 5
+            print >> sink, '<STATE> {}\n<MEAN> 39\n{}'.format(i, means)
+            print >> sink, '<VARIANCE> 39\n{}'.format(varg)
+        print >> sink, """<TRANSP> 5
  0.0 1.0 0.0 0.0 0.0
  0.0 0.6 0.4 0.0 0.0
  0.0 0.0 0.6 0.4 0.0
  0.0 0.0 0.0 0.7 0.3
  0.0 0.0 0.0 0.0 0.0
-<ENDHMM>\n""")
+<ENDHMM>"""
         sink.close()
         ## make vFloors
-        call(['HCompV', '-f', str(f), '-C', self.cfg, '-S', self.train_scp,
-                                      '-M', self.cur_dir, self.proto])
+        check_call(['HCompV', '-f', str(f), '-C', self.cfg, 
+                              '-S', self.train_scp,
+                              '-M', self.cur_dir, self.proto])
         ## make local macro
         # get first three lines from local proto
-        sink = open(os.path.join(self.cur_dir, macro), 'a')
+        sink = open(os.path.join(self.cur_dir, MACROS), 'a')
         source = open(os.path.join(self.cur_dir,
                       os.path.split(self.proto)[1]), 'r')
         for i in xrange(3):
-            sink.write(source.readline())
+            print >> sink, source.readline(),
         source.close()
         # get remaining lines from vFloors
         sink.writelines(open(os.path.join(self.cur_dir,
-                                          vFloors), 'r').readlines())
+                                          VFLOORS), 'r').readlines())
         sink.close()
         ## make hmmdefs
-        sink = open(os.path.join(self.cur_dir, hmmdf), 'w')
+        sink = open(os.path.join(self.cur_dir, HMMDEFS), 'w')
         for phone in open(self.phons, 'r'):
             source = open(self.proto, 'r')
             # ignore
             source.readline()
             source.readline()
             # the header
-            sink.write('~h "{0}"\n'.format(phone.rstrip()))
+            print >> sink, '~h "{}"'.format(phone.rstrip())
             # the rest
             sink.writelines(source.readlines())
             source.close()
@@ -494,7 +530,7 @@ class TrainAligner(Aligner):
     def _check(self, ts_dir, tr_dir):
         """
         Performs checks on .wav and .lab files in the folders indicated by
-        dir1 and dir2, combining them to eliminate any redundant computations.
+        dir1 and dir2, eliminating any redundant computations.
         """
         if ts_dir == tr_dir:  # if training on testing
             (self.wav_list, lab_list) = self._lists(ts_dir)
@@ -532,11 +568,12 @@ class TrainAligner(Aligner):
         Perform one or more rounds of estimation
         """
         for i in xrange(niter):
-            call(['HERest', '-C', self.cfg, '-S', self.train_scp,
-                  '-I', self.phon_mlf, '-M', self.nxt_dir,
-                                       '-H', os.path.join(self.cur_dir, macro),
-                                       '-H', os.path.join(self.cur_dir, hmmdf),
-                                            '-t'] + pruning + [self.phons],
+            check_call(['HERest', '-C', self.cfg, '-S', self.train_scp,
+                        '-I', self.phon_mlf, 
+                        '-M', self.nxt_dir,
+                        '-H', os.path.join(self.cur_dir, MACROS),
+                        '-H', os.path.join(self.cur_dir, HMMDEFS),
+                        '-t'] + pruning + [self.phons],
                  stdout=PIPE)
             self._nxt_dir()
 
@@ -545,25 +582,24 @@ class TrainAligner(Aligner):
         Add in a tied-state small pause model
         """
         ## make a new hmmdf
-        source = open(os.path.join(self.cur_dir, hmmdf), 'r+')
-        saved = ['~h "{0}"\n'.format(sp)]
-                                     # keep track of lines to append later
-        # pass until we find "sil"
+        source = open(os.path.join(self.cur_dir, HMMDEFS), 'r+')
+        saved = ['~h "{0}"\n'.format(SP)] # store lines to append later
+        # pass until we find SIL
         for line in source:
-            if line == '~h "{0}"\n'.format(sil):
+            if line.startswith('~h "{}"'.format(SIL)):
                 break
-        # header for "sil"
+        # header for silence
         saved.append('<BEGINHMM>\n<NUMSTATES> 3\n<STATE> 2\n')
-        # pass until we get to "sil"'s middle state
+        # pass until we get to "SIL"'s middle state
         for line in source:
             if line == '<STATE> 3\n':
                 break
-        # grab "sil"'s middle state
+        # grab "SIL"'s middle state
         for line in source:
             if line == '<STATE> 4\n':
                 break
             saved.append(line)
-        # add in the TRANSP matrix (from VoxForge tutorial, not HTK book...)
+        # add in the TRANSP matrix (from VoxForge tutorial)
         saved.append('<TRANSP> 3\n')
         saved.append(' 0.0 1.0 0.0\n 0.0 0.9 0.1\n 0.0 0.0 0.0\n<ENDHMM>')
         # go to the end of the file
@@ -572,15 +608,15 @@ class TrainAligner(Aligner):
         source.writelines(saved)
         source.close()
         ## tie the states together
-        hed = os.path.join(self.tmp_dir, temp)
-        open(hed, 'w').write("""AT 2 4 0.2 {{{1}.transP}}
+        hed = os.path.join(self.tmp_dir, TEMP)
+        print >> open(hed, 'w'), """AT 2 4 0.2 {{{1}.transP}}
 AT 4 2 0.2 {{{1}.transP}}
 AT 1 3 0.3 {{{0}.transP}}
 TI silst {{{1}.state[3],{0}.state[2]}}
-""".format(sp, sil))
-        call(['HHEd', '-H', os.path.join(self.cur_dir, macro), '-H',
-              os.path.join(self.cur_dir, hmmdf), '-M',
-              self.nxt_dir, hed, self.phons])
+""".format(SP, SIL)
+        check_call(['HHEd', '-H', os.path.join(self.cur_dir, MACROS), 
+                            '-H', os.path.join(self.cur_dir, HMMDEFS), 
+                            '-M', self.nxt_dir, hed, self.phons])
         # FIXME this seems to not be necessary, but I'm not sure why.
         """
         # run HLEd
@@ -598,14 +634,13 @@ if __name__ == '__main__':
     ## parse arguments
     # complain if no test directory specification
     try:
-        (opts, args) = getopt(argv[1:], 'd:n:s:t:aAmhpu')
+        (opts, args) = getopt(argv[1:], 'd:n:s:t:aAmhu')
         # default opts values
         dictionary = 'dictionary.txt'  # -d
         sr = 8000
         tr_dir = None
         ood_mode = False
         n_per_round = 4  # -n
-        use_baseproj = False  # -p
         use_unicode = False  # -u
         speaker_dependent = False  # -T
         require_training = False  # to keep track of if -n, -s used
@@ -625,8 +660,6 @@ if __name__ == '__main__':
                         raise ValueError
                 except ValueError:
                     error('-n value must be > 0')
-            elif opt == '-p':
-                use_baseproj = True
             elif opt == '-s':
                 try:
                     sr = int(val)
@@ -646,11 +679,11 @@ if __name__ == '__main__':
                         sr = SRs[i - 1]
                     else:
                         sr = SRs[i]
-                    stderr.write('Nearest viable SR is {0} Hz\n'.format(sr))
+                    print >> stderr, 'Nearest licit SR is {} Hz'.format(sr)
             elif opt == '-t':
                 tr_dir = resolve(val)
                 if not os.access(tr_dir, os.F_OK):
-                    error('-t path {0} cannot be read', tr_dir)
+                    error('-t path {} cannot be read', tr_dir)
             elif opt == '-h':
                 error('-h requests usage message')
             elif opt == '-a':
@@ -670,33 +703,47 @@ if __name__ == '__main__':
     ## do the model
     path_to_mlf = os.path.join(ts_dir, align_mlf)
     if tr_dir:
-        print 'Initializing...'
-        aligner = TrainAligner(ts_dir, tr_dir, dictionary, sr, ood_mode,
-                               use_baseproj)
-        print 'Training...'
+        print >> stderr, 'Initializing...',
+        aligner = TrainAligner(ts_dir, tr_dir, dictionary, sr, ood_mode)
+        print >> stderr, 'done.'
+        print >> stderr, 'Training...',
         aligner.train(n_per_round)  # start training
-        print 'Modeling silence...'
+        print >> stderr, 'done.'
+        print >> stderr, 'Modeling silence...',
         aligner.small_pause()      # fix small pauses
-        print 'More training...'
+        print >> stderr, 'done.'
+        print >> stderr, 'Additional training...',
         aligner.train(n_per_round)  # more training
-        print 'Realigning...'
-        aligner.align(aligner.phon_mlf)  # get best pronuciation of homonyms
-        print 'More training...'
+        print >> stderr, 'done.'
+        print >> stderr, 'Realigning...',
+        aligner.align(aligner.phon_mlf)  # get best homonyms
+        print >> stderr, 'done.'
+        print >> stderr, 'Final training...',
         aligner.train(n_per_round)  # more training
-        print 'Final aligning...'
-        aligner.align_and_score(path_to_mlf, os.path.join(ts_dir, scores_txt))
-        print 'Making TextGrids...'
-        MLF(path_to_mlf).write(ts_dir)
-        print 'Alignment complete.'
+        print >> stderr, 'done.'
+        print >> stderr, 'Final aligning...',
+        aligner.align_and_score(path_to_mlf, os.path.join(ts_dir, 
+                                                          scores_txt))
+        print >> stderr, 'done.'
+        print >> stderr, 'Making TextGrids...',
+        n = MLF(path_to_mlf).write(ts_dir)
+        if n < 1:
+            error('No paths found! Data may be too noisy.')
+        print >> stderr, '{} TextGrids generated... done.'.format(n)
+        print >> stderr, 'Alignment complete.'
     else:
         if require_training:
             error('-n, -s only available in training (-t) mode')
-        print 'Initializing...'
-        aligner = Aligner(ts_dir, 'MOD', dictionary, sr, ood_mode,
-                          use_baseproj)
-        print 'Aligning...'
+        print >> stderr, 'Initializing...',
+        aligner = Aligner(ts_dir, 'MOD', dictionary, sr, ood_mode)
+        print >> stderr, 'done.'
+        print >> stderr, 'Aligning...',
         aligner.align_and_score(path_to_mlf, os.path.join(ts_dir,
                                                           scores_txt))
-        print 'Making TextGrids...'
-        MLF(path_to_mlf).write(ts_dir)
-        print 'Alignment complete.'
+        print >> stderr, 'done.'
+        print >> stderr, 'Making TextGrids...',
+        n = MLF(path_to_mlf).write(ts_dir)
+        if n < 1:
+            error('No paths found! Do you have enough training data?')
+        print >> stderr, '{} TextGrids generated... done.'.format(n)
+        print >> stderr, 'Alignment complete.'

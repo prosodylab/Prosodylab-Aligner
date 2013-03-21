@@ -1,4 +1,4 @@
-# Prosodylab-Aligner, v. 0.8
+# Prosodylab-Aligner, v. 0.9
 
 Scripts for alignment of laboratory speech production data
 
@@ -9,7 +9,7 @@ Scripts for alignment of laboratory speech production data
 
 * FQRSC Nouvelle Chercheur NP-132516
 * SSHRC Canada Research Chair 218503
-* SSHRC Digging into Data Challenge Grant 869-2009-0004
+* SSHRC Digging Into Data Challenge Grant 869-2009-0004
 
 ## License
 
@@ -17,25 +17,26 @@ See included "LICENSE"
 
 ## Usage
 
-    ./align.py [options] data_to_be_aligned/ 
+    align.py: Forced alignment with HTK and SoX
+    Kyle Gorman <kgorman@ling.upenn.edu> and Michael Wagner <chael@mcgill.ca>
+
+    USAGE: ./align.py [OPTIONS] data_to_be_aligned/
 
     Option              Function
 
     -a                  Perform speaker adaptation,
                         w/ or w/o prior training
-    -d dictionary       specify a dictionary file     [default: dictionary.txt]
-    -h                  display this message
-    -m                  list files containing 
+    -d dictionary       specify a dictionary file       [default: dictionary.txt]
+    -h                  Display this message
+    -m                  List files containing
                         out-of-dictionary words
-    -n n                number of training iterations [default: 4]
-                        for each step of training      
-    -p                  Guess unseen words with base
-                        projection (CMU English only)
-    -s samplerate (Hz)  Samplerate for models         [default: 8000]
+    -n n                Number of training iterations   [default: 4]
+                        for each step of training
+    -s samplerate (Hz)  Samplerate for models           [default: 8000]
                         (NB: available only with -t)
     -t training_data/   Perform model training
-    -u                  Support for UTF-8 and UTF-16 
-                        label files
+    -u                  Assume UTF8 label files
+
 
 ## Installing
 
@@ -194,7 +195,7 @@ On Linux or Mac OS X, the following command should do the trick:
 
 Then, run `align.py` like above.  
 
-#### Out of space error
+#### Out of space errors
 
 The `align.py` script makes prodigious use of "temporary" disk space. On Linux (in particular), it is possible that this space is limited by the OS, and `align.py` will fail with number of cascading errors referring to disc space. A simple way to fix this is to use a temporary directory located somewhere else. If the environmental variable `$TMPDIR` is defined and it points to a writeable directory, `align.py` will use it.
 
@@ -208,7 +209,7 @@ The `align.py` script also allows you to train your own models, where the folder
     $ ./align.py -t test_data/ data/
     ...
 
-This requires a lot of data to work well, and further takes a long time when there is a lot of data. It is also possible to train on your test data, and in fact it is something we do quite often at the lab. That looks like:
+Please note: THIS REQUIRES A LOT OF DATA to work well, and further takes a long time when there is a lot of data. It is also possible to train on your test data, and in fact it is something we do quite often at the lab. That looks like:
 
     $ ./align.py -t data/ data/
     ...
