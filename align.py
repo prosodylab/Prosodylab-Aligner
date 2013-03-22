@@ -63,7 +63,7 @@ MACROS = 'macros'
 HMMDEFS = 'hmmdefs'
 VFLOORS = 'vFloors'
 UNPAIRED = 'unpaired.txt'
-OUTOFDICT = 'OUTOFDICT.txt'
+OUTOFDICT = 'outofdict.txt'
 
 # string constants for various shell calls
 f = str(.01)
@@ -91,7 +91,7 @@ def error(msg, *args):
     """
     print >> stderr, """
 align.py: Forced alignment with HTK and SoX
-Kyle Gorman <kgorman@ling.upenn.edu> and Michael Wagner <chael@mcgill.ca>
+Kyle Gorman <gormanky@ling.upenn.edu> and Michael Wagner <chael@mcgill.ca>
 
 USAGE: ./align.py [OPTIONS] data_to_be_aligned/
 
@@ -304,11 +304,11 @@ class Aligner(object):
         if ood:
             with open(OUTOFDICT, 'w') as sink:
                 if self.ood_mode:
-                    for (word, flist) in ood.iteritems():
+                    for (word, flist) in sorted(ood.iteritems()):
                         print >> sink, '{}\t{}'.format(word, 
                                                        ' '.join(flist))
                 else:
-                    for word in ood:
+                    for word in sorted(ood):
                         print >> sink, word
             error('Out of dictionary word(s), see {}', OUTOFDICT)
         ## make word
@@ -323,15 +323,6 @@ class Aligner(object):
         print >> open(self.phons, 'a'), SIL
         ## add sil and projected words to self.taskdict
         print >> open(self.taskdict, 'a'), '{} {}'.format(SIL, SIL)
-        """
-        with open(self.taskdict, 'a') as sink:
-            print >> sink, '{} {}'.format(sil, sil)
-            # known entries
-            for (key, pronlist) in self.the_dict.d.iteritems():
-                for pron in pronlist:
-                    print >> sink, '{} {}'.format(key,
-                                                  ' '.join(pron + [sp]))
-        """
         ## run HLEd
         led = os.path.join(self.tmp_dir, TEMP)
         print >> open(led, 'w'), 'EX\nIS {0} {0}\nDE {1}'.format(SIL, SP)

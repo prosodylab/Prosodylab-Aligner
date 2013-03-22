@@ -1,29 +1,16 @@
 #!/usr/bin/env python
-# A script for sorting according to HTK principles
-# Kyle Gorman <kgorman@ling.upenn.edu>
-# The UNIX sort utility does not always do the right thing, but this one does.
+# 
+# Kyle Gorman <gormanky@ohsu.edu>
+# 
+# The UNIX sort utility does not always do the right thing in HTK's mind,
+# but this one does, so check it out, y'all.
 
-from sys import argv
-
-
-def error():
-    print """
-    sort.py: a script for sorting dictionaries in the HTK-appropriate format
-
-    USAGE: ./sort.py dictionary1 [... dictionary2]
-
-    """
-    exit(1)
+import fileinput
 
 
 if __name__ == '__main__':
-
-    if len(argv) < 1: error()
     # accumulate
-    lines = []
-    for path in argv[1:]:
-        for line in open(path, 'r'):
-            lines.append(line.rstrip())
+    lines = list(set(l.rstrip() for l in fileinput.input()))
     # sort
     lines.sort()
     # dump out

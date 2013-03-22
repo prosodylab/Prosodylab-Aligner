@@ -1,6 +1,6 @@
 #!/bin/sh
 # Example that does a single alignment
-# Kyle Gorman <kgorman@ling.upenn.edu>
+# Kyle Gorman <gormanky@ohsu.edu>
 
 # check args
 

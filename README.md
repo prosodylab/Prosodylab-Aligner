@@ -2,7 +2,7 @@
 
 Scripts for alignment of laboratory speech production data
 
-* Kyle Gorman <kgorman@ling.upenn.edu> 
+* Kyle Gorman <gormanky@ohsu.edu>
 * Michael Wagner <chael@mcgill.ca>
 
 ## Funding
@@ -18,7 +18,7 @@ See included "LICENSE"
 ## Usage
 
     align.py: Forced alignment with HTK and SoX
-    Kyle Gorman <kgorman@ling.upenn.edu> and Michael Wagner <chael@mcgill.ca>
+    Kyle Gorman <gormanky@ohsu.edu> and Michael Wagner <chael@mcgill.ca>
 
     USAGE: ./align.py [OPTIONS] data_to_be_aligned/
 
