@@ -28,8 +28,6 @@
 # Kyle Gorman <gormanky@ohsu.edu>
 # Morgan Sonderegger <morgan.sonderegger@mcgill.ca>
 
-# TODO: UTF-8 writing for MLF files
-
 
 import re
 import codecs
@@ -44,7 +42,7 @@ def readFile(f):
     This helper method returns an appropriate file handle given a path f.
     This handles UTF-8, which is itself an ASCII extension, so also ASCII.
     """
-    return codecs.open(f, 'r', encoding='UTF8')
+    return codecs.open(f, 'r', encoding='UTF-8')
 
 
 class Point(object):
@@ -108,6 +106,12 @@ class Point(object):
     def __isub__(self, other):
         self.time -= other
 
+
+def decode(string):
+    """
+    Decode HTK's mangling of UTF-8 strings into something useful
+    """
+    return string.decode('string_escape').decode('UTF-8')
 
 class Interval(object):
     """ 
@@ -296,7 +300,7 @@ class PointTier(object):
         file. f may be a file object to write to, or a string naming a 
         path for writing
         """
-        sink = f if hasattr(f, 'write') else open(f, 'w')
+        sink = f if hasattr(f, 'write') else codecs.open(f, 'w', 'UTF-8')
         print >> sink, 'File type = "ooTextFile"'
         print >> sink, 'Object class = "TextTier"'
         print >> sink
@@ -306,7 +310,7 @@ class PointTier(object):
         for (i, point) in enumerate(self.points, 1):
             print >> sink, 'points [{}]:'.format(i)
             print >> sink, '\ttime = {}'.format(point.time)
-            print >> sink, '\tmark = {}'.format(point.mark)
+            print >> sink, u'\tmark = {}'.format(point.mark)
         sink.close()
 
     def bounds(self):
@@ -674,7 +678,7 @@ class TextGrid(object):
         be a file object to write to, or a string naming a path to open 
         for writing.
         """
-        sink = f if hasattr(f, 'write') else open(f, 'w')
+        sink = f if hasattr(f, 'write') else codecs.open(f, 'w', 'UTF-8')
         print >> sink, 'File type = "ooTextFile"'
         print >> sink, 'Object class = "TextGrid"\n'
         print >> sink, 'xmin = {}'.format(self.minTime)
@@ -701,7 +705,7 @@ class TextGrid(object):
                     print >> sink, '\t\t\tintervals [{}]:'.format(j)
                     print >> sink, '\t\t\t\txmin = {}'.format(interval.minTime)
                     print >> sink, '\t\t\t\txmax = {}'.format(interval.maxTime)
-                    print >> sink, '\t\t\t\ttext = "{}"'.format(interval.mark)
+                    print >> sink, u'\t\t\t\ttext = "{}"'.format(interval.mark)
             elif tier.__class__ == PointTier: # PointTier
                 print >> sink, '\t\tclass = "TextTier"'
                 print >> sink, '\t\tname = "{}"'.format(tier.name)
@@ -711,7 +715,7 @@ class TextGrid(object):
                 for (k, point) in enumerate(tier, 1):
                     print >> sink, '\t\t\tpoints [{}]:'.format(k)
                     print >> sink, '\t\t\t\ttime = {}'.format(point.time)
-                    print >> sink, '\t\t\t\tmark = "{}"'.format(point.mark)
+                    print >> sink, u'\t\t\t\tmark = "{}"'.format(point.mark)
         sink.close()
 
 
@@ -761,7 +765,7 @@ class MLF(object):
         return self.grids[i]
 
     def read(self, f, samplerate):
-        source = open(f, 'r') # HTK only generates ASCII
+        source = open(f, 'r') # HTK returns ostensible ASCII
         samplerate = float(samplerate)
         source.readline() # header
         while True: # loop over text
@@ -784,7 +788,7 @@ class MLF(object):
                         phon.add(pmin, pmax, line[2])
                         if wmrk:
                             word.add(wsrt, wend, wmrk)
-                        wmrk = line[3]
+                        wmrk = decode(line[3])
                         wsrt = pmin
                         wend = pmax
                     elif len(line) == 3: # just phone
@@ -793,7 +797,7 @@ class MLF(object):
                         if line[2] == 'sp' and pmin != pmax:
                             if wmrk:
                                 word.add(wsrt, wend, wmrk)
-                            wmrk = line[2]
+                            wmrk = decode(line[2])
                             wsrt = pmin
                             wend = pmax
                         elif pmin != pmax:
@@ -823,7 +827,8 @@ class MLF(object):
         for grid in self.grids:
             (junk, tail) = os.path.split(grid.name)
             (root, junk) = os.path.splitext(tail)
-            grid.write(open(os.path.join(prefix, root + '.TextGrid'), 'w'))
+            my_path = os.path.join(prefix, root + '.TextGrid')
+            grid.write(codecs.open(my_path, 'w', 'UTF-8'))
         return len(self.grids)
 
 

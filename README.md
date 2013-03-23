@@ -1,4 +1,4 @@
-# Prosodylab-Aligner, v. 0.9
+# Prosodylab-Aligner, v. 1.0
 
 Scripts for alignment of laboratory speech production data
 
@@ -35,7 +35,6 @@ See included "LICENSE"
     -s samplerate (Hz)  Samplerate for models           [default: 8000]
                         (NB: available only with -t)
     -t training_data/   Perform model training
-    -u                  Assume UTF8 label files
 
 
 ## Installing

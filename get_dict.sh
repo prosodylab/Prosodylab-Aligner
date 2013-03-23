@@ -2,5 +2,5 @@
 ## grabs English stress-free dictionary from CMU
 ## Kyle Gorman <kgorman@ling.upenn.edu>
 
-## instead, use the following line (uncomment it) to get a stress dictionary
-curl -s https://cmusphinx.svn.sourceforge.net/svnroot/cmusphinx/trunk/cmudict/cmudict.0.7a | grep "^[A-Z]" | grep -v '^SIL' | sed -e 's/([0-9][0-9]*)//' | sed -e 's/\ \ */\ /g' | sed -e "s/^\'/\\\'/" > dictionary.txt
+## use the following line to get a stress dictionary
+curl -s https://cmusphinx.svn.sourceforge.net/svnroot/cmusphinx/trunk/cmudict/cmudict.0.7a | grep "^[A-Z]" | grep -v '^SIL  ' | sed -e 's/([0-9][0-9]*)//' | sed -e 's/\ \ */\ /g' | sed -e "s/^\'/\\\'/" | sed -e "s/ARABIA AH R EY1 B IY0 AH0/ARABIA AH0 R EY1 B IY0 AH0/" > dictionary.txt

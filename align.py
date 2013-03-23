@@ -24,7 +24,7 @@
 # align.py: text/speech alignment for speech production experiments
 # Kyle Gorman <gormanky@ohsu.edu> and Michael Wagner <chael@mcgill.ca>
 #
-# Requires Python 2.5-2.7
+# Requires Python 2.4-2.7
 #
 # See README.md for usage information and a tutorial. 
 #
@@ -54,6 +54,8 @@ from subprocess import check_call, Popen, CalledProcessError, PIPE
 from textgrid import MLF
 # http://github.com/kylebgorman/textgrid.py/
 
+DEBUG = False # when True, temp data not deleted...
+
 ### GLOBAL VARS
 # You can change these if you know HTK well
 
@@ -65,8 +67,6 @@ HMMDEFS = 'hmmdefs'
 VFLOORS = 'vFloors'
 UNPAIRED = 'unpaired.txt'
 OUTOFDICT = 'outofdict.txt'
-
-DEBUG = False
 
 # string constants for various shell calls
 F = str(.01)
@@ -83,6 +83,19 @@ HVITE_SCORE = re.compile('.+==  \[\d+ frames\] (-\d+\.\d+)')
 
 # regexp for inspecting phones
 INVALID_PHONE = re.compile('^\d')
+
+# list of CMU English phones, which can only be used if you're not training
+
+CMU_PHONES = set(['AA0', 'AA1', 'AA2', 'AE0', 'AE1', 'AE2', 
+                  'AH0', 'AH1', 'AH2', 'AO0', 'AO1', 'AO2', 
+                  'AW0', 'AW1', 'AW2', 'AY0', 'AY1', 'AY2', 
+                  'EH0', 'EH1', 'EH2', 'ER0', 'ER1', 'ER2',
+                  'EY0', 'EY1', 'EY2', 'IH0', 'IH1', 'IH2', 
+                  'IY0', 'IY1', 'IY2', 'OW0', 'OW1', 'OW2', 
+                  'OY0', 'OY1', 'OY2', 'UH0', 'UH1', 'UH2', 
+                  'UW0', 'UW1', 'UW2', 'B', 'CH', 'D', 'DH', 'F', 'G',
+                  'HH', 'JH', 'K', 'L', 'M', 'N', 'NG', 'P', 'R', 'S',
+                  'SH', 'T', 'TH', 'V', 'W', 'Y', 'Z', 'ZH'])
 
 # divisors of 1e7, truncated on either end, which make good samplerates
 SRs = [4000, 8000, 10000, 12500, 15625, 16000, 20000, 25000, 31250, 40000,
@@ -107,8 +120,6 @@ Option              Function
 -s samplerate (Hz)  Samplerate for models           [default: 8000]
                     (NB: available only with -t)
 -t training_data/   Perform model training
--u                  Assume UTF-8 label files and 
-                    generate UTF-8 TextGrids
 """
 
 
@@ -126,28 +137,40 @@ def resolve(path):
     return os.path.expandvars(os.path.expanduser(path))
 
 
+def pronify(source):
+    for (i, line) in enumerate(source, 1):
+        if line.startswith(';'):
+            continue
+        (word, pron) = line.rstrip().split(None, 1)
+        yield (i, word, pron.split())
+
 ### CLASSES
 
 class PronDict(object):
     """
     A wrapper for a normal pronunciation dictionary in the CMU style
     """
-    def __init__(self, f, affixes=None):
-        # affix argument is ignored for compatibility with subclass
-        sink = f if hasattr(f, 'read') else open(f, 'r')
+    def __init__(self, f, valid_phones=None):
+        source = f if hasattr(f, 'read') else open(f, 'r')
         self.d = defaultdict(list)
-        for (i, line) in enumerate(sink, 1):
-            if line.startswith(';'): # comment
-                continue
-            (word, pron) = line.rstrip().split(None, 1)
-            pron = pron.split()
-            for ph in pron:
-                if INVALID_PHONE.match(ph):
-                    error('Invalid phone on dictionary ' +
-                          '({}), line {}: "{}" '.format(f, i, ph) + 
-                          '(phones may not start with numbers).')
-            self.d[word].append(pron)
-        sink.close()
+        if valid_phones:
+            for (i, word, pron) in pronify(source):
+                for ph in pron:
+                    if pron not in valid_phones:
+                        error('Unknown phone in dictionary ' +
+                              '({}), line {}: "{}" '.format(f, i, ph) +
+                              '(did you want to train a new acoustic ' +
+                              'model? If so, use the -t flag).')
+                self.d[word].append(pron)
+        else:
+            for (i, word, pron) in pronify(source):
+                for ph in pron:
+                    if INVALID_PHONE.match(ph):
+                        error('Invalid phone on dictionary ' +
+                              '({}), line {}: "{}" '.format(f, i, ph) +
+                              '(phones may not start with numbers).')
+                self.d[word].append(pron)
+        source.close()
         self.ood = set()
 
     def __contains__(self, key):
@@ -175,7 +198,8 @@ class Aligner(object):
     models shipped with this package and stored in the directory MOD/.
     """
 
-    def __init__(self, ts_dir, tr_dir, dictionary, sr, ood_mode, use_UTF8):
+    def __init__(self, ts_dir, tr_dir, dictionary='dictionary.txt',
+                               sr=8000, ood_mode=False, phoneset=None):
         ## class variables
         self.sr = sr
         self.has_sox = self._has_sox()
@@ -191,7 +215,7 @@ class Aligner(object):
         os.mkdir(self.hmm_dir)
         ## dictionary reps
         self.dictionary = dictionary # string of dict location
-        self.the_dict = PronDict(dictionary)
+        self.the_dict = PronDict(dictionary, phoneset)
         self.the_dict[SIL] = [SIL]
         # lists
         self.words = os.path.join(self.tmp_dir, 'words')
@@ -273,7 +297,8 @@ class Aligner(object):
                 sink = open(UNPAIRED, 'w')
                 for path in unpaired_list:
                     print >> sink, path
-                error('Missing .wav or .lab files; see {}', UNPAIRED)
+                error('Missing .wav or .lab files (see ' + 
+                      '{}).'.format(UNPAIRED))
         return (wav_list, lab_list)
 
     def _check_dct(self, lab_list):
@@ -321,7 +346,7 @@ class Aligner(object):
                 else:
                     for word in sorted(ood):
                         print >> sink, word
-            error('Out of dictionary word(s), see {}', OUTOFDICT)
+            error('Out of dictionary word(s), see {}.'.format(OUTOFDICT))
         ## make word
         print >> open(self.words, 'w'), '\n'.join(found_words)
         ded = os.path.join(self.tmp_dir, TEMP)
@@ -640,14 +665,13 @@ if __name__ == '__main__':
     ## parse arguments
     # complain if no test directory specification
     try:
-        (opts, args) = getopt(argv[1:], 'd:n:s:t:aAmhu')
+        (opts, args) = getopt(argv[1:], 'd:n:s:t:aAmh')
         # default opts values
         dictionary = 'dictionary.txt'  # -d
         sr = 8000
         tr_dir = None
         ood_mode = False
         n_per_round = 4  # -n
-        use_UTF8 = False  # -u
         speaker_dependent = False  # -T
         require_training = False  # to keep track of if -n, -s used
         # go through args
@@ -699,8 +723,6 @@ if __name__ == '__main__':
                 exit(0)
             elif opt == '-a':
                 raise NotImplementedError('Not yet implemented.')  # FIXME
-            elif opt == '-u':
-                use_UTF8 = True
             else:
                 raise GetoptError
     except GetoptError, err:
@@ -717,7 +739,7 @@ if __name__ == '__main__':
         try:
             print >> stderr, 'Initializing...',
             aligner = TrainAligner(ts_dir, tr_dir, dictionary, sr, 
-                                   ood_mode, use_UTF8)
+                                   ood_mode)
             print >> stderr, 'done.'
             print >> stderr, 'Training...',
             aligner.train(n_per_round)  # start training
@@ -752,7 +774,7 @@ if __name__ == '__main__':
         try:
             print >> stderr, 'Initializing...',
             aligner = Aligner(ts_dir, 'MOD', dictionary, sr, ood_mode,
-                                                             use_UTF8)
+                                                             CMU_PHONES)
             print >> stderr, 'done.'
             print >> stderr, 'Aligning...',
             aligner.align_and_score(path_to_mlf, os.path.join(ts_dir,
