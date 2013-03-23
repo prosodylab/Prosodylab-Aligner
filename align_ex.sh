@@ -34,7 +34,7 @@ mkdir -p .dat;
 cp $WAV $LAB .dat;
 
 # perform alignment
-./align.py ${ARGS[@]:0:$#-2} .dat/;
+python align.py ${ARGS[@]:0:$#-2} .dat/;
 
 if [ $? != 1 ]; then
     # name of output file

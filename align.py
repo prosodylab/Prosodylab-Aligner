@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/python -U
 #
 # Copyright (c) 2011-2013 Kyle Gorman and Michael Wagner
 #
@@ -39,7 +39,6 @@ from __future__ import with_statement       # for Python <= 2.5 users
 import os
 import re
 import wave
-import codecs
 
 from glob import glob
 from bisect import bisect
@@ -156,10 +155,10 @@ class PronDict(object):
         if valid_phones:
             for (i, word, pron) in pronify(source):
                 for ph in pron:
-                    if pron not in valid_phones:
-                        error('Unknown phone in dictionary ' +
-                              '({}), line {}: "{}" '.format(f, i, ph) +
-                              '(did you want to train a new acoustic ' +
+                    if ph not in valid_phones:
+                        error('Unknown phone in dictionary ' + \
+                              '({}), line {}: "{}" '.format(f, i, ph) + \
+                              '(did you want to train a new acoustic ' + \
                               'model? If so, use the -t flag).')
                 self.d[word].append(pron)
         else:
