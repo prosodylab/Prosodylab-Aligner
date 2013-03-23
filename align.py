@@ -1,6 +1,6 @@
 #!/usr/bin/python
 #
-# Copyright (c) 2012-2013 Kyle Gorman and Michael Wagner
+# Copyright (c) 2011-2013 Kyle Gorman and Michael Wagner
 #
 # Permission is hereby granted, free of charge, to any person obtaining a
 # copy of this software and associated documentation files (the
@@ -39,6 +39,7 @@ from __future__ import with_statement       # for Python <= 2.5 users
 import os
 import re
 import wave
+import codecs
 
 from glob import glob
 from bisect import bisect
@@ -65,31 +66,29 @@ VFLOORS = 'vFloors'
 UNPAIRED = 'unpaired.txt'
 OUTOFDICT = 'outofdict.txt'
 
+DEBUG = False
+
 # string constants for various shell calls
-f = str(.01)
-sfac = str(5.0)
-pruning = [str(i) for i in (250.0, 150.0, 2000.0)]
+F = str(.01)
+SFAC = str(5.0)
+PRUNING = [str(i) for i in (250.0, 150.0, 2000.0)]
 
 # hidden, but useful files
-align_mlf = '.ALIGN.mlf'
-scores_txt = '.SCORES.txt'
+ALIGN_MLF = '.ALIGN.mlf'
+SCORES_TXT = '.SCORES.txt'
 
 # regexp for parsing the HVite trace
-HVite_score = re.compile('.+==  \[\d+ frames\] (-\d+\.\d+)')
+HVITE_SCORE = re.compile('.+==  \[\d+ frames\] (-\d+\.\d+)')
 # the rest of the string is: '\[Ac=-\d+\.\d+ LM=0.0\] \(Act=\d+\.\d+\)'
+
+# regexp for inspecting phones
+INVALID_PHONE = re.compile('^\d')
 
 # divisors of 1e7, truncated on either end, which make good samplerates
 SRs = [4000, 8000, 10000, 12500, 15625, 16000, 20000, 25000, 31250, 40000,
        50000, 62500, 78125, 80000, 100000, 125000, 156250, 200000]
 
-### GENERIC FUNCTIONS
-
-
-def error(msg, *args):
-    """
-    Raises an error in msg, using printf-like args, then exits
-    """
-    print >> stderr, """
+USAGE = """
 align.py: Forced alignment with HTK and SoX
 Kyle Gorman <gormanky@ling.upenn.edu> and Michael Wagner <chael@mcgill.ca>
 
@@ -108,10 +107,16 @@ Option              Function
 -s samplerate (Hz)  Samplerate for models           [default: 8000]
                     (NB: available only with -t)
 -t training_data/   Perform model training
--u                  Assume UTF8 label files
-
+-u                  Assume UTF-8 label files and 
+                    generate UTF-8 TextGrids
 """
-    exit('Error: ' + msg.format(*args))
+
+
+def error(msg):
+    """
+    Raises an error in msg, using printf-like args, then exits
+    """
+    exit('Error: ' + msg)
 
 
 def resolve(path):
@@ -131,11 +136,16 @@ class PronDict(object):
         # affix argument is ignored for compatibility with subclass
         sink = f if hasattr(f, 'read') else open(f, 'r')
         self.d = defaultdict(list)
-        for line in sink:
+        for (i, line) in enumerate(sink, 1):
             if line.startswith(';'): # comment
                 continue
             (word, pron) = line.rstrip().split(None, 1)
             pron = pron.split()
+            for ph in pron:
+                if INVALID_PHONE.match(ph):
+                    error('Invalid phone on dictionary ' +
+                          '({}), line {}: "{}" '.format(f, i, ph) + 
+                          '(phones may not start with numbers).')
             self.d[word].append(pron)
         sink.close()
         self.ood = set()
@@ -151,11 +161,12 @@ class PronDict(object):
             self.ood.add(key)
             raise(KeyError(key))
 
-    def __str__(self):
+    def __repr__(self):
         return 'PronDict({0})'.format(self.d)
 
     def __setitem__(self, key, value):
         self.d[key].append(value)
+
 
 
 class Aligner(object):
@@ -164,7 +175,7 @@ class Aligner(object):
     models shipped with this package and stored in the directory MOD/.
     """
 
-    def __init__(self, ts_dir, tr_dir, dictionary, sr, ood_mode):
+    def __init__(self, ts_dir, tr_dir, dictionary, sr, ood_mode, use_UTF8):
         ## class variables
         self.sr = sr
         self.has_sox = self._has_sox()
@@ -315,9 +326,9 @@ class Aligner(object):
         print >> open(self.words, 'w'), '\n'.join(found_words)
         ded = os.path.join(self.tmp_dir, TEMP)
         # make ded
-        print >> open(ded, 'w'), """AS {0}\nMP {1} {1} {0}""".format(SP, 
+        print >> open(ded, 'w'), """AS {0}\nMP {1} {1} {0}""".format(SP,
                                                                      SIL)
-        check_call(['HDMan', '-m', '-g', ded, '-w', self.words, '-n', 
+        check_call(['HDMan', '-m', '-g', ded, '-w', self.words, '-n',
                     self.phons, self.taskdict, self.dictionary])
         # add sil
         print >> open(self.phons, 'a'), SIL
@@ -407,8 +418,8 @@ NUMCEPS = 12"""
                     '-C', self.cfg, '-S', self.test_scp,
                     '-H', os.path.join(self.cur_dir, MACROS),
                     '-H', os.path.join(self.cur_dir, HMMDEFS),
-                    '-I', self.word_mlf, '-t'] + pruning +
-                    ['-s', sfac, self.taskdict, self.phons])
+                    '-I', self.word_mlf, '-t'] + PRUNING +
+                    ['-s', SFAC, self.taskdict, self.phons])
 
     def align_and_score(self, mlf, score):
         """
@@ -416,16 +427,17 @@ NUMCEPS = 12"""
         """
         i = 0
         sink = open(score, 'w')
-        proc = Popen(['HVite', '-T', '1', '-a', '-m', '-y', 'lab',
+        call_list = ['HVite', '-T', '1', '-a', '-m', '-y', 'lab',
                       '-o', 'SM', '-b', SIL, '-i', mlf, 
                       '-L', self.lab_dir,
                       '-C', self.cfg, '-S', self.test_scp,
                       '-H', os.path.join(self.cur_dir, MACROS),
                       '-H', os.path.join(self.cur_dir, HMMDEFS),
-                      '-I', self.word_mlf, '-t'] + pruning +
-                      [self.taskdict, self.phons], stdout=PIPE)
+                      '-I', self.word_mlf, '-t'] + PRUNING + \
+                      [self.taskdict, self.phons]
+        proc = Popen(call_list, stdout=PIPE)
         for line in proc.stdout:
-            mch = HVite_score.match(line)  # check for score line
+            mch = HVITE_SCORE.match(line)  # check for score line
             if mch:
                 print >> sink, '{}\t{}'.format(self.wav_list[i], 
                                                mch.group(1))
@@ -433,14 +445,17 @@ NUMCEPS = 12"""
         # make sure no errors in decoding...
         retcode = proc.wait()
         if retcode != 0:
-            raise CalledProcessError(retcode, 'HVite')
+            raise CalledProcessError(retcode, call_list)
         sink.close()
 
     def __del__(self):
         """
         Destroys the temp directory on the way out
         """
-        rmtree(self.tmp_dir)
+        if DEBUG:
+            print >> stderr, 'Temp files are in {}'.format(self.tmp_dir)
+        else:
+            rmtree(self.tmp_dir)
 
 
 class TrainAligner(Aligner):
@@ -471,8 +486,8 @@ class TrainAligner(Aligner):
         os.mkdir(self.nxt_dir)  # from now on, just call self._nxt_dir()
         ## make proto
         sink = open(self.proto, 'w')
-        means = ' '.join(['0.0' for i in xrange(39)])
-        varg = ' '.join(['1.0' for i in xrange(39)])
+        means = ' '.join(['0.0' for _ in xrange(39)])
+        varg = ' '.join(['1.0' for _ in xrange(39)])
         print >> sink, """~o <VECSIZE> 39 <MFCC_D_A_0>
 ~h "proto"
 <BEGINHMM>
@@ -489,7 +504,7 @@ class TrainAligner(Aligner):
 <ENDHMM>"""
         sink.close()
         ## make vFloors
-        check_call(['HCompV', '-f', str(f), '-C', self.cfg, 
+        check_call(['HCompV', '-f', F, '-C', self.cfg, 
                               '-S', self.train_scp,
                               '-M', self.cur_dir, self.proto])
         ## make local macro
@@ -497,7 +512,7 @@ class TrainAligner(Aligner):
         sink = open(os.path.join(self.cur_dir, MACROS), 'a')
         source = open(os.path.join(self.cur_dir,
                       os.path.split(self.proto)[1]), 'r')
-        for i in xrange(3):
+        for _ in xrange(3):
             print >> sink, source.readline(),
         source.close()
         # get remaining lines from vFloors
@@ -558,13 +573,13 @@ class TrainAligner(Aligner):
         """
         Perform one or more rounds of estimation
         """
-        for i in xrange(niter):
+        for _ in xrange(niter):
             check_call(['HERest', '-C', self.cfg, '-S', self.train_scp,
                         '-I', self.phon_mlf, 
                         '-M', self.nxt_dir,
                         '-H', os.path.join(self.cur_dir, MACROS),
                         '-H', os.path.join(self.cur_dir, HMMDEFS),
-                        '-t'] + pruning + [self.phons],
+                        '-t'] + PRUNING + [self.phons],
                  stdout=PIPE)
             self._nxt_dir()
 
@@ -632,7 +647,7 @@ if __name__ == '__main__':
         tr_dir = None
         ood_mode = False
         n_per_round = 4  # -n
-        use_unicode = False  # -u
+        use_UTF8 = False  # -u
         speaker_dependent = False  # -T
         require_training = False  # to keep track of if -n, -s used
         # go through args
@@ -640,7 +655,8 @@ if __name__ == '__main__':
             if opt == '-d':  # dictionary
                 dictionary = val
                 if not os.access(dictionary, os.R_OK):
-                    error('-d path {0} not found', dictionary)
+                    print >> stderr, USAGE
+                    error('-d path {} not found'.format(dictionary))
             elif opt == '-m':  # ood_mode
                 ood_mode = True
             elif opt == '-n':
@@ -650,6 +666,7 @@ if __name__ == '__main__':
                     if not (0 < n_per_round):
                         raise ValueError
                 except ValueError:
+                    print >> stderr, USAGE
                     error('-n value must be > 0')
             elif opt == '-s':
                 try:
@@ -658,6 +675,7 @@ if __name__ == '__main__':
                     if not sr > 0:
                         raise ValueError
                 except ValueError:
+                    print >> stderr, USAGE
                     error('-s value must be > 0')
                 # check for sane samplerate
                 if sr not in SRs:
@@ -674,67 +692,77 @@ if __name__ == '__main__':
             elif opt == '-t':
                 tr_dir = resolve(val)
                 if not os.access(tr_dir, os.F_OK):
-                    error('-t path {} cannot be read', tr_dir)
+                    print >> stderr, USAGE
+                    error('-t path {} cannot be read'.format(tr_dir))
             elif opt == '-h':
-                error('-h requests usage message')
+                print >> stderr, USAGE
+                exit(0)
             elif opt == '-a':
-                speaker_adaptation = True
                 raise NotImplementedError('Not yet implemented.')  # FIXME
             elif opt == '-u':
-                use_unicode = True
-                raise NotImplementedError('Not yet implemented')  # FIXME
+                use_UTF8 = True
             else:
                 raise GetoptError
     except GetoptError, err:
+        print >> stderr, USAGE
         error(str(err))
     if len(args) == 0:
-        error('No test directory specified')
+        print >> stderr, USAGE
+        error('No test directory specified.')
     ts_dir = resolve(args.pop())
 
     ## do the model
-    path_to_mlf = os.path.join(ts_dir, align_mlf)
+    path_to_mlf = os.path.join(ts_dir, ALIGN_MLF)
     if tr_dir:
-        print >> stderr, 'Initializing...',
-        aligner = TrainAligner(ts_dir, tr_dir, dictionary, sr, ood_mode)
-        print >> stderr, 'done.'
-        print >> stderr, 'Training...',
-        aligner.train(n_per_round)  # start training
-        print >> stderr, 'done.'
-        print >> stderr, 'Modeling silence...',
-        aligner.small_pause()      # fix small pauses
-        print >> stderr, 'done.'
-        print >> stderr, 'Additional training...',
-        aligner.train(n_per_round)  # more training
-        print >> stderr, 'done.'
-        print >> stderr, 'Realigning...',
-        aligner.align(aligner.phon_mlf)  # get best homonyms
-        print >> stderr, 'done.'
-        print >> stderr, 'Final training...',
-        aligner.train(n_per_round)  # more training
-        print >> stderr, 'done.'
-        print >> stderr, 'Final aligning...',
-        aligner.align_and_score(path_to_mlf, os.path.join(ts_dir, 
-                                                          scores_txt))
-        print >> stderr, 'done.'
-        print >> stderr, 'Making TextGrids...',
-        n = MLF(path_to_mlf).write(ts_dir)
-        if n < 1:
-            error('No paths found! Data may be too noisy.')
-        print >> stderr, '{} TextGrids generated... done.'.format(n)
-        print >> stderr, 'Alignment complete.'
+        try:
+            print >> stderr, 'Initializing...',
+            aligner = TrainAligner(ts_dir, tr_dir, dictionary, sr, 
+                                   ood_mode, use_UTF8)
+            print >> stderr, 'done.'
+            print >> stderr, 'Training...',
+            aligner.train(n_per_round)  # start training
+            print >> stderr, 'done.'
+            print >> stderr, 'Modeling silence...',
+            aligner.small_pause()      # fix small pauses
+            print >> stderr, 'done.'
+            print >> stderr, 'Additional training...',
+            aligner.train(n_per_round)  # more training
+            print >> stderr, 'done.'
+            print >> stderr, 'Realigning...',
+            aligner.align(aligner.phon_mlf)  # get best homonyms
+            print >> stderr, 'done.'
+            print >> stderr, 'Final training...',
+            aligner.train(n_per_round)  # more training
+            print >> stderr, 'done.'
+            print >> stderr, 'Final aligning...',
+            aligner.align_and_score(path_to_mlf, os.path.join(ts_dir, 
+                                                              SCORES_TXT))
+            print >> stderr, 'done.'
+            print >> stderr, 'Making TextGrids...',
+            n = MLF(path_to_mlf).write(ts_dir)
+            if n < 1:
+                error('No paths found (is your data very noisy?).')
+            print >> stderr, '{} TextGrids generated... done.'.format(n)
+            print >> stderr, 'Alignment complete.'
+        except CalledProcessError, err:
+            exit(err)
     else:
         if require_training:
-            error('-n, -s only available in training (-t) mode')
-        print >> stderr, 'Initializing...',
-        aligner = Aligner(ts_dir, 'MOD', dictionary, sr, ood_mode)
-        print >> stderr, 'done.'
-        print >> stderr, 'Aligning...',
-        aligner.align_and_score(path_to_mlf, os.path.join(ts_dir,
-                                                          scores_txt))
-        print >> stderr, 'done.'
-        print >> stderr, 'Making TextGrids...',
-        n = MLF(path_to_mlf).write(ts_dir)
-        if n < 1:
-            error('No paths found! Do you have enough training data?')
-        print >> stderr, '{} TextGrids generated... done.'.format(n)
-        print >> stderr, 'Alignment complete.'
+            error('-n, -s only available in training (-t) mode.')
+        try:
+            print >> stderr, 'Initializing...',
+            aligner = Aligner(ts_dir, 'MOD', dictionary, sr, ood_mode,
+                                                             use_UTF8)
+            print >> stderr, 'done.'
+            print >> stderr, 'Aligning...',
+            aligner.align_and_score(path_to_mlf, os.path.join(ts_dir,
+                                                              SCORES_TXT))
+            print >> stderr, 'done.'
+            print >> stderr, 'Making TextGrids...',
+            n = MLF(path_to_mlf).write(ts_dir)
+            if n < 1:
+                error('No paths found (do you plenty of training data?).')
+            print >> stderr, '{} TextGrids generated... done.'.format(n)
+            print >> stderr, 'Alignment complete.'
+        except CalledProcessError, err:
+            exit(err)

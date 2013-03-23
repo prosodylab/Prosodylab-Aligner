@@ -26,9 +26,9 @@
 # 
 # Max Bane <bane@uchicago.edu>
 # Kyle Gorman <gormanky@ohsu.edu>
-# Morgan Sonderegger <morgan@cs.uchicago.edu>
+# Morgan Sonderegger <morgan.sonderegger@mcgill.ca>
 
-# TODO: UTF-8 writing
+# TODO: UTF-8 writing for MLF files
 
 
 import re
