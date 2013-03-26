@@ -17,35 +17,63 @@ See included "LICENSE"
 
 ## Usage
 
-    align.py: Forced alignment with HTK and SoX
-    Kyle Gorman <gormanky@ohsu.edu> and Michael Wagner <chael@mcgill.ca>
-
     USAGE: ./align.py [OPTIONS] data_to_be_aligned/
 
     Option              Function
 
     -a                  Perform speaker adaptation,
                         w/ or w/o prior training
-    -d dictionary       specify a dictionary file       [default: dictionary.txt]
+
+    -d dictionary       specify a dictionary file     [default: dictionary.txt]
+
     -h                  Display this message
     -m                  List files containing
                         out-of-dictionary words
-    -n n                Number of training iterations   [default: 4]
+
+    -n n                Number of training iterations [default: 4]
                         for each step of training
-    -s samplerate (Hz)  Samplerate for models           [default: 8000]
                         (NB: available only with -t)
+
+    -s samplerate (Hz)  Samplerate for models         [default: 8000]
+                        (NB: available only with -t)
+
     -t training_data/   Perform model training
 
+## FAQ
+
+### What is forced alignment?
+
+Forced alignment can be thought of as the process of finding the times at which individual sounds and words appear in an audio recording under the constraint that words in the recording follow the same order as they appear in the transcript. This is accomplished much in the same way as traditional speech recognition, but the problem is somewhat easier given the constraints on the "language model" imposed by the transcript.
+
+### What is forced alignment good for?
+
+The primary use of forced alignment is to eliminate the need for human annotation of time-boundaries for acoustic events of interest. Perhaps you are interested in sound change: forced alignment can be used to locate individual vowels in a sociolinguistic interview for formant measurement. Perhaps you are interested in laboratoy speech production: forced alignment can be used to locate the target word for pitch measurement.
+
+### Can I use Prosodylab-Aligner for languages other than English?
+
+Yes! If you have a few hours of high quality speech and associated word-level transcripts, Prosodylab-Aligner can induce a new acoustic model, then compute the best alignments for said data according to the acoustic model.
+
+### What are the limitations of forced alignment?
+
+Forced alignment works well for audio from speakers of similar dialects with little background noise. Aligning data with considerable dialect variation, or to speech embedded in noise or music, is currently state of the art.
+
+### How can I improve alignment quality?
+
+You can train your own acoustic models, using as much training data as possible, or try to reduce the noise in your test data before aligning.
+
+### How does Prosodylab-Aligner differ from HTK?
+
+The [Hidden Markov Model Toolkit](http://htk.eng.cam.ac.uk) (HTK) is a set of programs for speech recognition and forced alignment. The [HTK book](http://htk.eng.cam.ac.uk/docs/docs.shtml) describes how to train acoustic models and perform forced alignment. However, the procedure is rather complex and the error messages are cryptic. Prosodylab-Aligner essentially automates the HTK forced alignment workflow.
+
+### How does Prosodylab-Aligner differ from the Penn Forced Aligner?
+
+The [Penn Forced Aligner](http://www.ling.upenn.edu/phonetics/p2fa/) (P2FA) provides forced alignment for American English using an acoustic model derived from audio of US Supreme Court oral arguments. Prosodylab-Aligner has a number of additional capabilities, most importantly acoustic model training, and once the corpus of oral arguments is released, it will be possible in theory to use Prosodylab-Aligner to simulate P2FA.
 
 ## Installing
 
-The scripts require a version of Python 2 no earlier than 2.5, a BASH-compatible shell in /bin/sh, and curl. All these will be installed on recent Macintosh computers as well as most computers running Linux. The scripts included here assume that HTK and SoX are installed on your system. While these scripts can also be made to work on Windows computers, it is non-trivial and not described here.
+The scripts require a version of Python no earlier than 2.5, a BASH-compatible shell located in `/bin/sh`, and `curl`. All these will be installed on recent Macintosh computers as well as most computers running Linux. The scripts included here also assume that HTK and SoX are installed on your system. While these scripts can also be made to work on Windows computers, it is non-trivial and not described here.
 
 ### Installing SoX
-
-SoX: Source for SoX, which is under the GNU General Public License, can be found at the following URL:
-
-    http://sourceforge.net/projects/sox/files/
 
 #### Linux
 
@@ -70,9 +98,7 @@ Note that your version may be different: `align.py` has been tested for this ver
 
 ### Installing HTK
 
-Source for HTK can be obtained at the following URL:
-
-    $ http://htk.eng.cam.ac.uk/download.shtml
+You will need first to download [HTK's source code](http://htk.eng.cam.ac.uk/download.shtml).
 
 Note that you will have to make an account and agree to their restricted distribution license. Once you obtain the "tarball", the following command (adjusting for version number) should unpack it:
 
@@ -100,7 +126,7 @@ This will produce smaller, faster binaries than otherwise. Then run the followin
 
 #### Mac OS X
 
-By default, no C compiler is installed on Mac OS X. There are a few quick ways to get one. You can get a full set of compilers by downloading [Xcode](http://itunes.apple.com/us/app/xcode/id497799835?ls=1&mt=12) from the Mac App Store. This package is really quite gigantic (a concern for those users who have capped bandwidth), and may take days(!) to download. An excellent alternative is to download the new [Command Line Tools for Xcode](http://developer.apple.com/downloads) package on the Mac App Store, which is much smaller. You will need a free registration to download either package.
+By default, no C compiler is installed on Mac OS X. There are a few quick ways to get one. You can get a full set of compilers by downloading [Xcode](http://itunes.apple.com/us/app/xcode/id497799835?ls=1&mt=12) from the Mac App Store. This package is really quite large and may take days(!) to download. A good alternative is to download the new [Command Line Tools for Xcode](http://developer.apple.com/downloads) package on the Mac App Store, which is much smaller. You will need a free registration to download either package.
 
 Once that's taken care of, execute the following commands in the "htk/" directory you just navigated to:
 

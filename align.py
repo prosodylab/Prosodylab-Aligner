@@ -24,7 +24,7 @@
 # align.py: text/speech alignment for speech production experiments
 # Kyle Gorman <gormanky@ohsu.edu> and Michael Wagner <chael@mcgill.ca>
 #
-# Requires Python 2.4-2.7
+# Requires Python 2.5-2.7
 #
 # See README.md for usage information and a tutorial. 
 #
@@ -34,7 +34,7 @@
 # SSHRC Digging into Data Challenge Grant 869-2009-0004
 # SSHRC Canada Research Chair 218503
 
-from __future__ import with_statement       # for Python <= 2.5 users
+from __future__ import with_statement       # for Python 2.5 users
 
 import os
 import re
