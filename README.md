@@ -170,7 +170,7 @@ Imagine you simply want to align multiple audio files with their associated labe
 
 In the case that you only want to align one .wav/.lab pair, perhaps to test out the system, the script `align_ex.sh` is provided, and can be used like the following:
 
-    `./align_ex.sh data/myexp_1_1_1.wav data/myexp_1_1_1.lab`
+    $ ./align_ex.sh data/myexp_1_1_1.wav data/myexp_1_1_1.lab
     ...
 
 Assuming alignment is successful, this script will copy the resulting TextGrid file (called `myexp_1_1_1.TextGrid`) to the current directory for your inspection.
