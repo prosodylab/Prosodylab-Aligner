@@ -71,7 +71,7 @@ The [Penn Forced Aligner](http://www.ling.upenn.edu/phonetics/p2fa/) (P2FA) prov
 
 ## Installing
 
-The scripts require a version of Python no earlier than 2.5, a BASH-compatible shell located in `/bin/sh`, and `curl`. All these will be installed on recent Macintosh computers as well as most computers running Linux. The scripts included here also assume that HTK and SoX are installed on your system. While these scripts can also be made to work on Windows computers, it is non-trivial and not described here.
+The scripts require a version of Python no earlier than 2.6, a BASH-compatible shell located in `/bin/sh`, and `curl`. All these will be installed on recent Macintosh computers as well as most computers running Linux. The scripts included here also assume that HTK and SoX are installed on your system. While these scripts can also be made to work on Windows computers, it is non-trivial and not described here.
 
 ### Installing SoX
 
