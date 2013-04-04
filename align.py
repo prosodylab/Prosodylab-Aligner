@@ -34,6 +34,16 @@
 # SSHRC Digging into Data Challenge Grant 869-2009-0004
 # SSHRC Canada Research Chair 218503
 
+from __future__ import with_statement
+
+
+## VERSION CHECK
+# before we get going, check for 
+from sys import version_info, exit
+if version_info < (2, 6, 0):
+    exit('You need Python 2.6-2.7 to run this script.')
+
+
 import os
 import re
 import wave
@@ -41,8 +51,8 @@ import wave
 from glob import glob
 from bisect import bisect
 from shutil import rmtree
+from sys import argv, stderr
 from tempfile import mkdtemp
-from sys import argv, stderr, exit
 from collections import defaultdict
 from getopt import getopt, GetoptError
 from subprocess import check_call, Popen, CalledProcessError, PIPE
