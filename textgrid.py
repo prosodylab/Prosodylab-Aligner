@@ -83,8 +83,8 @@ class Point(object):
         self.mark = mark
 
     def __repr__(self):
-        return 'Point({}, {})'.format(self.time, 
-                                      self.mark if self.mark else None)
+        return 'Point({0}, {1})'.format(self.time, 
+                                        self.mark if self.mark else None)
 
     def __cmp__(self, other):
         """
@@ -139,8 +139,8 @@ class Interval(object):
         self.mark = mark
 
     def __repr__(self):
-        return 'Interval({}, {}, {})'.format(self.minTime, self.maxTime, 
-                                      self.mark if self.mark else None)
+        return 'Interval({0}, {1}, {2})'.format(self.minTime, self.maxTime,
+                                         self.mark if self.mark else None)
 
     def duration(self):
         """ 
@@ -232,10 +232,10 @@ class PointTier(object):
         self.points = []
 
     def __str__(self):
-        return '<PointTier {} with {} points>'.format(self.name, len(self))
+        return '<PointTier {0}, {1} points>'.format(self.name, len(self))
 
     def __repr__(self):
-        return 'PointTier({}, {})'.format(self.name, self.points)
+        return 'PointTier({0}, {1})'.format(self.name, self.points)
 
     def __iter__(self):
         return iter(self.points)
@@ -304,13 +304,13 @@ class PointTier(object):
         print >> sink, 'File type = "ooTextFile"'
         print >> sink, 'Object class = "TextTier"'
         print >> sink
-        print >> sink, 'xmin = {}'.format(min(self))
-        print >> sink, 'xmax = {}'.format(max(self))
-        print >> sink, 'points: size = {}'.format(len(self))
+        print >> sink, 'xmin = {0}'.format(min(self))
+        print >> sink, 'xmax = {0}'.format(max(self))
+        print >> sink, 'points: size = {0}'.format(len(self))
         for (i, point) in enumerate(self.points, 1):
-            print >> sink, 'points [{}]:'.format(i)
-            print >> sink, '\ttime = {}'.format(point.time)
-            print >> sink, u'\tmark = {}'.format(point.mark)
+            print >> sink, 'points [{0}]:'.format(i)
+            print >> sink, '\ttime = {0}'.format(point.time)
+            print >> sink, u'\tmark = {0}'.format(point.mark)
         sink.close()
 
     def bounds(self):
@@ -374,11 +374,11 @@ class IntervalTier(object):
         self.intervals = []
 
     def __str__(self):
-        return '<IntervalTier {} with {} intervals>'.format(self.name, 
-                                                            len(self))
+        return '<IntervalTier {0}, {1} intervals>'.format(self.name, 
+                                                          len(self))
 
     def __repr__(self):
-        return 'IntervalTier({}, {})'.format(self.name, self.intervals)
+        return 'IntervalTier({0}, {1})'.format(self.name, self.intervals)
 
     def __iter__(self):
         return iter(self.intervals)
@@ -481,18 +481,18 @@ class IntervalTier(object):
         sink = f if hasattr(f, 'write') else open(f, 'w')
         print >> sink, 'File type = "ooTextFile"'
         print >> sink, 'Object class = "IntervalTier"\n'
-        print >> sink, 'xmin = {}'.format(self.minTime)
-        print >> sink, 'xmax = {}'.format(self.maxTime if self.maxTime \
-                                   else self.intervals[-1].maxTime)
+        print >> sink, 'xmin = {0}'.format(self.minTime)
+        print >> sink, 'xmax = {0}'.format(self.maxTime if self.maxTime \
+                                          else self.intervals[-1].maxTime)
         # compute the number of intervals and make the empty ones
         output = self._fillInTheGaps(null)
         # write it all out
-        print >> sink, 'intervals: size = {}'.format(len(output))
+        print >> sink, 'intervals: size = {0}'.format(len(output))
         for (i, interval) in enumerate(output, 1):
-            print >> sink, 'intervals [{}]'.format(i)
-            print >> sink, '\txmin = {}'.format(interval.minTime)
-            print >> sink, '\txmax = {}'.format(interval.maxTime)
-            print >> sink, '\ttext = "{}"'.format(interval.mark)
+            print >> sink, 'intervals [{0}]'.format(i)
+            print >> sink, '\txmin = {0}'.format(interval.minTime)
+            print >> sink, '\txmax = {0}'.format(interval.maxTime)
+            print >> sink, '\ttext = "{0}"'.format(interval.mark)
         sink.close()
 
     def bounds(self):
@@ -554,10 +554,10 @@ class TextGrid(object):
         self.tiers = []
 
     def __str__(self):
-        return '<TextGrid {} with {} Tiers>'.format(self.name, len(self))
+        return '<TextGrid {0}, {1} Tiers>'.format(self.name, len(self))
 
     def __repr__(self):
-        return 'TextGrid({}, {})'.format(self.name, self.tiers)
+        return 'TextGrid({0}, {1})'.format(self.name, self.tiers)
 
     def __iter__(self):
         return iter(self.tiers)
@@ -681,41 +681,46 @@ class TextGrid(object):
         sink = f if hasattr(f, 'write') else codecs.open(f, 'w', 'UTF-8')
         print >> sink, 'File type = "ooTextFile"'
         print >> sink, 'Object class = "TextGrid"\n'
-        print >> sink, 'xmin = {}'.format(self.minTime)
+        print >> sink, 'xmin = {0}'.format(self.minTime)
         # compute max time
         maxT = self.maxTime
         if not maxT:
             maxT = max([t.maxTime if t.maxTime else t[-1].maxTime \
                                                for t in self.tiers])
-        print >> sink, 'xmax = {}'.format(maxT)
+        print >> sink, 'xmax = {0}'.format(maxT)
         print >> sink, 'tiers? <exists>'
-        print >> sink, 'size = {}'.format(len(self))
+        print >> sink, 'size = {0}'.format(len(self))
         print >> sink, 'item []:'
         for (i, tier) in enumerate(self.tiers, 1):
-            print >> sink, '\titem [{}]:'.format(i)
+            print >> sink, '\titem [{0}]:'.format(i)
             if tier.__class__ == IntervalTier: 
                 print >> sink, '\t\tclass = "IntervalTier"'
-                print >> sink, '\t\tname = "{}"'.format(tier.name)
-                print >> sink, '\t\txmin = {}'.format(tier.minTime)
-                print >> sink, '\t\txmax = {}'.format(maxT)
+                print >> sink, '\t\tname = "{0}"'.format(tier.name)
+                print >> sink, '\t\txmin = {0}'.format(tier.minTime)
+                print >> sink, '\t\txmax = {0}'.format(maxT)
                 # compute the number of intervals and make the empty ones
                 output = tier._fillInTheGaps(null)
-                print >> sink, '\t\tintervals: size = {}'.format(len(output))
+                print >> sink, '\t\tintervals: size = {0}'.format(
+                                                           len(output))
                 for (j, interval) in enumerate(output, 1):
-                    print >> sink, '\t\t\tintervals [{}]:'.format(j)
-                    print >> sink, '\t\t\t\txmin = {}'.format(interval.minTime)
-                    print >> sink, '\t\t\t\txmax = {}'.format(interval.maxTime)
-                    print >> sink, u'\t\t\t\ttext = "{}"'.format(interval.mark)
+                    print >> sink, '\t\t\tintervals [{0}]:'.format(j)
+                    print >> sink, '\t\t\t\txmin = {0}'.format(
+                                                        interval.minTime)
+                    print >> sink, '\t\t\t\txmax = {0}'.format(
+                                                        interval.maxTime)
+                    print >> sink, u'\t\t\t\ttext = "{0}"'.format(
+                                                        interval.mark)
             elif tier.__class__ == PointTier: # PointTier
                 print >> sink, '\t\tclass = "TextTier"'
-                print >> sink, '\t\tname = "{}"'.format(tier.name)
-                print >> sink, '\t\txmin = {}'.format(min(tier))
-                print >> sink, '\t\txmax = {}'.format(max(tier))
-                print >> sink, '\t\tpoints: size = {}'.format(len(tier))
+                print >> sink, '\t\tname = "{0}"'.format(tier.name)
+                print >> sink, '\t\txmin = {0}'.format(min(tier))
+                print >> sink, '\t\txmax = {0}'.format(max(tier))
+                print >> sink, '\t\tpoints: size = {0}'.format(len(tier))
                 for (k, point) in enumerate(tier, 1):
-                    print >> sink, '\t\t\tpoints [{}]:'.format(k)
-                    print >> sink, '\t\t\t\ttime = {}'.format(point.time)
-                    print >> sink, u'\t\t\t\tmark = "{}"'.format(point.mark)
+                    print >> sink, '\t\t\tpoints [{0}]:'.format(k)
+                    print >> sink, '\t\t\t\ttime = {0}'.format(point.time)
+                    print >> sink, u'\t\t\t\tmark = "{0}"'.format(
+                                                           point.mark)
         sink.close()
 
 
@@ -750,10 +755,10 @@ class MLF(object):
         return iter(self.grids)
 
     def __str__(self):
-        return '<MLF with {} TextGrids>'.format(len(self))
+        return '<MLF, {0} TextGrids>'.format(len(self))
 
     def __repr__(self):
-        return 'MLF({})'.format(self.grids)
+        return 'MLF({0})'.format(self.grids)
 
     def __len__(self):
         return len(self.grids)

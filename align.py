@@ -24,7 +24,7 @@
 # align.py: text/speech alignment for speech production experiments
 # Kyle Gorman <gormanky@ohsu.edu> and Michael Wagner <chael@mcgill.ca>
 #
-# Requires Python 2.5-2.7
+# Requires Python 2.6-2.7
 #
 # See README.md for usage information and a tutorial. 
 #
@@ -33,8 +33,6 @@
 # FQRSC Nouvelle Chercheur NP-132516
 # SSHRC Digging into Data Challenge Grant 869-2009-0004
 # SSHRC Canada Research Chair 218503
-
-from __future__ import with_statement       # for Python 2.5 users
 
 import os
 import re
@@ -55,6 +53,7 @@ from textgrid import MLF
 
 DEBUG = False # when True, temp data not deleted...
 
+
 ### GLOBAL VARS
 # You can change these if you know HTK well
 
@@ -69,8 +68,8 @@ OUTOFDICT = 'outofdict.txt'
 
 # string constants for various shell calls
 F = str(.01)
-SFAC = str(5.0)
-PRUNING = [str(i) for i in (250.0, 150.0, 2000.0)]
+SFAC = str(5.)
+PRUNING = [str(i) for i in (250., 150., 2000.)]
 
 # hidden, but useful files
 ALIGN_MLF = '.ALIGN.mlf'
@@ -157,7 +156,7 @@ class PronDict(object):
                 for ph in pron:
                     if ph not in valid_phones:
                         error('Unknown phone in dictionary ' + \
-                              '({}), line {}: "{}" '.format(f, i, ph) + \
+                              '({0}), line {1}: "{2}" '.format(f, i, ph) +\
                               '(did you want to train a new acoustic ' + \
                               'model? If so, use the -t flag).')
                 self.d[word].append(pron)
@@ -166,7 +165,7 @@ class PronDict(object):
                 for ph in pron:
                     if INVALID_PHONE.match(ph):
                         error('Invalid phone on dictionary ' +
-                              '({}), line {}: "{}" '.format(f, i, ph) +
+                              '({0}), line {1}: "{2}" '.format(f, i, ph) +
                               '(phones may not start with numbers).')
                 self.d[word].append(pron)
         source.close()
@@ -297,7 +296,7 @@ class Aligner(object):
                 for path in unpaired_list:
                     print >> sink, path
                 error('Missing .wav or .lab files (see ' + 
-                      '{}).'.format(UNPAIRED))
+                      '{0}).'.format(UNPAIRED))
         return (wav_list, lab_list)
 
     def _check_dct(self, lab_list):
@@ -318,7 +317,7 @@ class Aligner(object):
                 # new lab file at the word level, in self.lab_dir
                 word_lab = open(os.path.join(self.lab_dir, lab_name), 'w')
                 # .mlf headers
-                print >> word_mlf, '"{}"'.format(word_lab.name)
+                print >> word_mlf, '"{0}"'.format(word_lab.name)
                 # sil
                 print >> phon_lab, SIL
                 # look up words
@@ -327,7 +326,7 @@ class Aligner(object):
                         found_words.add(word)
                         print >> phon_lab, '\n'.join(
                                            self.the_dict[word][0])
-                        print >> word_lab, '{} '.format(word)
+                        print >> word_lab, '{0} '.format(word)
                         print >> word_mlf, word
                     else:
                         ood[word].append(lab)
@@ -340,12 +339,12 @@ class Aligner(object):
             with open(OUTOFDICT, 'w') as sink:
                 if self.ood_mode:
                     for (word, flist) in sorted(ood.iteritems()):
-                        print >> sink, '{}\t{}'.format(word, 
+                        print >> sink, '{0}\t{1}'.format(word, 
                                                        ' '.join(flist))
                 else:
                     for word in sorted(ood):
                         print >> sink, word
-            error('Out of dictionary word(s), see {}.'.format(OUTOFDICT))
+            error('Out of dictionary word(s), see {0}.'.format(OUTOFDICT))
         ## make word
         print >> open(self.words, 'w'), '\n'.join(found_words)
         ded = os.path.join(self.tmp_dir, TEMP)
@@ -357,7 +356,7 @@ class Aligner(object):
         # add sil
         print >> open(self.phons, 'a'), SIL
         ## add sil and projected words to self.taskdict
-        print >> open(self.taskdict, 'a'), '{} {}'.format(SIL, SIL)
+        print >> open(self.taskdict, 'a'), '{0} {0}'.format(SIL)
         ## run HLEd
         led = os.path.join(self.tmp_dir, TEMP)
         print >> open(led, 'w'), 'EX\nIS {0} {0}\nDE {1}'.format(SIL, SP)
@@ -389,7 +388,7 @@ class Aligner(object):
                     retcode = pid.wait()
                     if retcode != 0:
                         raise CalledProcessError(retcode, 'sox')
-                print >> copy_scp, '{} {}'.format(wav, mfc)
+                print >> copy_scp, '{0} {1}'.format(wav, mfc)
                 print >> check_scp, mfc
                 w.close()
         else:
@@ -398,8 +397,8 @@ class Aligner(object):
                 mfc = os.path.join(self.aud_dir, head + '.mfc')
                 w = wave.open(wav, 'r')
                 if (w.getframerate() != self.sr) or (w.getnchannels()!=1):
-                    error('File {} to be resampled but Sox not found ', w)
-                print >> copy_scp, '{} {}'.format(wav, mfc)
+                    error('File {0} needs resampled but Sox not found ', w)
+                print >> copy_scp, '{0} {1}'.format(wav, mfc)
                 print >> check_scp, mfc
                 w.close()
         copy_scp.close()
@@ -463,8 +462,8 @@ NUMCEPS = 12"""
         for line in proc.stdout:
             mch = HVITE_SCORE.match(line)  # check for score line
             if mch:
-                print >> sink, '{}\t{}'.format(self.wav_list[i], 
-                                               mch.group(1))
+                print >> sink, '{0}\t{1}'.format(self.wav_list[i], 
+                                                 mch.group(1))
                 i += 1
         # make sure no errors in decoding...
         retcode = proc.wait()
@@ -477,7 +476,7 @@ NUMCEPS = 12"""
         Destroys the temp directory on the way out
         """
         if DEBUG:
-            print >> stderr, 'Temp files are in {}'.format(self.tmp_dir)
+            print >> stderr, 'Temp files are in {0}'.format(self.tmp_dir)
         else:
             rmtree(self.tmp_dir)
 
@@ -517,8 +516,8 @@ class TrainAligner(Aligner):
 <BEGINHMM>
 <NUMSTATES> 5"""
         for i in xrange(2, 5):
-            print >> sink, '<STATE> {}\n<MEAN> 39\n{}'.format(i, means)
-            print >> sink, '<VARIANCE> 39\n{}'.format(varg)
+            print >> sink, '<STATE> {0}\n<MEAN> 39\n{1}'.format(i, means)
+            print >> sink, '<VARIANCE> 39\n{0}'.format(varg)
         print >> sink, """<TRANSP> 5
  0.0 1.0 0.0 0.0 0.0
  0.0 0.6 0.4 0.0 0.0
@@ -551,7 +550,7 @@ class TrainAligner(Aligner):
             source.readline()
             source.readline()
             # the header
-            print >> sink, '~h "{}"'.format(phone.rstrip())
+            print >> sink, '~h "{0}"'.format(phone.rstrip())
             # the rest
             sink.writelines(source.readlines())
             source.close()
@@ -616,7 +615,7 @@ class TrainAligner(Aligner):
         saved = ['~h "{0}"\n'.format(SP)] # store lines to append later
         # pass until we find SIL
         for line in source:
-            if line.startswith('~h "{}"'.format(SIL)):
+            if line.startswith('~h "{0}"'.format(SIL)):
                 break
         # header for silence
         saved.append('<BEGINHMM>\n<NUMSTATES> 3\n<STATE> 2\n')
@@ -644,8 +643,8 @@ AT 4 2 0.2 {{{1}.transP}}
 AT 1 3 0.3 {{{0}.transP}}
 TI silst {{{1}.state[3],{0}.state[2]}}
 """.format(SP, SIL)
-        check_call(['HHEd', '-H', os.path.join(self.cur_dir, MACROS), 
-                            '-H', os.path.join(self.cur_dir, HMMDEFS), 
+        check_call(['HHEd', '-H', os.path.join(self.cur_dir, MACROS),
+                            '-H', os.path.join(self.cur_dir, HMMDEFS),
                             '-M', self.nxt_dir, hed, self.phons])
         # FIXME this seems to not be necessary, but I'm not sure why.
         """
@@ -679,7 +678,7 @@ if __name__ == '__main__':
                 dictionary = val
                 if not os.access(dictionary, os.R_OK):
                     print >> stderr, USAGE
-                    error('-d path {} not found'.format(dictionary))
+                    error('-d path {0} not found'.format(dictionary))
             elif opt == '-m':  # ood_mode
                 ood_mode = True
             elif opt == '-n':
@@ -711,12 +710,12 @@ if __name__ == '__main__':
                         sr = SRs[i - 1]
                     else:
                         sr = SRs[i]
-                    print >> stderr, 'Nearest licit SR is {} Hz'.format(sr)
+                    print >> stderr, 'Nearest licit SR = {0} Hz'.format(sr)
             elif opt == '-t':
                 tr_dir = resolve(val)
                 if not os.access(tr_dir, os.F_OK):
                     print >> stderr, USAGE
-                    error('-t path {} cannot be read'.format(tr_dir))
+                    error('-t path {0} cannot be read'.format(tr_dir))
             elif opt == '-h':
                 print >> stderr, USAGE
                 exit(0)
@@ -763,7 +762,7 @@ if __name__ == '__main__':
             n = MLF(path_to_mlf).write(ts_dir)
             if n < 1:
                 error('No paths found (is your data very noisy?).')
-            print >> stderr, '{} TextGrids generated... done.'.format(n)
+            print >> stderr, '{0} TextGrids generated... done.'.format(n)
             print >> stderr, 'Alignment complete.'
         except CalledProcessError, err:
             exit(err)
@@ -783,7 +782,7 @@ if __name__ == '__main__':
             n = MLF(path_to_mlf).write(ts_dir)
             if n < 1:
                 error('No paths found (do you plenty of training data?).')
-            print >> stderr, '{} TextGrids generated... done.'.format(n)
+            print >> stderr, '{0} TextGrids generated... done.'.format(n)
             print >> stderr, 'Alignment complete.'
         except CalledProcessError, err:
             exit(err)
