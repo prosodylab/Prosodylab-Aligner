@@ -9,10 +9,10 @@
 # distribute, sublicense, and/or sell copies of the Software, and to
 # permit persons to whom the Software is furnished to do so, subject to
 # the following conditions:
-# 
+#
 # The above copyright notice and this permission notice shall be included
 # in all copies or substantial portions of the Software.
-# 
+#
 # THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
 # OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
 # MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
@@ -26,7 +26,7 @@
 #
 # Requires Python 2.6-2.7
 #
-# See README.md for usage information and a tutorial. 
+# See README.md for usage information and a tutorial.
 #
 # This project was funded by:
 #
@@ -38,7 +38,7 @@ from __future__ import with_statement
 
 
 ## VERSION CHECK
-# before we get going, check for 
+# before we get going, check for
 from sys import version_info, exit
 if version_info < (2, 6, 0):
     exit('You need Python 2.6-2.7 to run this script.')
@@ -61,7 +61,7 @@ from subprocess import check_call, Popen, CalledProcessError, PIPE
 from textgrid import MLF
 # http://github.com/kylebgorman/textgrid.py/
 
-DEBUG = False # when True, temp data not deleted...
+DEBUG = False  # when True, temp data not deleted...
 
 
 ### GLOBAL VARS
@@ -94,13 +94,13 @@ INVALID_PHONE = re.compile('^\d')
 
 # list of CMU English phones, which can only be used if you're not training
 
-CMU_PHONES = set(['AA0', 'AA1', 'AA2', 'AE0', 'AE1', 'AE2', 
-                  'AH0', 'AH1', 'AH2', 'AO0', 'AO1', 'AO2', 
-                  'AW0', 'AW1', 'AW2', 'AY0', 'AY1', 'AY2', 
+CMU_PHONES = set(['AA0', 'AA1', 'AA2', 'AE0', 'AE1', 'AE2',
+                  'AH0', 'AH1', 'AH2', 'AO0', 'AO1', 'AO2',
+                  'AW0', 'AW1', 'AW2', 'AY0', 'AY1', 'AY2',
                   'EH0', 'EH1', 'EH2', 'ER0', 'ER1', 'ER2',
-                  'EY0', 'EY1', 'EY2', 'IH0', 'IH1', 'IH2', 
-                  'IY0', 'IY1', 'IY2', 'OW0', 'OW1', 'OW2', 
-                  'OY0', 'OY1', 'OY2', 'UH0', 'UH1', 'UH2', 
+                  'EY0', 'EY1', 'EY2', 'IH0', 'IH1', 'IH2',
+                  'IY0', 'IY1', 'IY2', 'OW0', 'OW1', 'OW2',
+                  'OY0', 'OY1', 'OY2', 'UH0', 'UH1', 'UH2',
                   'UW0', 'UW1', 'UW2', 'B', 'CH', 'D', 'DH', 'F', 'G',
                   'HH', 'JH', 'K', 'L', 'M', 'N', 'NG', 'P', 'R', 'S',
                   'SH', 'T', 'TH', 'V', 'W', 'Y', 'Z', 'ZH'])
@@ -154,6 +154,7 @@ def pronify(source):
 
 ### CLASSES
 
+
 class PronDict(object):
     """
     A wrapper for a normal pronunciation dictionary in the CMU style
@@ -165,9 +166,9 @@ class PronDict(object):
             for (i, word, pron) in pronify(source):
                 for ph in pron:
                     if ph not in valid_phones:
-                        error('Unknown phone in dictionary ' + \
-                              '({0}), line {1}: "{2}" '.format(f, i, ph) +\
-                              '(did you want to train a new acoustic ' + \
+                        error('Unknown phone in dictionary ' +
+                              '({0}), line {1}: "{2}" '.format(f, i, ph) +
+                              '(did you want to train a new acoustic ' +
                               'model? If so, use the -t flag).')
                 self.d[word].append(pron)
         else:
@@ -199,7 +200,6 @@ class PronDict(object):
         self.d[key].append(value)
 
 
-
 class Aligner(object):
     """
     Basic class for performing alignment, using Montreal English lab speech
@@ -207,7 +207,7 @@ class Aligner(object):
     """
 
     def __init__(self, ts_dir, tr_dir, dictionary='dictionary.txt',
-                               sr=8000, ood_mode=False, phoneset=None):
+                 sr=8000, ood_mode=False, phoneset=None):
         ## class variables
         self.sr = sr
         self.has_sox = self._has_sox()
@@ -222,7 +222,7 @@ class Aligner(object):
         self.hmm_dir = os.path.join(self.tmp_dir, 'HMM')  # HMM dir
         os.mkdir(self.hmm_dir)
         ## dictionary reps
-        self.dictionary = dictionary # string of dict location
+        self.dictionary = dictionary  # string of dict location
         self.the_dict = PronDict(dictionary, phoneset)
         self.the_dict[SIL] = [SIL]
         # lists
@@ -283,7 +283,7 @@ class Aligner(object):
     def _lists(self, path):
         """
         Checks that the .wav and .lab files are all paired. An exception is
-        raised if they are not, and the unpaired data are written out. 
+        raised if they are not, and the unpaired data are written out.
         If no errors result, the tuple (wav_list, lab_list) is returned.
         """
         # glob together the list of source data
@@ -305,7 +305,7 @@ class Aligner(object):
                 sink = open(UNPAIRED, 'w')
                 for path in unpaired_list:
                     print >> sink, path
-                error('Missing .wav or .lab files (see ' + 
+                error('Missing .wav or .lab files (see ' +
                       '{0}).'.format(UNPAIRED))
         return (wav_list, lab_list)
 
@@ -349,8 +349,8 @@ class Aligner(object):
             with open(OUTOFDICT, 'w') as sink:
                 if self.ood_mode:
                     for (word, flist) in sorted(ood.iteritems()):
-                        print >> sink, '{0}\t{1}'.format(word, 
-                                                       ' '.join(flist))
+                        print >> sink, '{0}\t{1}'.format(word,
+                                                         ' '.join(flist))
                 else:
                     for word in sorted(ood):
                         print >> sink, word
@@ -375,7 +375,7 @@ class Aligner(object):
 
     def _check_aud(self, wav_list, train=False):
         """
-        Check audio files, mixing down to mono and downsampling if 
+        Check audio files, mixing down to mono and downsampling if
         necessary. Writes copy_scp and the training or testing SCP files
         """
         copy_scp = open(self.copy_scp, 'a')
@@ -391,7 +391,7 @@ class Aligner(object):
                     new_wav = os.path.join(self.aud_dir, head + '.wav')
                     pids.append(Popen(['sox', '-G', wav, '-b', '16',
                                        new_wav, 'remix', '-',
-                                       'rate', str(self.sr), 
+                                       'rate', str(self.sr),
                                        'dither', '-s'], stderr=PIPE))
                     wav = new_wav
                 for pid in pids:  # do a join
@@ -406,7 +406,7 @@ class Aligner(object):
                 head = os.path.splitext(wav)[0]
                 mfc = os.path.join(self.aud_dir, head + '.mfc')
                 w = wave.open(wav, 'r')
-                if (w.getframerate() != self.sr) or (w.getnchannels()!=1):
+                if (w.getframerate() != self.sr) or (w.getnchannels() != 1):
                     error('File {0} needs resampled but Sox not found ', w)
                 print >> copy_scp, '{0} {1}'.format(wav, mfc)
                 print >> check_scp, mfc
@@ -446,13 +446,13 @@ NUMCEPS = 12"""
         """
         Align using the models in self.cur_dir and MLF to path
         """
-        check_call(['HVite', '-a', '-m', '-y', 'lab', '-o', 'SM', '-b', 
+        check_call(['HVite', '-a', '-m', '-y', 'lab', '-o', 'SM', '-b',
                     SIL, '-i', mlf, '-L', self.lab_dir,
                     '-C', self.cfg, '-S', self.test_scp,
                     '-H', os.path.join(self.cur_dir, MACROS),
                     '-H', os.path.join(self.cur_dir, HMMDEFS),
                     '-I', self.word_mlf, '-t'] + PRUNING +
-                    ['-s', SFAC, self.taskdict, self.phons])
+                   ['-s', SFAC, self.taskdict, self.phons])
 
     def align_and_score(self, mlf, score):
         """
@@ -461,18 +461,18 @@ NUMCEPS = 12"""
         i = 0
         sink = open(score, 'w')
         call_list = ['HVite', '-T', '1', '-a', '-m', '-y', 'lab',
-                      '-o', 'SM', '-b', SIL, '-i', mlf, 
-                      '-L', self.lab_dir,
-                      '-C', self.cfg, '-S', self.test_scp,
-                      '-H', os.path.join(self.cur_dir, MACROS),
-                      '-H', os.path.join(self.cur_dir, HMMDEFS),
-                      '-I', self.word_mlf, '-t'] + PRUNING + \
-                      [self.taskdict, self.phons]
+                     '-o', 'SM', '-b', SIL, '-i', mlf,
+                     '-L', self.lab_dir,
+                     '-C', self.cfg, '-S', self.test_scp,
+                     '-H', os.path.join(self.cur_dir, MACROS),
+                     '-H', os.path.join(self.cur_dir, HMMDEFS),
+                     '-I', self.word_mlf, '-t'] + PRUNING + \
+                    [self.taskdict, self.phons]
         proc = Popen(call_list, stdout=PIPE)
         for line in proc.stdout:
             mch = HVITE_SCORE.match(line)  # check for score line
             if mch:
-                print >> sink, '{0}\t{1}'.format(self.wav_list[i], 
+                print >> sink, '{0}\t{1}'.format(self.wav_list[i],
                                                  mch.group(1))
                 i += 1
         # make sure no errors in decoding...
@@ -537,7 +537,7 @@ class TrainAligner(Aligner):
 <ENDHMM>"""
         sink.close()
         ## make vFloors
-        check_call(['HCompV', '-f', F, '-C', self.cfg, 
+        check_call(['HCompV', '-f', F, '-C', self.cfg,
                               '-S', self.train_scp,
                               '-M', self.cur_dir, self.proto])
         ## make local macro
@@ -608,12 +608,12 @@ class TrainAligner(Aligner):
         """
         for _ in xrange(niter):
             check_call(['HERest', '-C', self.cfg, '-S', self.train_scp,
-                        '-I', self.phon_mlf, 
+                        '-I', self.phon_mlf,
                         '-M', self.nxt_dir,
                         '-H', os.path.join(self.cur_dir, MACROS),
                         '-H', os.path.join(self.cur_dir, HMMDEFS),
                         '-t'] + PRUNING + [self.phons],
-                 stdout=PIPE)
+                       stdout=PIPE)
             self._nxt_dir()
 
     def small_pause(self):
@@ -622,7 +622,7 @@ class TrainAligner(Aligner):
         """
         ## make a new hmmdf
         source = open(os.path.join(self.cur_dir, HMMDEFS), 'r+')
-        saved = ['~h "{0}"\n'.format(SP)] # store lines to append later
+        saved = ['~h "{0}"\n'.format(SP)]  # store lines to append later
         # pass until we find SIL
         for line in source:
             if line.startswith('~h "{0}"'.format(SIL)):
@@ -746,7 +746,7 @@ if __name__ == '__main__':
     if tr_dir:
         try:
             print >> stderr, 'Initializing...',
-            aligner = TrainAligner(ts_dir, tr_dir, dictionary, sr, 
+            aligner = TrainAligner(ts_dir, tr_dir, dictionary, sr,
                                    ood_mode)
             print >> stderr, 'done.'
             print >> stderr, 'Training...',
@@ -765,7 +765,7 @@ if __name__ == '__main__':
             aligner.train(n_per_round)  # more training
             print >> stderr, 'done.'
             print >> stderr, 'Final aligning...',
-            aligner.align_and_score(path_to_mlf, os.path.join(ts_dir, 
+            aligner.align_and_score(path_to_mlf, os.path.join(ts_dir,
                                                               SCORES_TXT))
             print >> stderr, 'done.'
             print >> stderr, 'Making TextGrids...',
@@ -782,7 +782,7 @@ if __name__ == '__main__':
         try:
             print >> stderr, 'Initializing...',
             aligner = Aligner(ts_dir, 'MOD', dictionary, sr, ood_mode,
-                                                             CMU_PHONES)
+                              CMU_PHONES)
             print >> stderr, 'done.'
             print >> stderr, 'Aligning...',
             aligner.align_and_score(path_to_mlf, os.path.join(ts_dir,

@@ -67,7 +67,7 @@ The [Hidden Markov Model Toolkit](http://htk.eng.cam.ac.uk) (HTK) is a set of pr
 
 ### How does Prosodylab-Aligner differ from the Penn Forced Aligner?
 
-The [Penn Forced Aligner](http://www.ling.upenn.edu/phonetics/p2fa/) (P2FA) provides forced alignment for American English using an acoustic model derived from audio of US Supreme Court oral arguments. Prosodylab-Aligner has a number of additional capabilities, most importantly acoustic model training, and once the corpus of oral arguments is released, it will be possible in theory to use Prosodylab-Aligner to simulate P2FA.
+The [Penn Forced Aligner](http://www.ling.upenn.edu/phonetics/p2fa/) (P2FA) provides forced alignment for American English using an acoustic model derived from audio of US Supreme Court oral arguments. Prosodylab-Aligner has a number of additional capabilities, most importantly acoustic model training, and it is possible in theory to use Prosodylab-Aligner to simulate P2FA.
 
 ## Installing
 
@@ -259,3 +259,20 @@ Other options are documented above.
 ## Importing the module
 
 Users who are familiar with Python are encouraged to import `align.py` as a Python module if it makes sense for their application. 
+
+## Making your own default acoustic model
+
+Many users have requested the ability to store an acoustic model for future use. Prosodylab-Aligner is not built with this in mind, but it is certainly possible for technically-inclined users to save their acoustic models for reuse.
+
+1. Open `align.py` in a text editor.
+    1. Change the global variable `DEBUG` to `True`.
+    2. Then, edit the global variable `CMU\_PHONES` so that it contains the same phoneset as your training data.
+    3. Exit the text editor.
+2. Gather the training data and perform model training with the `-t` flag.
+3. At the end of training and alignment, `align.py` will print out the location of the temporary directory where the resulting acoustic models are stored. 
+    1. Navigate to this directory, then to the subdirectory `HMM`.
+    2. You will see a number of numbered subdirectories here. Go to the second-highest numbered subdirectory (e.g., if the last subdiretory is `9`, go to `8`). 
+    3. Copy the files `hmmdefs` and `macros` to the subdirectory `MOD` where Prosodylab-Aligner is located.
+4. To return to normal operation, change the global variable `DEBUG` in `align.py` back to `False`.
+
+Note that this will overwrite the default acoustic model, so you may want to keep multiple copies of the Prosodylab-Aligner directory.
