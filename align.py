@@ -38,7 +38,7 @@ from __future__ import with_statement
 
 
 ## VERSION CHECK
-# before we get going, check for
+# before we get going, check Python version
 from sys import version_info, exit
 if version_info < (2, 6, 0):
     exit('You need Python 2.6-2.7 to run this script.')
@@ -747,7 +747,7 @@ if __name__ == '__main__':
         try:
             print >> stderr, 'Initializing...',
             aligner = TrainAligner(ts_dir, tr_dir, dictionary, sr,
-                                   ood_mode)
+                                                          ood_mode)
             print >> stderr, 'done.'
             print >> stderr, 'Training...',
             aligner.train(n_per_round)  # start training

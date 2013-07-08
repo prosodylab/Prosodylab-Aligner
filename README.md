@@ -77,11 +77,15 @@ The scripts require a version of Python no earlier than 2.6, a BASH-compatible s
 
 #### Linux
 
-On Linux or similar POSIX-based systems, SoX can be obtained from the distribution-specific package manager (`apt-get`, `yum`, etc.), or can be compiled from source without too much difficulty. 
+On Linux or similar POSIX-based systems, SoX can be obtained from the distribution-specific package manager (`apt-get`, `yum`, etc.), or can be compiled from source without too much difficulty.
 
 #### Mac OS X
 
-On Mac OS X it may be obtained from Fink or DarwinPorts, though compiling by hand may be somewhat difficult. Fortunately, the SoX maintainers provide compiled binaries for Mac OS X. You can simply download these binaries from the above URL (click on the link after the text "Looking for the latest version?"). The zip file can be expanded by double-clicking on it. The resulting files must be placed in your `$PATH`. A simple way to do this is to navigate to the resulting directory, and issue the following command:
+On Mac OS X it may be obtained from Fink or DarwinPorts, though compiling by hand may be somewhat difficult. Fortunately, the SoX maintainers provide compiled binaries for Mac OS X. You can simply download these binaries from the following URL (click on the link after the text "Looking for the latest version?"):
+
+    http://sox.sourceforge.net
+
+The zip file can be expanded by double-clicking on it. The resulting files must be placed in your `$PATH`. A simple way to do this is to navigate to the resulting directory, and issue the following command:
 
     $ sudo mv rec play sox soxi /usr/local/bin
 
@@ -112,8 +116,8 @@ Once you extract the application, navigate into the resulting directory:
 
 Edit the file `configure`, making the following changes:
 
-* On line 5507, replace "-m32" with "-s" (make 64-bit stripped binaries instead of 32-bit unstripped binaries)
-* On line 6788, replace "-O2" with "-O3" (make fully optimmized binaries)
+* On line 5507, replace `-m32` with `-s` (make 64-bit stripped binaries instead of 32-bit unstripped binaries)
+* On line 6788, replace `-O2` with `-O3` (make fully optimmized binaries)
 
 This will produce smaller, faster binaries than otherwise. Then run the following commands
 
@@ -239,7 +243,7 @@ Please note: THIS REQUIRES A LOT OF DATA to work well, and further takes a long 
     $ ./align.py -t data/ data/
     ...
 
-When `-t` is specified, a few other command-line options to `align.py    become available. The `-s` flag specifies samplerate for the models used, and if SoX is installed, both training and testing data will be resampled to this rate, if they do not match it. For instance, to use 44010 Hz models, you could say:
+When `-t` is specified, a few other command-line options to `align.py` become available. The `-s` flag specifies samplerate for the models used, and if SoX is installed, both training and testing data will be resampled to this rate, if they do not match it. For instance, to use 44010 Hz models, you could say:
 
     $ ./align.py -s 44010 -t data data
     ...

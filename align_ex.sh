@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 # Example that does a single alignment
 # Kyle Gorman <gormanky@ohsu.edu>
 
