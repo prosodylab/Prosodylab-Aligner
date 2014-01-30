@@ -40,9 +40,9 @@ from __future__ import with_statement
 ## VERSION CHECK
 # before we get going, check Python version
 from sys import version_info, exit
+
 if version_info < (2, 6, 0):
     exit('You need Python 2.6-2.7 to run this script.')
-
 
 import os
 import re
@@ -58,8 +58,7 @@ from getopt import getopt, GetoptError
 from subprocess import check_call, Popen, CalledProcessError, PIPE
 
 # should be in the current directory
-from textgrid import MLF
-# http://github.com/kylebgorman/textgrid.py/
+from textgrid import MLF  # http://github.com/kylebgorman/textgrid.py/
 
 DEBUG = False  # when True, temp data not deleted...
 
@@ -101,11 +100,12 @@ CMU_PHONES = set(['AA0', 'AA1', 'AA2', 'AE0', 'AE1', 'AE2',
                   'EY0', 'EY1', 'EY2', 'IH0', 'IH1', 'IH2',
                   'IY0', 'IY1', 'IY2', 'OW0', 'OW1', 'OW2',
                   'OY0', 'OY1', 'OY2', 'UH0', 'UH1', 'UH2',
-                  'UW0', 'UW1', 'UW2', 'B', 'CH', 'D', 'DH', 'F', 'G',
-                  'HH', 'JH', 'K', 'L', 'M', 'N', 'NG', 'P', 'R', 'S',
-                  'SH', 'T', 'TH', 'V', 'W', 'Y', 'Z', 'ZH'])
+                  'UW0', 'UW1', 'UW2', 
+                  'B', 'CH', 'D', 'DH', 'F', 'G', 'HH', 'JH', 'K', 'L', 
+                  'M', 'N', 'NG', 'P', 'R', 'S', 'SH', 'T', 'TH', 'V', 
+                  'W', 'Y', 'Z', 'ZH'])
 
-# divisors of 1e7, truncated on either end, which make good samplerates
+# samplerates which are HTK-compatible (divisors of 1e7)
 SRs = [4000, 8000, 10000, 12500, 15625, 16000, 20000, 25000, 31250, 40000,
        50000, 62500, 78125, 80000, 100000, 125000, 156250, 200000]
 
@@ -290,7 +290,7 @@ class Aligner(object):
         wav_list = glob(os.path.join(os.path.realpath(path), '*.wav'))
         lab_list = glob(os.path.join(os.path.realpath(path), '*.lab'))
         if len(wav_list) < 1:  # broken
-            error('Directory {0} has no .wav files', path)
+            error('Directory {0} has no .wav files'.format(path))
         else:
             unpaired_list = []
             for lab in lab_list:

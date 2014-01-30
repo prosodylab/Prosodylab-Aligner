@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python -O
 # 
 # Copyright (c) 2011-2013 Kyle Gorman, Max Bane, Morgan Sonderegger
 # 
@@ -21,8 +21,7 @@
 # TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
 # SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #
-# textgrid.py
-# Classes for Praat TextGrid data structures, and HTK .mlf files
+# textgrid.py: classes for Praat TextGrid and HTK mlf files
 # 
 # Max Bane <bane@uchicago.edu>
 # Kyle Gorman <gormanky@ohsu.edu>
@@ -155,7 +154,7 @@ class Interval(object):
                 # this returns the two intervals, so the user can patch things
                 # up if s/he so chooses
             return cmp(self.minTime, other.minTime)
-        elif hasattr(other, 'time'):
+        elif hasattr(other, 'time'): # happens when comparing Intervals and Points
             return cmp(self.minTime, other.time) + \
                    cmp(self.maxTime, other.time)
         else: 
@@ -205,7 +204,7 @@ class Interval(object):
             return self.minTime <= other <= self.maxTime
 
     def bounds(self):
-        return (self.minTime, self.maxTime or self.points[-1].maxTime)
+        return (self.minTime, self.maxTime)
 
 
 class PointTier(object):
@@ -314,7 +313,7 @@ class PointTier(object):
         sink.close()
 
     def bounds(self):
-        return (self.minTime, self.maxTime or self.intervals[-1].maxTime)
+        return (self.minTime, self.maxTime or self.points[-1].time)
 
 
 class PointTierFromFile(PointTier):
@@ -623,8 +622,20 @@ class TextGrid(object):
 
     @staticmethod
     def _getMark(text):
-        a = re.search('(\S+) (=) (".*")', text.readline()).groups()
-        return a[2][1:-1]
+        """
+        Get the "mark" text on a line. Since Praat doesn't prevent you 
+        from using your platform's newline character in "text" fields, we
+        read until we find a match. Regression tests are in `RWtests.py`.
+        """
+        m = None
+        my_line = ''
+        while True:
+            my_line += text.readline()
+            m = re.search(r'(\S+)\s(=)\s(".*")', my_line, 
+                          re.DOTALL)
+            if m != None:
+                break
+        return m.groups()[2][1:-1]
 
     def read(self, f):
         """
@@ -649,11 +660,10 @@ class TextGrid(object):
                 itie = IntervalTier(inam)
                 for j in xrange(int(source.readline().rstrip().split()[3])):
                     source.readline().rstrip().split() # header junk
-                    jmin = round(float(source.readline().rstrip().split()[2]),
-                                                                           5)
-                    jmax = round(float(source.readline().rstrip().split()[2]),
-                                                                           5)
+                    jmin = round(float(source.readline().rstrip().split()[2]), 5)
+                    jmax = round(float(source.readline().rstrip().split()[2]), 5)
                     jmrk = self._getMark(source)
+                    print jmin, jmax, jmrk
                     if jmin < jmax: # non-null
                         itie.addInterval(Interval(jmin, jmax, jmrk))
                 self.append(itie)
