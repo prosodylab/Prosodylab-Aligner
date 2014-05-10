@@ -151,10 +151,10 @@ class Interval(object):
         if hasattr(other, 'minTime') and hasattr(other, 'maxTime'):
             if self.overlaps(other): 
                 raise ValueError(self, other)
-                # this returns the two intervals, so the user can patch things
+                # this returns the two intervals, so user can patch things
                 # up if s/he so chooses
             return cmp(self.minTime, other.minTime)
-        elif hasattr(other, 'time'): # happens when comparing Intervals and Points
+        elif hasattr(other, 'time'): # comparing Intervals and Points
             return cmp(self.minTime, other.time) + \
                    cmp(self.maxTime, other.time)
         else: 
@@ -663,7 +663,6 @@ class TextGrid(object):
                     jmin = round(float(source.readline().rstrip().split()[2]), 5)
                     jmax = round(float(source.readline().rstrip().split()[2]), 5)
                     jmrk = self._getMark(source)
-                    print jmin, jmax, jmrk
                     if jmin < jmax: # non-null
                         itie.addInterval(Interval(jmin, jmax, jmrk))
                 self.append(itie)
