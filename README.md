@@ -108,6 +108,14 @@ Note that you will have to make an account and agree to their restricted distrib
 
     $ tar -fvxz htk-3.4.1.tar.gz
 
+Note that if your browser automatically attempts to unpack compressed files upon download, you may get the following error:
+
+    tar: Must specify one of -c, -r, -t, -u, -x
+
+In this case, use the command (again adjusting for version number):
+
+    $ tar -xf htk-3.4.1.tar.gz
+
 Once you extract the application, navigate into the resulting directory:
 
     $ cd htk
@@ -150,7 +158,11 @@ You can confirm that HTK is installed by issuing the following command in any di
 
 ### Obtaining a dictionary
 
-First, obtain an appropriate pronunciation dictionary. Since many of the intended users are American English speakers, I've provided a version of the CMU pronunciation dictionary (with minor modifications). Many other dictionaries are available online; if you're working with RP speakers, CELEX might be a good fit..
+First, obtain an appropriate pronunciation dictionary. Currently, the aligner comes with a file "dictionary.txt" intended for use with American English. Dictionaries in other languages are available at our other repository,
+
+    https://github.com/prosodylab/prosodylab.dictionaries
+
+Other dictionaries can be found online, or written in the CMU format for specific tasks. If you're working with RP speakers, [CELEX](http://catalog.ldc.upenn.edu/LDC96L14) might be a good choice.
 
 ### Aligning one pair
 
