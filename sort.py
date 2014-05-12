@@ -1,14 +1,13 @@
-#!/usr/bin/env python
+#!/usr/bin/env python -O
 #
 # Kyle Gorman <gormanky@ohsu.edu>
 #
-# The UNIX sort utility does not always do the right thing in HTK's mind,
-# but this one does.
+# The UNIX sort utility does not always do the right thing, as far as HTK
+# is concerned; this one does.
 
 import fileinput
 
 
 if __name__ == '__main__':
     lines = list(set(l.rstrip() for l in fileinput.input()))  # accumulate
-    lines.sort()       # sort
-    print '\n'.join(lines)
+    print '\n'.join(sorted(lines))                            # linearize

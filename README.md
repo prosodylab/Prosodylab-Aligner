@@ -122,12 +122,7 @@ Once you extract the application, navigate into the resulting directory:
 
 #### 64-bit x86 Linux 
 
-Edit the file `configure`, making the following changes:
-
-* On line 5507, replace `-m32` with `-s` (make 64-bit stripped binaries instead of 32-bit unstripped binaries)
-* On line 6788, replace `-O2` with `-O3` (make fully optimmized binaries)
-
-This will produce smaller, faster binaries than otherwise. Then run the following commands
+Run the following commands:
 
     $ ./configure --disable-hslab --disable-hlmtools
     ...
@@ -167,7 +162,7 @@ First, obtain an appropriate pronunciation dictionary. Currently, the aligner co
 
     https://github.com/prosodylab/prosodylab.dictionaries
 
-Other dictionaries can be found online, or written in the CMU format for specific tasks. If you're working with RP speakers, CELEX might be a good one (found at http://catalog.ldc.upenn.edu/LDC96L14 ).
+Other dictionaries can be found online, or written in the CMU format for specific tasks. If you're working with RP speakers, [CELEX](http://catalog.ldc.upenn.edu/LDC96L14) might be a good choice.
 
 ### Aligning one pair
 
@@ -215,9 +210,11 @@ Secondly, a word in your .lab files may be missing from the dictionary. Such wor
 
 If you call align.py with the argument -m, each word in outofdict.txt is paired with a list of .lab files where it occurs. This may be useful for fixing typos in the .lab files. 
 
+If you are transcribing new words using the CMU phone set, see [this page](http://www.csee.ogi.edu/~gormanky/papers/codes/) for IPA equivalents.
+
 #### SoX not installed
 
-Also, if SoX is not installed, but it needed because the audio is in a different format than the provided models (which are mono and sampled at 8000 Hz), an error will be raised.
+Also, if SoX is not installed, but it needed because the audio is in a different format than the provided models (sampled at 8000 Hz and mono), an error result.
 
 #### align.py not executable ("Permission denied")
 
@@ -230,7 +227,7 @@ On Linux or Mac OS X, the following command should do the trick:
 
     $ chmod +x ./align.py
 
-Then, run `align.py` like above.  
+Then, run `align.py` like above.
 
 #### Out of space errors
 
