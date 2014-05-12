@@ -1,6 +1,6 @@
-#!/usr/bin/env python
+#!/usr/bin/env python -O
 #
-# Copyright (c) 2011-2013 Kyle Gorman and Michael Wagner
+# Copyright (c) 2011-2014 Kyle Gorman and Michael Wagner
 #
 # Permission is hereby granted, free of charge, to any person obtaining a
 # copy of this software and associated documentation files (the
@@ -100,9 +100,9 @@ CMU_PHONES = set(['AA0', 'AA1', 'AA2', 'AE0', 'AE1', 'AE2',
                   'EY0', 'EY1', 'EY2', 'IH0', 'IH1', 'IH2',
                   'IY0', 'IY1', 'IY2', 'OW0', 'OW1', 'OW2',
                   'OY0', 'OY1', 'OY2', 'UH0', 'UH1', 'UH2',
-                  'UW0', 'UW1', 'UW2', 
-                  'B', 'CH', 'D', 'DH', 'F', 'G', 'HH', 'JH', 'K', 'L', 
-                  'M', 'N', 'NG', 'P', 'R', 'S', 'SH', 'T', 'TH', 'V', 
+                  'UW0', 'UW1', 'UW2',
+                  'B', 'CH', 'D', 'DH', 'F', 'G', 'HH', 'JH', 'K', 'L',
+                  'M', 'N', 'NG', 'P', 'R', 'S', 'SH', 'T', 'TH', 'V',
                   'W', 'Y', 'Z', 'ZH'])
 
 # samplerates which are HTK-compatible (divisors of 1e7)
@@ -398,8 +398,8 @@ class Aligner(object):
                     retcode = pid.wait()
                     if retcode != 0:
                         raise CalledProcessError(retcode, 'sox')
-                print >> copy_scp, '{0} {1}'.format(wav, mfc)
-                print >> check_scp, mfc
+                print >> copy_scp, '"{0}" "{1}"'.format(wav, mfc)
+                print >> check_scp, '"{0}"'.format(mfc)
                 w.close()
         else:
             for wav in wav_list:
@@ -408,8 +408,8 @@ class Aligner(object):
                 w = wave.open(wav, 'r')
                 if (w.getframerate() != self.sr) or (w.getnchannels() != 1):
                     error('File {0} needs resampled but Sox not found ', w)
-                print >> copy_scp, '{0} {1}'.format(wav, mfc)
-                print >> check_scp, mfc
+                print >> copy_scp, '"{0}" "{1}"'.format(wav, mfc)
+                print >> check_scp, '"{0}"'.format(mfc)
                 w.close()
         copy_scp.close()
         check_scp.close()
