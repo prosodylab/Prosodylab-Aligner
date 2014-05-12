@@ -15,6 +15,12 @@ Scripts for alignment of laboratory speech production data
 
 See included "LICENSE" 
 
+## Citation
+
+Please you use this tool, we would appreciate if you cited the following paper:
+
+Gorman, Kyle, Jonathan Howell and Michael Wagner. 2011. Prosodylab-Aligner: A Tool for Forced Alignment of Laboratory Speech. Canadian Acoustics. 39.3. 192–193.
+
 ## Usage
 
     USAGE: ./align.py [OPTIONS] data_to_be_aligned/
