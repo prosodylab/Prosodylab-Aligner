@@ -108,6 +108,14 @@ Note that you will have to make an account and agree to their restricted distrib
 
     $ tar -fvxz htk-3.4.1.tar.gz
 
+Note that if your browser automatically attempts to unpack compressed files upon download, you may get the following error:
+
+    tar: Must specify one of -c, -r, -t, -u, -x
+
+In this case, use the command (again adjusting for version number):
+
+    $ tar -xf htk-3.4.1.tar.gz
+
 Once you extract the application, navigate into the resulting directory:
 
     $ cd htk
