@@ -1,4 +1,4 @@
-#!/usr/bin/env python -O
+#!/usr/bin/env python
 #
 # Copyright (c) 2011-2014 Kyle Gorman and Michael Wagner
 #
