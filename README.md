@@ -81,15 +81,11 @@ On Linux or similar POSIX-based systems, SoX can be obtained from the distributi
 
 #### Mac OS X
 
-On Mac OS X it may be obtained from Fink or DarwinPorts, though compiling by hand may be somewhat difficult. Fortunately, the SoX maintainers provide compiled binaries for Mac OS X. You can simply download these binaries from the following URL (click on the link after the text "Looking for the latest version?"):
-
-    http://sox.sourceforge.net
-
-The zip file can be expanded by double-clicking on it. The resulting files must be placed in your `$PATH`. A simple way to do this is to navigate to the resulting directory, and issue the following command:
+On Mac OS X it may be obtained via package managers like [http://brew.sh](Homebrew). The SoX maintainers also provide compiled binaries, which can be downloaded from [SourceForge](http://sox.sourceforge.net): click on the link after "Looking for the latest version?". The zip file can be expanded by double-clicking on it. The resulting files must be placed in your `$PATH`. A simple way to do this is to navigate to the resulting directory, and issue the following command:
 
     $ sudo mv rec play sox soxi /usr/local/bin
 
-This will prompt for your password; type it in (it will not "echo", as `***`), and hit Enter when you're done. 
+This will prompt for your password; type it in (it will not "echo", as `***`), and hit Enter when you're done.
 
 #### Checking installation
 
@@ -158,11 +154,7 @@ You can confirm that HTK is installed by issuing the following command in any di
 
 ### Obtaining a dictionary
 
-First, obtain an appropriate pronunciation dictionary. Currently, the aligner comes with a file "dictionary.txt" intended for use with American English. Dictionaries in other languages are available at our other repository,
-
-    https://github.com/prosodylab/prosodylab.dictionaries
-
-Other dictionaries can be found online, or written in the CMU format for specific tasks. If you're working with RP speakers, [CELEX](http://catalog.ldc.upenn.edu/LDC96L14) might be a good choice.
+First, obtain an appropriate pronunciation dictionary. Currently, the aligner comes with a file "dictionary.txt" intended for use with American English. Some dictionaries we have created are available at the [`prosodylab.dictionaries` repository](https://github.com/prosodylab/prosodylab.dictionaries). Other dictionaries can be found online, or written for specific tasks. If you're working with RP speakers, [CELEX](http://catalog.ldc.upenn.edu/LDC96L14) might be a good choice. For languages with regular, transparent orthographies, you may want to create a simple rule-based grapheme-to-phoneme system as a series of ordered rules.
 
 ### Aligning one pair
 
