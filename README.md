@@ -163,11 +163,11 @@ You can confirm that HTK is installed by issuing the following command in any di
 
 ### Obtaining a dictionary
 
-First, obtain an appropriate pronunciation dictionary. Since many of the intended users are American English speakers, I've provided a script (`get_dict.sh`) which will download the CMU pronunciation dictionary automatically.
+First, obtain an appropriate pronunciation dictionary. Currently, the aligner comes with a file "dictionary.txt" intended for use with American English. Dictionaries in other languages are available at our other repository,
 
-    ./get_dict.sh
+    https://github.com/prosodylab/prosodylab.dictionaries
 
-Other dictionaries can be found online, or written in the CMU format for specific tasks. If you're working with RP speakers, CELEX might be a good one.
+Other dictionaries can be found online, or written in the CMU format for specific tasks. If you're working with RP speakers, CELEX might be a good one (found at http://catalog.ldc.upenn.edu/LDC96L14 ).
 
 ### Aligning one pair
 
