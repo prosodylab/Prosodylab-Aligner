@@ -9,5 +9,5 @@ import fileinput
 
 
 if __name__ == '__main__':
-    lines = list(set(l.rstrip() for l in fileinput.input()))  # accumulate
-    print '\n'.join(sorted(lines))                            # linearize
+    lines = set(l.rstrip() for l in fileinput.input())  # accumulate
+    print '\n'.join(sorted(lines))                      # linearize
