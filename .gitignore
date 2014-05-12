@@ -1,3 +1,6 @@
+*.wav
+*.lab
+*.TextGrid
+.DS_Store
 *.pyc
 *.pyo
-.DS_Store
