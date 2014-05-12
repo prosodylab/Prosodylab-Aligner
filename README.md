@@ -198,6 +198,8 @@ Secondly, a word in your .lab files may be missing from the dictionary. Such wor
 
 If you call align.py with the argument -m, each word in outofdict.txt is paired with a list of .lab files where it occurs. This may be useful for fixing typos in the .lab files. 
 
+If you are transcribing new words using the CMU phone set, see [this page](http://www.csee.ogi.edu/~gormanky/papers/codes/) for IPA equivalents.
+
 #### SoX not installed
 
 Also, if SoX is not installed, but it needed because the audio is in a different format than the provided models (sampled at 8000 Hz and mono), an error result.
