@@ -144,6 +144,13 @@ Once that's taken care of, execute the following commands in the "htk/" director
     $ sudo make install
     ...
 
+If you are running Mavericks, you may have problems at this point in time--the following error may crop up after running $ make all:
+
+    strarr.c:21:10: fatal error: 'malloc.h' file not found
+
+There are directions [here](https://github.com/JoFrhwld/FAVE/wiki/HTK-on-OS-X) that can help you out.
+
+
 #### Checking installation
 
 You can confirm that HTK is installed by issuing the following command in any directory:
