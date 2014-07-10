@@ -97,9 +97,8 @@ This will prompt for your password; type it in (it will not "echo", as `***`), a
 
 You can confirm that SoX is installed by issuing the following command in any directory:
 
-    $ sox -h
+    $ sox --version
     sox: SoX v14.3.2
-    ...
 
 Note that your version may be different: `align.py` has been tested for this version, but it should work for both somewhat older versions as well as for the foreseeable future.
 
