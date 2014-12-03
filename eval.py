@@ -1,20 +1,19 @@
-#!/usr/bin/env python -O
+#!/usr/bin/env python
 # eval.py: instrinsic evaluation for forced alignment using Praat TextGrids
 # Kyle Gorman <gormanky@ohsu.edu>
 
 from __future__ import division
 
-from textgrid import TextGridFromFile
+from textgrid import TextGrid
 
 from sys import argv, stderr
 from collections import namedtuple
-from getopt import getopt, GetoptError
+from argparse import ArgumentParser
 
-
-USAGE = """USAGE: {} [-s 20] [-t phones] TGrid1 TGrid2""".format(__file__)
 
 CLOSE_ENOUGH = 20
 TIER_NAME = "phones"
+
 
 boundary = namedtuple("boundary", ["transition", "time"])
 
@@ -49,25 +48,22 @@ if __name__ == "__main__":
     # check args
     tier_name = TIER_NAME
     close_enough = CLOSE_ENOUGH / 1000
-    (opts, args) = getopt(argv[1:], 's:t:')
-    if len(args) != 2:
-        print >> stderr, USAGE
-        exit("Not enough TextGrids provided")
-    try:
-        for (opt, val) in opts:
-            if opt == '-s':
-                close_enough = int(val) / 1000
-            elif opt == '-t':
-                tier_name = val
-            else:
-                raise GetoptError
-    except (TypeError, GetoptError) as err:
-        print >> stderr, USAGE
-        exit(str(err))
-    # get boundaries
-    first = boundaries(TextGridFromFile(args[0]), tier_name)
-    secnd = boundaries(TextGridFromFile(args[1]), tier_name)
-    # count
+    argparser = ArgumentParser(description="Alignment quality evaluation")
+    argparser.add_argument("-f", "--fudge", type=int,
+                           help="Fudge factor in milliseconds")
+    argparser.add_argument("-t", "--tier",
+                           help="Name of tier to use")
+    argparser.add_argument("OneGrid")
+    argparser.add_argument("TwoGrid")
+    args = argparser.parse_args()
+    if args.fudge:
+        close_enough = args.fudge / 1000
+    if args.tier:
+        tier_name = args.tier
+    # read in
+    first = boundaries(TextGrid.fromFile(args.OneGrid), tier_name)
+    secnd = boundaries(TextGrid.fromFile(args.TwoGrid), tier_name)
+    # count concordant and discordant boundaries
     if len(first) != len(secnd):
         exit("Tiers lengths do not match.")
     concordant = 0
@@ -81,6 +77,6 @@ if __name__ == "__main__":
             discordant += 1
     # print out
     agreement = concordant / (concordant + discordant)
-    print '{} "close enough" boundaries, {} incorrect boundaries'.format(
-                                         concordant, discordant)
-    print 'Agreement: {:.4f}'.format(agreement)
+    print "{} 'close enough' boundaries.".format(concordant)
+    print "{} incorrect boundaries.".format(discordant)
+    print "Agreement: {:.4f}".format(agreement)

@@ -1,13 +1,12 @@
-#!/usr/bin/env python -O
-#
+#!/usr/bin/env python 
 # Kyle Gorman <gormanky@ohsu.edu>
-#
-# The UNIX sort utility does not always do the right thing, as far as HTK
-# is concerned; this one does.
+# The UNIX `sort` utility does not always sort the dictionary the way 
+# that HTK expects; this one doe
+
 
 import fileinput
 
 
-if __name__ == '__main__':
-    lines = set(l.rstrip() for l in fileinput.input())  # accumulate
-    print '\n'.join(sorted(lines))                      # linearize
+if __name__ == "__main__":
+    lines = frozenset(l.rstrip() for l in fileinput.input())  # accumulate
+    print "\n".join(sorted(lines))                            # linearize
