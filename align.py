@@ -659,8 +659,7 @@ if __name__ == "__main__":
                              help="directory of data to train on")
     output_group = argparser.add_mutually_exclusive_group(required=True)
     output_group.add_argument("-a", "--align", 
-                              help="directory of data to align" + 
-                              " (may be same as training data)")
+                              help="directory of data to align")
     output_group.add_argument("-w", "--write",
                               help="location to write serialized model")
     args = argparser.parse_args()
