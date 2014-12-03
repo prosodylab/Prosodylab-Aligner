@@ -314,17 +314,14 @@ class PointTier(object):
 
     def bounds(self):
         return (self.minTime, self.maxTime or self.points[-1].time)
+    
+    # alternative constructor
 
-
-class PointTierFromFile(PointTier):
-    """
-    The same as a PointTier, but initialized from a text file
-    """
-
-    def __init__(self, f, name=None):
-        self.points = []
-        self.name = name
-        self.read(f)
+    @classmethod
+    def fromFile(cls, f, name=None):
+        pt = cls(name=name)
+        pt.read(f)
+        return pt
 
 
 class IntervalTier(object):
@@ -497,18 +494,14 @@ class IntervalTier(object):
     def bounds(self):
         return self.minTime, self.maxTime or self.intervals[-1].maxTime
 
+    # alternative constructor
 
-class IntervalTierFromFile(IntervalTier):
-    """
-    The same as a IntervalTier, but initialized from a text file
-    """
-
-    def __init__(self, f, name=None):
-        self.minTime = 0.
-        self.maxTime = 0.
-        self.intervals = []
-        self.name = name
-        self.read(f)
+    @classmethod
+    def fromFile(cls, f, name=None):
+        it = cls(name=name)
+        it.intervals = []
+        it.read(f)
+        return it
 
 
 class TextGrid(object):
@@ -646,8 +639,8 @@ class TextGrid(object):
         source.readline() # header junk
         source.readline() # header junk
         source.readline() # header junk
-        self.minTime = round(float(source.readline().split()[2]), 4)
-        self.maxTime = round(float(source.readline().split()[2]), 4)
+        self.minTime = round(float(source.readline().split()[2]), 5)
+        self.maxTime = round(float(source.readline().split()[2]), 5)
         source.readline() # more header junk
         m = int(source.readline().rstrip().split()[2]) # will be self.n
         source.readline()
@@ -655,27 +648,27 @@ class TextGrid(object):
             source.readline()
             if source.readline().rstrip().split()[2] == '"IntervalTier"': 
                 inam = source.readline().rstrip().split(' = ')[1].strip('"')
-                imin = round(float(source.readline().rstrip().split()[2]), 4)
-                imax = round(float(source.readline().rstrip().split()[2]), 4)
+                imin = round(float(source.readline().rstrip().split()[2]), 5)
+                imax = round(float(source.readline().rstrip().split()[2]), 5)
                 itie = IntervalTier(inam)
                 for j in xrange(int(source.readline().rstrip().split()[3])):
                     source.readline().rstrip().split() # header junk
-                    jmin = round(float(source.readline().rstrip().split()[2]), 4)
-                    jmax = round(float(source.readline().rstrip().split()[2]), 4)
+                    jmin = round(float(source.readline().rstrip().split()[2]), 5)
+                    jmax = round(float(source.readline().rstrip().split()[2]), 5)
                     jmrk = self._getMark(source)
                     if jmin < jmax: # non-null
                         itie.addInterval(Interval(jmin, jmax, jmrk))
                 self.append(itie)
             else: # pointTier
                 inam = source.readline().rstrip().split(' = ')[1].strip('"')
-                imin = round(float(source.readline().rstrip().split()[2]), 4)
-                imax = round(float(source.readline().rstrip().split()[2]), 4)
+                imin = round(float(source.readline().rstrip().split()[2]), 5)
+                imax = round(float(source.readline().rstrip().split()[2]), 5)
                 itie = PointTier(inam)
                 n = int(source.readline().rstrip().split()[3])
                 for j in xrange(n):
                     source.readline().rstrip() # header junk
                     jtim = round(float(source.readline().rstrip().split()[2]),
-                                                                           4)
+                                                                           5)
                     jmrk = source.readline().rstrip().split()[2][1:-1]
                     itie.addPoint(Point(jtim, jmrk))
                 self.append(itie)
@@ -732,18 +725,13 @@ class TextGrid(object):
                                                            point.mark)
         sink.close()
 
+    # alternative constructor
 
-class TextGridFromFile(TextGrid):
-    """
-    The same as a TextGrid, but initialized from a text file
-    """
-
-    def __init__(self, f, name=None):
-        self.minTime = 0.
-        self.maxTime = 0.
-        self.tiers = []
-        self.name = name
-        self.read(f)
+    @classmethod
+    def fromFile(cls, f, name=None):
+        tg = cls(name=name)
+        tg.read(f)
+        return tg
 
 
 class MLF(object):
@@ -795,8 +783,8 @@ class MLF(object):
                 while 1: # loop over the lines in each grid
                     line = source.readline().rstrip().split()
                     if len(line) == 4: # word on this baby
-                        pmin = round(float(line[0]) / samplerate, 4)
-                        pmax = round(float(line[1]) / samplerate, 4)
+                        pmin = round(float(line[0]) / samplerate, 5)
+                        pmax = round(float(line[1]) / samplerate, 5)
                         if pmin == pmax:
                             raise ValueError('null duration interval')
                         phon.add(pmin, pmax, line[2])
@@ -806,8 +794,8 @@ class MLF(object):
                         wsrt = pmin
                         wend = pmax
                     elif len(line) == 3: # just phone
-                        pmin = round(float(line[0]) / samplerate, 4)
-                        pmax = round(float(line[1]) / samplerate, 4)
+                        pmin = round(float(line[0]) / samplerate, 5)
+                        pmax = round(float(line[1]) / samplerate, 5)
                         if line[2] == 'sp' and pmin != pmax:
                             if wmrk:
                                 word.add(wsrt, wend, wmrk)
