@@ -54,7 +54,6 @@ LOGGING_FMT = "%(module)s: %(message)s"
 
 from glob import glob
 from bisect import bisect
-from sys import argv, stderr
 from tempfile import mkdtemp
 from collections import defaultdict
 from argparse import ArgumentParser
@@ -62,9 +61,6 @@ from subprocess import check_call, Popen, CalledProcessError, PIPE
 
 # should be in the current directory
 from textgrid import MLF  # http://github.com/kylebgorman/textgrid.py/
-
-DEBUG = False  # when True, temp data not deleted...
-
 
 ### GLOBAL VARS
 # You can change these if you know HTK well
@@ -75,8 +71,8 @@ TEMP = "temp"
 MACROS = "macros"
 HMMDEFS = "hmmdefs"
 VFLOORS = "vFloors"
-UNPAIRED = "unpaired.txt"
-OUTOFDICT = "outofdict.txt"
+MISSING = "missing.txt"
+OOV = "OOV.txt"
 
 EPOCHS = 4
 SR = 16000
@@ -271,11 +267,11 @@ class Aligner(object):
                 if not os.path.exists(lab):
                     missing.append(lab)
             if missing:
-                with open(UNPAIRED, "w") as sink:
+                with open(MISSING, "w") as sink:
                     for path in missing:
                         print >> sink, path
                     print >> sink, path
-                logging.error("Missing data files: see '{}'.".format(UNPAIRED))
+                logging.error("Missing data: see '{}'.".format(MISSING))
                 exit(1)
         return (wav_list, lab_list)
 
@@ -316,7 +312,7 @@ class Aligner(object):
                 word_lab.close()
         ## now complain if any found
         if ood:
-            with open(OUTOFDICT, "w") as sink:
+            with open(OOV, "w") as sink:
                 if self.ood_mode:
                     for (word, flist) in sorted(ood.iteritems()):
                         print >> sink, "{}\t{}".format(word,
@@ -324,7 +320,8 @@ class Aligner(object):
                 else:
                     for word in sorted(ood):
                         print >> sink, word
-            exit("Out of dictionary word(s): see '{}'.".format(OUTOFDICT))
+            logging.error("OOV word(s): see '{}'.".format(OOV))
+            exit(1)
         ## make word
         print >> open(self.words, "w"), "\n".join(found_words)
         ded = os.path.join(self.tmp_dir, TEMP)
@@ -450,10 +447,6 @@ NUMCEPS = 12"""
         if retcode != 0:
             raise CalledProcessError(retcode, call_list)
         sink.close()
-
-    def __del__(self):
-        if DEBUG:
-            print >> stderr, "Tempdir: '{}'".format(self.tmp_dir)
 
 
 class TrainAligner(Aligner):
