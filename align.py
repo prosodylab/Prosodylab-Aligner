@@ -34,8 +34,7 @@
 # SSHRC Digging into Data Challenge Grant 869-2009-0004
 # SSHRC Canada Research Chair 218503
 
-from __future__ import with_statement
-
+from __future__ import division
 
 ## VERSION CHECK
 # before we get going, check Python version
