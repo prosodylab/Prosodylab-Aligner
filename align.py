@@ -431,9 +431,9 @@ class Aligner(object):
                               "-C", self.HERest_cfg, 
                               "-S", self.test_scp,
                               "-H", os.path.join(self.cur_dir, MACROS),
-                             "-H", os.path.join(self.cur_dir, HMMDEFS),
-                             "-I", self.word_mlf,
-                             "-t"] + PRUNING + \
+                              "-H", os.path.join(self.cur_dir, HMMDEFS),
+                              "-I", self.word_mlf,
+                              "-t"] + PRUNING + \
                     [self.taskdict, self.phons]
         proc = Popen(call_list, stdout=PIPE)
         for line in proc.stdout:
