@@ -45,11 +45,11 @@ if version_info < (2, 6, 0):
 
 import os
 import re
+import yaml
 import wave
-
-import yaml # FIXME coming soon
 import logging
-LOGGING_FMT = "%(module)s: %(message)s"
+
+LOGGING_FMT = "%(levelname)s: %(message)s"
 
 from glob import glob
 from bisect import bisect
@@ -70,8 +70,10 @@ TEMP = "temp"
 MACROS = "macros"
 HMMDEFS = "hmmdefs"
 VFLOORS = "vFloors"
-MISSING = "missing.txt"
+
 OOV = "OOV.txt"
+SCORES = "scores.txt"
+MISSING = "missing.txt"
 
 EPOCHS = 4
 SR = 16000
@@ -81,9 +83,8 @@ F = str(.01)
 SFAC = str(5.)
 PRUNING = [str(i) for i in (250., 150., 2000.)]
 
-# hidden, but useful files
+# hidden, but useful for debugging
 ALIGN_MLF = ".ALIGN.mlf"
-SCORES_TXT = ".SCORES.txt"
 
 # regexp for parsing the HVite trace
 HVITE_SCORE = re.compile(".+==  \[\d+ frames\] (-\d+\.\d+)")
@@ -134,26 +135,37 @@ class PronDict(object):
     """
     A wrapper for a normal pronunciation dictionary in the CMU style
     """
-    def __init__(self, f, valid_phones=None):
+
+    @staticmethod
+    def pronify(source):
+        for (i, line) in enumerate(source, 1):
+            if line.startswith(";"):
+                continue
+            (word, pron) = line.rstrip().split(None, 1)
+            yield (i, word, pron.split())
+
+    def __init__(self, f, phoneset):
+        # inspect phoneset
+        for phone in phoneset:
+            if not VALID_PHONE.match(phone):
+                logging.error("Disallowed phone '{}' in".format(ph) +
+                              " dictionary '{}'".format(source.name) +
+                              " (ln. {})".format(i) +
+                              ": phones must match /^[a-zA-Z]\S+$/.")
+                exit(1)
+        # build up dictionary
         source = f if hasattr(f, "read") else open(f, "r")
         self.d = defaultdict(list)
-        if valid_phones:
-            for (i, word, pron) in pronify(source):
-                for ph in pron:
-                    if ph not in valid_phones:
-                        exit("Unknown phone '{}' in".format(ph) + 
-                             " dictionary (ln. {})".format(i) +
-                             ": did you want to train?")
-                self.d[word].append(pron)
-        else:
-            for (i, word, pron) in pronify(source):
-                for ph in pron:
-                    if not VALID_PHONE.match(ph):
-                        exit("Disallowed phone '{}' in".format(ph) +
-                             " dictionary (ln. {})".format(i) + 
-                             ": phones must match /^[a-zA-Z]\S+$/.")
-                self.d[word].append(pron)
+        for (i, word, pron) in PronDict.pronify(source):
+            for ph in pron:
+                if ph not in phoneset:
+                    logging.error("Unknown phone '{}' in".format(ph) +
+                                  " dictionary '{}'".format(source.name) +
+                                  " (ln. {}).".format(i))
+                    exit(1)
+            self.d[word].append(pron)
         source.close()
+        # for later...
         self.ood = set()
 
     def __contains__(self, key):
@@ -180,8 +192,8 @@ class Aligner(object):
     models shipped with this package and stored in the directory MOD/.
     """
 
-    def __init__(self, ts_dir, tr_dir, dictionary, sr=SR, ood_mode=True,
-                 phoneset=None):
+    def __init__(self, ts_dir, tr_dir, dictionary, phoneset, sr,
+                 ood_mode=True):
         ## class variables
         self.sr = sr
         # get a temporary directory to stash everything
@@ -625,25 +637,20 @@ TI silst {{{1}.state[3],{0}.state[2]}}
         self._nxt_dir()  # increments dirs
 
 
-### MAIN
 if __name__ == "__main__":
     ## parse arguments
     argparser = ArgumentParser(prog="align.py",
                                description="Prosodylab-Aligner")
-    # FIXME these don"t do anything, yet, but they soon will
-    argparser.add_argument("-v", "--verbose", action="store_true",
-                           help="enable verbose output")
-    argparser.add_argument("-V", "--really-verbose", action="store_true",
-                           help="enable even more verbose output")
-    # /FIXME
-    argparser.add_argument("-d", "--dictionary", required=True,
+    argparser.add_argument("-c", "--configuration", default="aligner.yaml",
+                           help="Configuration file to use")
+    argparser.add_argument("-d", "--dictionary",
                            help="dictionary file to use")
-    argparser.add_argument("-E", "--epochs", type=int, default=EPOCHS,
-                           help="# of epochs of training per round " + 
-                           "(default: {})".format(EPOCHS))
     argparser.add_argument("-s", "--samplerate", type=int, default=SR,
                            help="analysis samplerate in Hz" +
                            " (default: {})".format(SR))
+    argparser.add_argument("-E", "--epochs", type=int, default=EPOCHS,
+                           help="# of epochs of training per round " + 
+                           "(default: {})".format(EPOCHS))
     input_group = argparser.add_mutually_exclusive_group(required=True)
     input_group.add_argument("-r", "--read", 
                              help="read in serialized acoustic model")
@@ -654,53 +661,67 @@ if __name__ == "__main__":
                               help="directory of data to align")
     output_group.add_argument("-w", "--write",
                               help="location to write serialized model")
+    argparser.add_argument("-v", "--verbose", action="store_true",
+                           help="Verbose output")
+    argparser.add_argument("-V", "--really-verbose", action="store_true",
+                           help="Even more verbose output")
     args = argparser.parse_args()
-    if args.read or args.write:
-        raise NotImplementedError
-    # verbosity block
+    ## set up logging
     if args.really_verbose:
         logging.basicConfig(format=LOGGING_FMT, level=logging.DEBUG)
     elif args.verbose:
         logging.basicConfig(format=LOGGING_FMT, level=logging.INFO)
     else:
         logging.basicConfig(format=LOGGING_FMT)
-    # do some basic argument tweaks
-    if args.samplerate:
-        if args.samplerate not in SRs:
-            i = bisect(SRs, args.samplerate)
-            if i == 0:
-                args.samplerate = SRs[0]
-            elif i == len(SRs):
-                args.samplerate = SRs[-1]
-            elif SRs[i] - sr > sr - SRs[i - 1]:
-                args.samplerate = SRs[i - 1]
-            else:
-                args.sample = SRs[i]
-            logging.warning("Set {} Hz samplerate".format(args.samplerate))
+    ## parse configuration file and overwrite opts with args
+    try:
+        source = open(args.configuration, "r")
+        opts = yaml.load(source)
+    except (IOError, yaml.YAMLError) as err:
+        logging.error("Error reading config file '{}' ({}).".format(
+                      args.configuration, err))
+        exit(1)
+    phoneset = frozenset(opts["phoneset"])
+    epochs = args.epochs if args.epochs else opts["epochs"]
+    dictionary = os.path.abspath(args.dictionary if args.dictionary
+                                                 else opts["dictionary"])
+    sr = args.samplerate if args.samplerate else opts["samplerate"]
+    if sr not in SRs:
+        i = bisect(SRs, sr)
+        if i == 0:
+            sr = SRs[0]
+        elif i == len(SRs):
+            sr = SRs[-1]
+        elif SRs[i] - sr > sr - SRs[i - 1]:
+            sr = SRs[i - 1]
+        else:
+            sr = SRs[i]
+        logging.warning("Using {} Hz as samplerate".format(sr))
     ## do the model
-    args.dictionary = os.path.abspath(args.dictionary)
+    if args.read or args.write:
+        raise NotImplementedError
     if args.align:
         args.align = os.path.abspath(args.align)
     path_to_mlf = os.path.join(args.align, ALIGN_MLF)
     if args.train:
         args.train = os.path.abspath(args.train)
         logging.info("Initializing.")
-        aligner = TrainAligner(args.align, args.train, args.dictionary, 
-                               args.samplerate)
+        aligner = TrainAligner(args.align, args.train, dictionary,
+                               phoneset, sr)
         logging.info("Training.")
-        aligner.train(args.epochs)
+        aligner.train(epochs)
         logging.info("Modeling silence.")
         aligner.small_pause()
         logging.info("Additional training.")
-        aligner.train(args.epochs)
+        aligner.train(epochs)
         logging.info("Realigning.")
         aligner.align(aligner.phon_mlf)
         logging.info("Final training.")
-        aligner.train(args.epochs)
+        aligner.train(epochs)
     else:
         raise NotImplementedError
     aligner.align_and_score(path_to_mlf, os.path.join(args.align,
-                                                      SCORES_TXT))
+                                                      SCORES))
     logging.info("Making TextGrids.")
     if MLF(path_to_mlf).write(args.align) < 1:
         logging.error("No paths found!")
