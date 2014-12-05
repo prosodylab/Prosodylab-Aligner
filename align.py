@@ -121,12 +121,6 @@ for path in os.environ["PATH"].split(os.pathsep):
         HAS_SOX = True
         break
 
-def pronify(source):
-    for (i, line) in enumerate(source, 1):
-        if line.startswith(";"):
-            continue
-        (word, pron) = line.rstrip().split(None, 1)
-        yield (i, word, pron.split())
 
 ### CLASSES
 
@@ -193,7 +187,7 @@ class Aligner(object):
     """
 
     def __init__(self, ts_dir, tr_dir, dictionary, phoneset, sr,
-                 ood_mode=True):
+                 HCopy_opts, HERest_opts, HVite_opts, ood_mode=True):
         ## class variables
         self.sr = sr
         # get a temporary directory to stash everything
@@ -221,16 +215,27 @@ class Aligner(object):
         self.copy_scp = os.path.join(self.tmp_dir, "copy.scp")
         self.test_scp = os.path.join(self.tmp_dir, "test.scp")
         self.train_scp = os.path.join(self.tmp_dir, "train.scp")
-        # CFG
-        self.cfg = os.path.join(self.tmp_dir, "cfg")
         # MLFs
         self.pron_mlf = os.path.join(self.tmp_dir, "pron.mlf")
         self.word_mlf = os.path.join(self.tmp_dir, "words.mlf")
         self.phon_mlf = os.path.join(self.tmp_dir, "phones.mlf")
         # other options
+        self.HCopy_cfg = os.path.join(self.tmp_dir, "HCopy.cfg")
+        Aligner.opts2cfg(self.HCopy_cfg, HCopy_opts)
+        self.HERest_cfg = os.path.join(self.tmp_dir, "HERest.cfg")
+        Aligner.opts2cfg(self.HERest_cfg, HERest_opts)
+        # FIXME doesn't exist, but we're not using HVite_opts yet
+        #self.HVite_cfg = os.path.join(self.tmp_dir, "HVite.cfg")
+        #Aligner.opts2cfg(self.HVite_cfg, HVite_opts)
         self.ood_mode = ood_mode
         # initializing
         self._subclass_specific_init(ts_dir, tr_dir)
+
+    @staticmethod
+    def opts2cfg(filename, opts):
+        with open(filename, "w") as sink:
+            for (setting, value) in opts.iteritems():
+                print >> sink, "{} = {}".format(setting, value)
 
     def _subclass_specific_init(self, ts_dir, tr_dir):
         """
@@ -396,29 +401,7 @@ class Aligner(object):
         """
         Compute MFCCs
         """
-        # write a CFG for extracting MFCCs
-        print >> open(self.cfg, "w"), """SOURCEKIND = WAVEFORM
-SOURCEFORMAT = WAVE
-TARGETRATE = 100000.0
-TARGETKIND = MFCC_D_A_0
-WINDOWSIZE = 250000.0
-PREEMCOEF = 0.97
-USEHAMMING = T
-ENORMALIZE = T
-CEPLIFTER = 22
-NUMCHANS = 20
-NUMCEPS = 12"""
-        check_call(["HCopy", "-C", self.cfg, "-S", self.copy_scp])
-        # write a CFG for what we just built
-        print >> open(self.cfg, "w"), """TARGETRATE = 100000.0
-TARGETKIND = MFCC_D_A_0
-WINDOWSIZE = 250000.0
-PREEMCOEF = 0.97
-USEHAMMING = T
-ENORMALIZE = T
-CEPLIFTER = 22
-NUMCHANS = 20
-NUMCEPS = 12"""
+        check_call(["HCopy", "-C", self.HCopy_cfg, "-S", self.copy_scp])
 
     def align(self, mlf):
         """
@@ -426,7 +409,7 @@ NUMCEPS = 12"""
         """
         check_call(["HVite", "-a", "-m", "-y", "lab", "-o", "SM", "-b",
                     SIL, "-i", mlf, "-L", self.lab_dir,
-                    "-C", self.cfg, "-S", self.test_scp,
+                    "-C", self.HERest_cfg, "-S", self.test_scp,
                     "-H", os.path.join(self.cur_dir, MACROS),
                     "-H", os.path.join(self.cur_dir, HMMDEFS),
                     "-I", self.word_mlf, "-t"] + PRUNING +
@@ -438,13 +421,19 @@ NUMCEPS = 12"""
         """
         i = 0
         sink = open(score, "w")
-        call_list = ["HVite", "-T", "1", "-a", "-m", "-y", "lab",
-                     "-o", "SM", "-b", SIL, "-i", mlf,
-                     "-L", self.lab_dir,
-                     "-C", self.cfg, "-S", self.test_scp,
-                     "-H", os.path.join(self.cur_dir, MACROS),
-                     "-H", os.path.join(self.cur_dir, HMMDEFS),
-                     "-I", self.word_mlf, "-t"] + PRUNING + \
+        call_list = ["HVite", "-a", "-m",
+                              "-T", "1",
+                              "-o", "SM", 
+                              "-y", "lab",
+                              "-b", SIL, 
+                              "-i", mlf,
+                              "-L", self.lab_dir,
+                              "-C", self.HERest_cfg, 
+                              "-S", self.test_scp,
+                              "-H", os.path.join(self.cur_dir, MACROS),
+                             "-H", os.path.join(self.cur_dir, HMMDEFS),
+                             "-I", self.word_mlf,
+                             "-t"] + PRUNING + \
                     [self.taskdict, self.phons]
         proc = Popen(call_list, stdout=PIPE)
         for line in proc.stdout:
@@ -506,7 +495,8 @@ class TrainAligner(Aligner):
 <ENDHMM>"""
         sink.close()
         ## make vFloors
-        check_call(["HCompV", "-f", F, "-C", self.cfg,
+        check_call(["HCompV", "-f", F,
+                              "-C", self.HERest_cfg,
                               "-S", self.train_scp,
                               "-M", self.cur_dir, self.proto])
         ## make local macro
@@ -576,13 +566,14 @@ class TrainAligner(Aligner):
         Perform one or more rounds of estimation
         """
         for _ in xrange(niter):
-            check_call(["HERest", "-C", self.cfg, "-S", self.train_scp,
-                        "-I", self.phon_mlf,
-                        "-M", self.nxt_dir,
-                        "-H", os.path.join(self.cur_dir, MACROS),
-                        "-H", os.path.join(self.cur_dir, HMMDEFS),
-                        "-t"] + PRUNING + [self.phons],
-                       stdout=PIPE)
+            check_call(["HERest", "-C", self.HERest_cfg, 
+                                  "-S", self.train_scp,
+                                  "-I", self.phon_mlf,
+                                  "-M", self.nxt_dir,
+                                  "-H", os.path.join(self.cur_dir,MACROS),
+                                  "-H", os.path.join(self.cur_dir,HMMDEFS),
+                                  "-t"] + PRUNING + [self.phons], 
+                                                     stdout=PIPE)
             self._nxt_dir()
 
     def small_pause(self):
@@ -707,7 +698,8 @@ if __name__ == "__main__":
         args.train = os.path.abspath(args.train)
         logging.info("Initializing.")
         aligner = TrainAligner(args.align, args.train, dictionary,
-                               phoneset, sr)
+                               phoneset, sr, opts["HCopy"], opts["HERest"],
+                                                            opts["HVite"])
         logging.info("Training.")
         aligner.train(epochs)
         logging.info("Modeling silence.")
