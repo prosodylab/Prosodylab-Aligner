@@ -21,7 +21,7 @@ boundary = namedtuple("boundary", ["transition", "time"])
 def boundaries(textgrid, tier_name):
     """
     Extract a single tier named `tier_name` from the TextGrid object 
-    `textgrid`, and then convert that IntervalTier to boundaries
+    `textgrid`, and then convert that IntervalTier to a list of boundaries
     """
     tiers = textgrid.getList(tier_name)
     if not tiers:
@@ -33,7 +33,7 @@ def boundaries(textgrid, tier_name):
     for (interval1, interval2) in zip(tier, tier[1:]):
         boundaries.append(boundary('"{}"+"{}"'.format(interval1.mark,
                                                       interval2.mark),
-                                                      interval1.maxTime))
+                                   interval1.maxTime))
     return boundaries
 
 

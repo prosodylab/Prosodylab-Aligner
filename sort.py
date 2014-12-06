@@ -1,6 +1,6 @@
-#!/usr/bin/env python 
+#!/usr/bin/env python
 # Kyle Gorman <gormanky@ohsu.edu>
-# The UNIX `sort` utility does not always sort the dictionary the way 
+# The UNIX `sort` utility does not always sort the dictionary the way
 # that HTK expects; this one doe
 
 

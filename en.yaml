@@ -29,8 +29,25 @@ HCopy:
     NUMCHANS: 20
     NUMCEPS: 12
 
+# pruning parameters, to use globally; change at your own risk
+PRUNING: [250, 100, 4000]
+
+# specs for flat start; change at your own risk
+HCompV:
+    F: .01
+
+# specs for estimation; change at your own risk
+HERest:
+    TARGETRATE: 100000.0
+    TARGETKIND: MFCC_D_A_0
+    WINDOWSIZE: 250000.0
+    PREEMCOEF: 0.97
+    USEHAMMING: T
+    ENORMALIZE: T
+    CEPLIFTER: 22
+    NUMCHANS: 20
+    NUMCEPS: 12
+
 # specs for the decoder; change at your own risk
 HVite:
-    F: .01
     SFAC: 5
-    PRUNING: 250 150 2000
