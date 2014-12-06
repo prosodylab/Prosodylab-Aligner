@@ -1,3 +1,5 @@
+*NB*: This README is currently out of date: the main branch is changing rapidly and will continue to do so until the end of December 2014; at this point, we will bring the README back up to date. Click [here](https://github.com/kylebgorman/Prosodylab-Aligner/archive/2204ee08a14ab91007155a09423da1d81d4be420.zip) to download the stable version of the aligner, which is described in the README below.
+
 # Prosodylab-Aligner, v. 1.0
 
 Scripts for alignment of laboratory speech production data
