@@ -27,14 +27,13 @@ import yaml
 import logging
 
 
-LOGGING_FMT = "%(module)s: %(message)s"
-
 
 from re import match
 from glob import glob
 from bisect import bisect
 from shutil import copyfile
 from tempfile import mkdtemp
+from collections import defaultdict
 from argparse import ArgumentParser
 from subprocess import check_call, Popen, CalledProcessError, PIPE
 
@@ -47,6 +46,8 @@ from prondict import PronDict
 
 
 # global vars
+
+LOGGING_FMT = "%(module)s: %(message)s"
 
 SP = "sp"
 SIL = "sil"
@@ -79,8 +80,6 @@ HVITE_SCORE = r".+==  \[\d+ frames\] (-\d+\.\d+)"
 #     /\[Ac=-\d+\.\d+ LM=0.0\] \(Act=\d+\.\d+\)/
 
 
-# CLASSES
-
 def split_filename(path):
     """
     Split a filename into directory, basename, and extension
@@ -88,7 +87,6 @@ def split_filename(path):
     (dirname, filename) = os.path.split(path)
     (basename, ext) = os.path.splitext(filename)
     return (dirname, basename, ext)
-
 
 
 class Aligner(object):
@@ -187,18 +185,18 @@ class Aligner(object):
         """
         Create lists of .wav and .lab files, detecting missing pairs.
         """
-        wavlist = glob(os.path.join(dirname), "*.wav"))
-        lablist = glob(os.path.join(dirname), "*.lab"))
-        if len(wavlist) < 1:
+        wavfiles = glob(os.path.join(dirname), "*.wav")
+        labfiles = glob(os.path.join(dirname), "*.lab")
+        if not wavfiles:
             logging.error("Found no .wav files in directory" +
                           " '{}'.".format(dirname))
             exit(1)
-        elif len(lablist) < 1:
+        elif labfiles:
             logging.error("Found no .lab files in directory" +
                           " '{}'.".format(dirname))
             exit(1)
-        wavbasenames = frozenset(bname for (_, bname, _) in wavlist)
-        labbasenames = frozenset(bname for (_, bname, _) in lablist)
+        wavbasenames = frozenset(bname for (_, bname, _) in wavfiles)
+        labbasenames = frozenset(bname for (_, bname, _) in labfiles)
         missing = []
         missing.extend(basename + ".wav" for basenames in
                        labbasenames - wavbasenames)
@@ -210,21 +208,76 @@ class Aligner(object):
                     print(os.path.join(dirname, filename), file=sink)
             logging.error("Missing data files: see '{}'.".format(MISSING))
             exit(1)
-        return (wavlist, lablist)
+        return (wavfiles, labfiles)
 
-    def _check_dct(self, lab_list):
+    def _prepare_lab(self, labfiles):
         """
-        Checks the label files to confirm that all words are found in the
-        dictionary, while building new .lab and .mlf files silently
+        Check label files against dictionary, and construct new .lab
+        and .mlf files
+        """
+        found_words = set()
+        with open(self.word_mlf, "w") as word_mlf:
+            print("#!MLF!#", file=word_mlf)
+            for labfile in labfiles:
+                (dirname, filename) = os.path.split(labfile)
+                word_labfile = os.path.join(self.labdir, filename)
+                phon_labfile = os.path.join(self.auddir, filename)
+                # header for each file in the .mlf
+                print('"{}"'.format(word_labfile), file=word_mlf)
+                # read in words from original .lab file
+                with open(labfile, "r") as orig_handle:
+                    words = [SIL] + lab_handle.readline().split() + [SIL]
+                # write out new wordlab
+                with open(word_labfile, "w") as word_handle:
+                    print(" ".join(words), file=word_handle)
+                # get pronunciation and check for in-dictionary-hood
+                phons = [SIL]
+                for word in words:
+                    try:
+                        phons.extend(self.thedict[word][0])
+                    except KeyError as error:
+                        pass
+                phons.append(SIL)
+                # write out new phonelab
+                with open(phon_labfile, "r") as phon_handle:
+                    print(" ".join(phons), file=phon_handle)
+                # tail of each MLF entry
+                print(".", word_mlf)
+        # report and die if OOV words are found
+        if self.thedict.oov:
+            with open(OOV, "w") as oov:
+                print("\n".join(sorted(self.thedict.oov)), file=oov)
+            logging.error("OOV word(s): see '{}'.".format(OOV))
+            exit(1)
+        # make words
+        with open(self.words, "w") as words:
+            print("\n".join(words), file=word)
+        # create temp file to abuse
+        temp = os.path.join(self.tmpdir, TEMP)
+        # run HDMan
+        with open(temp, "w") as ded:
+            print("AS {0}\nMP {1} {1} {0}".format(SP, SIL), file=ded)
+        check_call(["HDMan", "-m",
+                             "-g", temp,
+                             "-w", self.words,
+                             "-n", self.phons,
+                             self.taskdict,
+                             self.dictionary])
+        # add silence to phone list
+        with open(self.phons, "a") as phons:
+            print(SIL, file=phons)
+        # run HLEd
+        with open(temp, "w") as led:
+            print("EX\nIS {0} {0}\nDE {1}".formt(SIL, SP), file=led)
+        check_call(["HLEd", "-l", self.labdir,
+                            "-d", self.taskdict,
+                            "-i", self.phon_mlf,
+                            temp,
+                            self.word_mlf])
 
-        TODO: add checks that the phones are also valid
+    def _prepare_wav(self, wavfiles):
         """
-        raise NotImplementedError
-
-    def _prepare_audio(self, wavfiles):
-        """
-        Check audio files, mixing down to mono and downsampling if
-        necessary; also writes copy_scp.
+        Check audio files, downsampling if necessary, creating `copy.scp`
         """
         with open(self.copy_scp, "r") as copy_spc:
             for wavfile in wavfiles:
