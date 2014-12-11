@@ -1,6 +1,4 @@
-#!/usr/bin/env python -O
-#
-# Copyright (c) 2011-2013 Kyle Gorman, Max Bane, Morgan Sonderegger
+# Copyright (c) 2011-2014 Kyle Gorman, Max Bane, Morgan Sonderegger
 #
 # Permission is hereby granted, free of charge, to any person obtaining a
 # copy of this software and associated documentation files (the
@@ -22,10 +20,6 @@
 # SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #
 # textgrid.py: classes for Praat TextGrid and HTK mlf files
-#
-# Max Bane <bane@uchicago.edu>
-# Kyle Gorman <gormanky@ohsu.edu>
-# Morgan Sonderegger <morgan.sonderegger@mcgill.ca>
 
 
 import re

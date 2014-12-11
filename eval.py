@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # eval.py: instrinsic evaluation for forced alignment using Praat TextGrids
 # Kyle Gorman <gormanky@ohsu.edu>
 
@@ -77,6 +77,6 @@ if __name__ == "__main__":
             discordant += 1
     # print out
     agreement = concordant / (concordant + discordant)
-    print "{} 'close enough' boundaries.".format(concordant)
-    print "{} incorrect boundaries.".format(discordant)
-    print "Agreement: {:.4f}".format(agreement)
+    print("{} 'close enough' boundaries.".format(concordant))
+    print("{} incorrect boundaries.".format(discordant))
+    print("Agreement: {:.4f}".format(agreement))

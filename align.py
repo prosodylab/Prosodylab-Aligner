@@ -20,19 +20,6 @@
 # CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
 # TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
 # SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-#
-# align.py: text/speech alignment for speech production experiments
-# Kyle Gorman <gormanky@ohsu.edu> and Michael Wagner <chael@mcgill.ca>
-#
-# Requires Python 3.4 or better
-#
-# See README.md for usage information and a tutorial.
-#
-# This project was funded by:
-#
-# FQRSC Nouvelle Chercheur NP-132516
-# SSHRC Digging into Data Challenge Grant 869-2009-0004
-# SSHRC Canada Research Chair 218503
 
 
 import os
