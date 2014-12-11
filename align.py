@@ -35,7 +35,6 @@ from glob import glob
 from bisect import bisect
 from shutil import copyfile
 from tempfile import mkdtemp
-from collections import defaultdict
 from argparse import ArgumentParser
 from subprocess import check_call, Popen, CalledProcessError, PIPE
 
@@ -44,6 +43,7 @@ from subprocess import check_call, Popen, CalledProcessError, PIPE
 from textgrid import MLF
 from archive import Archive
 from wavfile import WavFile
+from prondict import PronDict
 
 
 # global vars
@@ -82,54 +82,6 @@ HVITE_SCORE = r".+==  \[\d+ frames\] (-\d+\.\d+)"
 # CLASSES
 
 
-class PronDict(object):
-
-    """
-    A wrapper for a normal pronunciation dictionary in the CMU style
-    """
-
-    @staticmethod
-    def pronify(source):
-        for (i, line) in enumerate(source, 1):
-            if line.startswith(";"):
-                continue
-            (word, pron) = line.rstrip().split(None, 1)
-            yield (i, word, pron.split())
-
-    def __init__(self, f, phoneset):
-        # build up dictionary
-        source = f if hasattr(f, "read") else open(f, "r")
-        self.d = defaultdict(list)
-        for (i, word, pron) in PronDict.pronify(source):
-            for ph in pron:
-                if ph not in phoneset:
-                    logging.error("Unknown phone '{}' in".format(ph) +
-                                  " dictionary '{}'".format(source.name) +
-                                  " (ln. {}).".format(i))
-                    exit(1)
-            self.d[word].append(pron)
-        source.close()
-        # for later...
-        self.ood = set()
-
-    def __contains__(self, key):
-        return key in self.d and self.d[key] != []
-
-    def __getitem__(self, key):
-        getlist = self.d[key]
-        if getlist or key:
-            return getlist
-        else:
-            self.ood.add(key)
-            raise KeyError(key)
-
-    def __repr__(self):
-        return "PronDict({})".format(self.d)
-
-    def __setitem__(self, key, value):
-        self.d[key].append(value)
-
-
 class Aligner(object):
 
     """
@@ -162,7 +114,7 @@ class Aligner(object):
         os.mkdir(self.hmmdir)
         # specific hyperparameters
         self.samplerate = opts["samplerate"]
-        self.pruning = [str(i) for i in opts["pruning"]
+        self.pruning = [str(i) for i in opts["pruning"]]
         # phoneset
         self.phoneset = frozenset(phoneset)
         for phone in self.phoneset:
@@ -363,8 +315,8 @@ class TrainAligner(Aligner):
         with open(os.path.join(self.cur_dir, MACROS), "a") as macros:
             with open(os.path.join(self.cur_dir, 
                       os.path.split(self.proto)[1]), "r") as proto:
-            for _ in xrange(3):
-                print >> macros, proto.readline(),
+                for _ in xrange(3):
+                    print >> macros, proto.readline(),
             # get remaining lines from `vFloors`
             with open(os.path.join(self.cur_dir, VFLOORS), "r") as vfloors:
                 macros.writelines(vfloors.readlines())
@@ -428,31 +380,18 @@ class TrainAligner(Aligner):
 
 ## helpers
 
-def resolve_opts(args):
+
+def get_opts(filename):
     try: 
-        with open(filename, "r") as source:
-            opts = yaml.load(source)
+        with open(filename.configuration, "r") as source:
+            return yaml.load(source)
     except (IOError, yaml.YAMLError) as error:
         logging.error("Error reading configuration file '{}': {}".format(
                       filename, error))
         exit(1)
-    # fix up samplerate
-    if args.read:
-        return _resolve_opts_read(args, opts)
-    else:
-        return _resolve_opts(args, opts)
 
-
-def _resolve_opts_read(args, opts):
-    if opts["samplerate"] not in SAMPLERATES:
-        logging.error("Invalid archive samplerate ({} Hz).".format(
-                      opts["samplerate"]))
-        exit(1)
-    # FIXME do something about dictionary, which doesn't make sense
-    # FIXME do something about epochs, which doesn't make sense
-    return opts
-
-def _resolve_opts(args, opts):
+def resolve_opts(args, opts):
+    opts = get_opts(args.configuration)
     opts["dictionary"] = args.dictionary if args.dictionary \
                                          else opts["dictionary"]
     samplerate = args.samplerate if args.samplerate else opts["samplerate"]
@@ -512,20 +451,18 @@ if __name__ == "__main__":
     else:
         logging.basicConfig(format=LOGGING_FMT, level=logging.WARNING)
 
-    # combine opts and args
-    opts = resolve_opts(args)
-
-    ## input
+    ## input: pick one
     if args.read:
         logging.info("Initializing aligner from file.")
-        aligner = TrainAligner.from_archive(args, opts)
+        aligner = TrainAligner.from_archive(args.read)
     elif args.train:
         logging.info("Training aligner.")
+        opts = resolve_opts(args)
         aligner = TrainAligner(args, opts)
         aligner.HTKBook_training_regime(opts["epochs"])
     # else unreachable
 
-    ## output
+    ## output: pick one
     if args.align:
         mlf = aligner.align_and_score()
         logging.info("Making TextGrids.")
