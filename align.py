@@ -81,6 +81,15 @@ HVITE_SCORE = r".+==  \[\d+ frames\] (-\d+\.\d+)"
 
 # CLASSES
 
+def split_filename(path):
+    """
+    Split a filename into directory, basename, and extension
+    """
+    (dirname, filename) = os.path.split(path)
+    (basename, ext) = os.path.splitext(filename)
+    return (dirname, basename, ext)
+
+
 
 class Aligner(object):
 
@@ -174,13 +183,34 @@ class Aligner(object):
         # check for missing, unpaired data
         raise NotImplementedError
 
-    def _lists(self, path):
+    def _lists(self, dirname):
         """
-        Checks that the .wav and .lab files are all paired. An exception is
-        raised if they are not, and the unpaired data are written out.
-        If no errors result, the tuple (wav_list, lab_list) is returned.
+        Create lists of .wav and .lab files, detecting missing pairs.
         """
-        raise NotImplementedError
+        wavlist = glob(os.path.join(dirname), "*.wav"))
+        lablist = glob(os.path.join(dirname), "*.lab"))
+        if len(wavlist) < 1:
+            logging.error("Found no .wav files in directory" +
+                          " '{}'.".format(dirname))
+            exit(1)
+        elif len(lablist) < 1:
+            logging.error("Found no .lab files in directory" +
+                          " '{}'.".format(dirname))
+            exit(1)
+        wavbasenames = frozenset(bname for (_, bname, _) in wavlist)
+        labbasenames = frozenset(bname for (_, bname, _) in lablist)
+        missing = []
+        missing.extend(basename + ".wav" for basenames in
+                       labbasenames - wavbasenames)
+        missing.extend(basename + ".lab" for basenames in
+                       wavbasenames - labbasenames)
+        if missing:
+            with open(MISSING, "w") as sink:
+                for filename in missing:
+                    print(os.path.join(dirname, filename), file=sink)
+            logging.error("Missing data files: see '{}'.".format(MISSING))
+            exit(1)
+        return (wavlist, lablist)
 
     def _check_dct(self, lab_list):
         """
@@ -191,12 +221,23 @@ class Aligner(object):
         """
         raise NotImplementedError
 
-    def _check_aud(self, wav_list, train=False):
+    def _prepare_audio(self, wavfiles):
         """
         Check audio files, mixing down to mono and downsampling if
         necessary; also writes copy_scp.
         """
-        raise NotImplementedError
+        with open(self.copy_scp, "r") as copy_spc:
+            for wavfile in wavfiles:
+                (_, tail) = os.path.split(wavfile)
+                basename = os.path.splitext(tail)
+                mfc = os.path.join(self.auddir, basename + ".mfc")
+                w = WavFile.from_file(wav)
+                if w.Fs != self.samplerate:
+                    new_wave = os.path.join(self.auddir, head + ".wav")
+                    logging.warning("Resampling '{}'.".format(wav))
+                    w.resample_bang(self.samplerate)
+                    w.write(new_wave)
+                print('"{}" "{}"'.format(wav, mfc), file=copy_scp)
 
     def _HCopy(self):
         """
