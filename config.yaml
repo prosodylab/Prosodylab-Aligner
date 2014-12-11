@@ -30,7 +30,7 @@ HCopy:
     NUMCEPS: 12
 
 # pruning parameters, to use globally; change at your own risk
-PRUNING: [250, 100, 4000]
+pruning: [250, 100, 4000]
 
 # specs for flat start; change at your own risk
 HCompV:

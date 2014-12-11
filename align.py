@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 #
 # Copyright (c) 2011-2014 Kyle Gorman and Michael Wagner
 #
@@ -24,7 +24,7 @@
 # align.py: text/speech alignment for speech production experiments
 # Kyle Gorman <gormanky@ohsu.edu> and Michael Wagner <chael@mcgill.ca>
 #
-# Requires Python 2.6-2.7
+# Requires Python 3.4 or better
 #
 # See README.md for usage information and a tutorial.
 #
@@ -34,82 +34,62 @@
 # SSHRC Digging into Data Challenge Grant 869-2009-0004
 # SSHRC Canada Research Chair 218503
 
-from __future__ import division
-
-# VERSION CHECK
-# before we get going, check Python version
-from sys import version_info, exit
-
-if version_info[0] != 2 or version_info[1] < 6:
-    exit("You need Python 2.6-2.7 to run this script.")
 
 import os
-import re
 import yaml
 import logging
 
-LOGGING_FMT = "%(levelname)s: %(message)s"
 
+LOGGING_FMT = "%(module)s: %(message)s"
+
+
+from re import match
 from glob import glob
 from bisect import bisect
+from shutil import copyfile
 from tempfile import mkdtemp
 from collections import defaultdict
 from argparse import ArgumentParser
 from subprocess import check_call, Popen, CalledProcessError, PIPE
 
-# should be in the current directory
-from textgrid import MLF  # http://github.com/kylebgorman/textgrid.py/
+
+# local modules
+from textgrid import MLF
+from archive import Archive
 from wavfile import WavFile
 
-# GLOBAL VARS
-# You can change these if you know HTK well
+
+# global vars
 
 SP = "sp"
 SIL = "sil"
+
 TEMP = "temp"
+DICT = "dict"
 MACROS = "macros"
 HMMDEFS = "hmmdefs"
 VFLOORS = "vFloors"
 
 OOV = "OOV.txt"
+ALIGN = "align.mlf"
+CONFIG = "config.yaml"
 SCORES = "scores.txt"
 MISSING = "missing.txt"
 
-EPOCHS = 4
-SAMPLERATE = 16000
-
-# hidden, but useful for debugging
-ALIGN_MLF = ".ALIGN.mlf"
-
-# regexp for parsing the HVite trace
-HVITE_SCORE = re.compile(".+==  \[\d+ frames\] (-\d+\.\d+)")
-# in case you"re curious, the rest of the trace string is:
-#     /\[Ac=-\d+\.\d+ LM=0.0\] \(Act=\d+\.\d+\)/
-
-# regexp for inspecting phones
-VALID_PHONE = re.compile("^[^\d\s]\S*$")
-
-# list of CMU English phones, which can only be used if you"re not training
-
-CMU_PHONES = set(["AA0", "AA1", "AA2", "AE0", "AE1", "AE2",
-                  "AH0", "AH1", "AH2", "AO0", "AO1", "AO2",
-                  "AW0", "AW1", "AW2", "AY0", "AY1", "AY2",
-                  "EH0", "EH1", "EH2", "ER0", "ER1", "ER2",
-                  "EY0", "EY1", "EY2", "IH0", "IH1", "IH2",
-                  "IY0", "IY1", "IY2", "OW0", "OW1", "OW2",
-                  "OY0", "OY1", "OY2", "UH0", "UH1", "UH2",
-                  "UW0", "UW1", "UW2",
-                  "B", "CH", "D", "DH", "F", "G", "HH", "JH", "K", "L",
-                  "M", "N", "NG", "P", "R", "S", "SH", "T", "TH", "V",
-                  "W", "Y", "Z", "ZH"])
-
-# defaults
 EPOCHS = 5
 SAMPLERATE = 16000
-# samplerates which are HTK-compatible (divisors of 1e7)
+# samplerates which appear to be HTK-compatible (all divisors of 1e7)
 SAMPLERATES = [4000, 8000, 10000, 12500, 15625, 16000, 20000, 25000,
                31250, 40000, 50000, 62500, 78125, 80000, 100000, 125000,
                156250, 200000]
+
+# regexp for inspecting phones
+VALID_PHONE = r"^[^\d\s]\S*$"
+
+# regexp for parsing the HVite trace
+HVITE_SCORE = r".+==  \[\d+ frames\] (-\d+\.\d+)"
+# in case you"re curious, the rest of the trace string is:
+#     /\[Ac=-\d+\.\d+ LM=0.0\] \(Act=\d+\.\d+\)/
 
 
 # CLASSES
@@ -130,14 +110,6 @@ class PronDict(object):
             yield (i, word, pron.split())
 
     def __init__(self, f, phoneset):
-        # inspect phoneset
-        for phone in phoneset:
-            if not VALID_PHONE.match(phone):
-                logging.error("Disallowed phone '{}' in".format(ph) +
-                              " dictionary '{}'".format(source.name) +
-                              " (ln. {})".format(i) +
-                              ": phones must match /^[a-zA-Z]\S+$/.")
-                exit(1)
         # build up dictionary
         source = f if hasattr(f, "read") else open(f, "r")
         self.d = defaultdict(list)
@@ -178,80 +150,90 @@ class Aligner(object):
     models shipped with this package and stored in the directory MOD/.
     """
 
-    def __init__(self, ts_dir, tr_dir, dictionary, phoneset, samplerate,
-                 pruning, HCopy_opts, HCompV_opts, HERest_opts,
-                 HVite_opts, ood_mode=True):
+    @classmethod
+    def from_archive(cls, filename, args, opts):
+        # open archive
+        archive = Archive(filename)
+        # set dictionary correctly
+        opts["dictionary"] = os.path.join(archive.dirname, DICT)
+        # create instance
+        retval = cls(args, opts)
+        # set hmmdir correctly
+        retval.hmmdir = archive.dirname
+        return retval
+
+    def __init__(self, args, opts):
         # make a temporary directory to stash everything
-        arg = os.environ["TMPDIR"] if "TMPDIR" in os.environ else None
-        self.tmp_dir = mkdtemp(dir=arg)
-        # make subdirectories thereof
-        self.aud_dir = os.path.join(self.tmp_dir, "DAT")
-        os.mkdir(self.aud_dir)
-        self.lab_dir = os.path.join(self.tmp_dir, "LAB")
-        os.mkdir(self.lab_dir)
-        self.hmm_dir = os.path.join(self.tmp_dir, "HMM")
-        os.mkdir(self.hmm_dir)
-        # class variables
-        self.samplerate = samplerate
-        self.pruning = [str(i) for i in pruning]
-        # dictionary reps
-        self.dictionary = dictionary  # string of dict location
-        self.the_dict = PronDict(dictionary, phoneset)
-        self.the_dict[SIL] = [SIL]
+        tmpdir = os.environ["TMPDIR"] if "TMPDIR" in os.environ else None
+        self.tmpdir = mkdtemp(dir=tmpdir)
+        # make subdirectories
+        self.auddir = os.path.join(self.tmpdir, "AUD")
+        os.mkdir(self.auddir)
+        self.labdir = os.path.join(self.tmpdir, "LAB")
+        os.mkdir(self.labdir)
+        self.hmmdir = os.path.join(self.tmpdir, "HMM")
+        os.mkdir(self.hmmdir)
+        # specific hyperparameters
+        self.samplerate = opts["samplerate"]
+        self.pruning = [str(i) for i in opts["pruning"]
+        # phoneset
+        self.phoneset = frozenset(phoneset)
+        for phone in self.phoneset:
+            if not match(VALID_PHONE, phone):
+                logging.error("Disallowed phone '{}' in".format(ph) +
+                              " dictionary '{}'".format(source.name) +
+                              " (ln. {})".format(i) +
+                              ": phones must match /^[a-zA-Z]\S+$/.")
+                exit(1)
+        # dictionary
+        self.dictionary = opts["dictionary"]
+        self.thedict = PronDict(dictionary, self.phoneset)
+        self.thedict[SIL] = [SIL]
         # lists
-        self.words = os.path.join(self.tmp_dir, "words")
-        self.phons = os.path.join(self.tmp_dir, "phones")
+        self.words = os.path.join(self.tmpdir, "words")
+        self.phons = os.path.join(self.tmpdir, "phones")
         # HMMs
-        self.proto = os.path.join(self.tmp_dir, "proto")
+        self.proto = os.path.join(self.tmpdir, "proto")
         # task dictionary
-        self.taskdict = os.path.join(self.tmp_dir, "taskdict")
+        self.taskdict = os.path.join(self.tmpdir, "taskdict")
         # SCP files
-        self.copy_scp = os.path.join(self.tmp_dir, "copy.scp")
-        self.test_scp = os.path.join(self.tmp_dir, "test.scp")
-        self.train_scp = os.path.join(self.tmp_dir, "train.scp")
+        self.copy_scp = os.path.join(self.tmpdir, "copy.scp")
+        self.test_scp = os.path.join(self.tmpdir, "test.scp")
+        self.train_scp = os.path.join(self.tmpdir, "train.scp")
         # MLFs
-        self.pron_mlf = os.path.join(self.tmp_dir, "pron.mlf")
-        self.word_mlf = os.path.join(self.tmp_dir, "words.mlf")
-        self.phon_mlf = os.path.join(self.tmp_dir, "phones.mlf")
+        self.pron_mlf = os.path.join(self.tmpdir, "pron.mlf")
+        self.word_mlf = os.path.join(self.tmpdir, "words.mlf")
+        self.phon_mlf = os.path.join(self.tmpdir, "phones.mlf")
         # config
-        self.HCopy_cfg = os.path.join(self.tmp_dir, "HCopy.cfg")
-        Aligner.opts2cfg(self.HCopy_cfg, HCopy_opts)
-        self.HCompV_opts = HCompV_opts
-        self.HERest_cfg = os.path.join(self.tmp_dir, "HERest.cfg")
-        Aligner.opts2cfg(self.HERest_cfg, HERest_opts)
-        self.HVite_opts = HVite_opts
-        self.ood_mode = ood_mode
+        self.HCopy_cfg = os.path.join(self.tmpdir, "HCopy.cfg")
+        Aligner.opts2cfg(self.HCopy_cfg, opts["HCopy"])
+        self.HCompV_opts = opts["HCompV"]
+        self.HERest_cfg = os.path.join(self.tmpdir, "HERest.cfg")
+        Aligner.opts2cfg(self.HERest_cfg, opts["HERest"])
+        self.HVite_opts = opts["HVite_opts"]
         # initializing whatever else is needed
-        self._subclass_specific_init(ts_dir, tr_dir)
+        self._subclass_specific_init(args)
 
     @staticmethod
     def opts2cfg(filename, opts):
         with open(filename, "w") as sink:
-            for (setting, value) in opts.iteritems():
-                print >> sink, "{} = {}".format(setting, value)
+            for (setting, value) in opts.items():
+                print("{} = {}".format(setting, value), file=sink)
 
-    def _subclass_specific_init(self, ts_dir, tr_dir):
+    def _subclass_specific_init(self, args):
         """
         Performs subclass-specific initialization operations
         """
-        # perform checks on data
-        self._check(ts_dir)
-        # make audio copies
-        self._HCopy()
-        # where trained models can be found...
-        self.cur_dir = tr_dir
+        self._check(args) # perform checks on data
+        self._HCopy(args) # extract audio features
 
-    def _check(self, ts_dir):
+    def _check(self, args):
         """
         Performs checks on .wav and .lab files in the folder indicated by
         ts_dir. If any problem arises, an error results.
         """
         # check for missing, unpaired data
-        (self.wav_list, lab_list) = self._lists(ts_dir)
-        # check dictionary
-        self._check_dct(lab_list)
-        # check audio
-        self._check_aud(self.wav_list)
+        raise NotImplementedError
 
     def _lists(self, path):
         """
@@ -259,30 +241,7 @@ class Aligner(object):
         raised if they are not, and the unpaired data are written out.
         If no errors result, the tuple (wav_list, lab_list) is returned.
         """
-        # glob together the list of source data
-        wav_list = glob(os.path.join(os.path.realpath(path), "*.wav"))
-        lab_list = glob(os.path.join(os.path.realpath(path), "*.lab"))
-        if len(wav_list) < 1:  # broken
-            logging.error("Directory '{}' has no .wav files.".format(path))
-            exit(1)
-        else:
-            missing = []
-            for lab in lab_list:
-                wav = os.path.splitext(lab)[0] + ".wav"  # expected...
-                if not os.path.exists(wav):
-                    missing.append(wav)
-            for wav in wav_list:
-                lab = os.path.splitext(wav)[0] + ".lab"  # expected...
-                if not os.path.exists(lab):
-                    missing.append(lab)
-            if missing:
-                with open(MISSING, "w") as sink:
-                    for path in missing:
-                        print >> sink, path
-                    print >> sink, path
-                logging.error("Missing data: see '{}'.".format(MISSING))
-                exit(1)
-        return (wav_list, lab_list)
+        raise NotImplementedError
 
     def _check_dct(self, lab_list):
         """
@@ -291,94 +250,22 @@ class Aligner(object):
 
         TODO: add checks that the phones are also valid
         """
-        found_words = set()
-        with open(self.word_mlf, "w") as word_mlf:
-            ood = defaultdict(list)
-            print >> word_mlf, "#!MLF!#"
-            for lab in lab_list:
-                lab_name = os.path.split(lab)[1]
-                # new lab file at the phone level, in self.aud_dir
-                phon_lab = open(os.path.join(self.aud_dir, lab_name), "w")
-                # new lab file at the word level, in self.lab_dir
-                word_lab = open(os.path.join(self.lab_dir, lab_name), "w")
-                # .mlf headers
-                print >> word_mlf, '"{}"'.format(word_lab.name)
-                # sil
-                print >> phon_lab, SIL
-                # look up words
-                for word in open(lab, "r").readline().rstrip().split():
-                    if word in self.the_dict:
-                        found_words.add(word)
-                        print >> phon_lab, "\n".join(
-                                           self.the_dict[word][0])
-                        print >> word_lab, "{} ".format(word)
-                        print >> word_mlf, word
-                    else:
-                        ood[word].append(lab)
-                print >> phon_lab, SIL
-                print >> word_mlf, "."
-                phon_lab.close()
-                word_lab.close()
-        # now complain if any found
-        if ood:
-            with open(OOV, "w") as sink:
-                if self.ood_mode:
-                    for (word, flist) in sorted(ood.iteritems()):
-                        print >> sink, "{}\t{}".format(word,
-                                                       " ".join(flist))
-                else:
-                    for word in sorted(ood):
-                        print >> sink, word
-            logging.error("OOV word(s): see '{}'.".format(OOV))
-            exit(1)
-        # make word
-        print >> open(self.words, "w"), "\n".join(found_words)
-        ded = os.path.join(self.tmp_dir, TEMP)
-        # make ded
-        print >> open(ded, "w"), """AS {0}\nMP {1} {1} {0}""".format(SP,
-                                                                     SIL)
-        check_call(["HDMan", "-m", "-g", ded, "-w", self.words, "-n",
-                    self.phons, self.taskdict, self.dictionary])
-        # add sil
-        print >> open(self.phons, "a"), SIL
-        # add sil and projected words to self.taskdict
-        print >> open(self.taskdict, "a"), "{0} {0}".format(SIL)
-        # run HLEd
-        led = os.path.join(self.tmp_dir, TEMP)
-        print >> open(led, "w"), "EX\nIS {0} {0}\nDE {1}".format(SIL, SP)
-        check_call(["HLEd", "-l", self.lab_dir, "-d", self.taskdict,
-                            "-i", self.phon_mlf, led, self.word_mlf])
+        raise NotImplementedError
 
     def _check_aud(self, wav_list, train=False):
         """
         Check audio files, mixing down to mono and downsampling if
-        necessary. Writes copy_scp and the training or testing SCP files
+        necessary; also writes copy_scp.
         """
-        copy_scp = open(self.copy_scp, "a")
-        check_scp = open(self.train_scp if train else self.test_scp, "w")
-        i = 0
-        for wav in wav_list:
-            head = os.path.splitext(os.path.split(wav)[1])[0]
-            mfc = os.path.join(self.aud_dir, head + ".mfc")
-            w = WavFile.from_file(wav)
-            if w.Fs != self.samplerate:
-                new_wav = os.path.join(self.aud_dir, head + ".wav")
-                logging.warning("Resampling '{}'.".format(wav))
-                w.resample_bang(self.samplerate)
-                w.write(new_wav)
-            print >> copy_scp, '"{}" "{}"'.format(wav, mfc)
-            print >> check_scp, '"{0}"'.format(mfc)
-        copy_scp.close()
-        check_scp.close()
+        raise NotImplementedError
 
     def _HCopy(self):
         """
         Compute MFCCs
         """
-        check_call(["HCopy", "-C", self.HCopy_cfg,
-                             "-S", self.copy_scp])
+        check_call(["HCopy", "-C", self.HCopy_cfg, "-S", self.copy_scp])
 
-    def align(self, mlf):
+    def align(self):
         """
         Align using the models in self.cur_dir and MLF to path
         """
@@ -395,42 +282,40 @@ class Aligner(object):
                              "-I", self.word_mlf,
                              "-s", str(self.HVite_opts["SFAC"]),
                              "-t"] + self.pruning +
-                   [self.taskdict,
-                    self.phons])
+                             [self.taskdict, self.phons])
 
-    def align_and_score(self, mlf, score):
+    def align_and_score(self):
         """
-        The same as self.align(mlf), but also with a file including scores
+        The same as self.align(mlf), but also generates a text file with 
+        -log likelihood confidence scores for each audio file
         """
-        i = 0
-        call_list = ["HVite", "-a", "-m",
-                              "-T", "1",
-                              "-o", "SM",
-                              "-y", "lab",
-                              "-b", SIL,
-                              "-i", mlf,
-                              "-L", self.lab_dir,
-                              "-C", self.HERest_cfg,
-                              "-S", self.test_scp,
-                              "-H", os.path.join(self.cur_dir, MACROS),
-                              "-H", os.path.join(self.cur_dir, HMMDEFS),
-                              "-I", self.word_mlf,
-                              "-s", str(self.HVite_opts["SFAC"]),
-                              "-t"] + self.pruning + \
-            [self.taskdict,
-             self.phons]
-        proc = Popen(call_list, stdout=PIPE)
+        proc = Popen(["HVite", "-a", "-m",
+                               "-T", "1",
+                               "-o", "SM",
+                               "-y", "lab",
+                               "-b", SIL,
+                               "-i", mlf,
+                               "-L", self.lab_dir,
+                               "-C", self.HERest_cfg,
+                               "-S", self.test_scp,
+                               "-H", os.path.join(self.cur_dir, MACROS),
+                               "-H", os.path.join(self.cur_dir, HMMDEFS),
+                               "-I", self.word_mlf,
+                               "-s", str(self.HVite_opts["SFAC"]),
+                               "-t"] + self.pruning + \
+                               [self.taskdict, self.phons], stdout=PIPE)
         with open(score, "w") as sink:
+            i = 0
             for line in proc.stdout:
-                mch = HVITE_SCORE.match(line)  # check for score line
-                if mch:
-                    print >> sink, "{}\t{}".format(self.wav_list[i],
-                                                   mch.group(1))
+                m = match(HVITE_SCORE, line)
+                if m:
+                    print >> sink, "{}\t{}".format(self.wavlist[i],
+                                                   m.group(1))
                     i += 1
-        # catch any errors in decoding
-        retcode = proc.wait()  # should be exhausted, but just to be sure
+        # Popen equivalent to check_call...
+        retcode = proc.wait()
         if retcode != 0:
-            raise CalledProcessError(retcode, call_list)
+            raise CalledProcessError(retcode, proc.args)
 
 
 class TrainAligner(Aligner):
@@ -460,97 +345,71 @@ class TrainAligner(Aligner):
         self.nxt_dir = os.path.join(self.hmm_dir, str(self.n).zfill(3))
         # make the new directory
         os.mkdir(self.nxt_dir)  # from now on, just call self._nxt_dir()
-        # make proto
-        sink = open(self.proto, "w")
-        means = " ".join(["0.0" for _ in xrange(39)])
-        varg = " ".join(["1.0" for _ in xrange(39)])
-        print >> sink, """~o <VECSIZE> 39 <MFCC_D_A_0>
-~h "proto"
+        # make `proto`
+        with open(self.proto, "w") as sink:
+            # FIXME this is highly specific to the default acoustic 
+            # features, but figuring out the number of means and variances
+            # needed from the HCopy configuration file is not trivial.
+            means = " ".join(["0.0" for _ in xrange(39)])
+            varg = " ".join(["1.0" for _ in xrange(39)])
+            print >> sink, """~o <VECSIZE> 39 <MFCC_D_A_0>
+    ~h "proto"
 <BEGINHMM>
 <NUMSTATES> 5"""
-        for i in xrange(2, 5):
-            print >> sink, "<STATE> {}\n<MEAN> 39\n{}".format(i, means)
-            print >> sink, "<VARIANCE> 39\n{}".format(varg)
-        print >> sink, """<TRANSP> 5
+            for i in xrange(2, 5):
+                print >> sink, "<STATE> {}\n<MEAN> 39\n{}".format(i, means)
+                print >> sink, "<VARIANCE> 39\n{}".format(varg)
+            print >> sink, """<TRANSP> 5
  0.0 1.0 0.0 0.0 0.0
  0.0 0.6 0.4 0.0 0.0
  0.0 0.0 0.6 0.4 0.0
  0.0 0.0 0.0 0.7 0.3
  0.0 0.0 0.0 0.0 0.0
 <ENDHMM>"""
-        sink.close()
-        # make vFloors
+        # make `vFloors`
         check_call(["HCompV", "-f", str(self.HCompV_opts["F"]),
                               "-C", self.HERest_cfg,
                               "-S", self.train_scp,
                               "-M", self.cur_dir, self.proto])
-        # make local macro
+        # make `macros`
         # get first three lines from local proto
-        sink = open(os.path.join(self.cur_dir, MACROS), "a")
-        source = open(os.path.join(self.cur_dir,
-                                   os.path.split(self.proto)[1]), "r")
-        for _ in xrange(3):
-            print >> sink, source.readline(),
-        source.close()
-        # get remaining lines from vFloors
-        sink.writelines(open(os.path.join(self.cur_dir,
-                                          VFLOORS), "r").readlines())
-        sink.close()
-        # make hmmdefs
-        sink = open(os.path.join(self.cur_dir, HMMDEFS), "w")
-        for phone in open(self.phons, "r"):
-            source = open(self.proto, "r")
-            # ignore
-            source.readline()
-            source.readline()
-            # the header
-            print >> sink, '~h "{}"'.format(phone.rstrip())
-            # the rest
-            sink.writelines(source.readlines())
-            source.close()
-        sink.close()
+        with open(os.path.join(self.cur_dir, MACROS), "a") as macros:
+            with open(os.path.join(self.cur_dir, 
+                      os.path.split(self.proto)[1]), "r") as proto:
+            for _ in xrange(3):
+                print >> macros, proto.readline(),
+            # get remaining lines from `vFloors`
+            with open(os.path.join(self.cur_dir, VFLOORS), "r") as vfloors:
+                macros.writelines(vfloors.readlines())
+        # make `hmmdefs`
+        with open(os.path.join(self.cur_dir, HMMDEFS), "w") as hmmdefs:
+            with open(self.proto, "r") as proto:
+                protolines = proto.readlines()[2:]
+            with open(self.phons, "r") as phons:
+                for phone in phons:
+                    # the header
+                    print >> hmmdefs, '~h "{}"'.format(phone.rstrip())
+                    # the rest
+                    hmmdefs.writelines(protolines)
 
     def _check(self, ts_dir, tr_dir):
         """
         Performs checks on .wav and .lab files in the folders indicated by
         dir1 and dir2, eliminating any redundant computations.
         """
-        if ts_dir == tr_dir:  # if training on testing
-            (self.wav_list, lab_list) = self._lists(ts_dir)
-            # check and make dictionary
-            self._check_dct(lab_list)
-            # inspect audio
-            self._check_aud(self.wav_list)
-            # IMPORTANT
-            self.train_scp = self.test_scp
-        else:  # otherwise
-            (self.wav_list, ts_lab_list) = self._lists(ts_dir)
-            (tr_wav_list, tr_lab_list) = self._lists(tr_dir)
-            # check and make dictionary
-            self._check_dct(ts_lab_list + tr_lab_list)
-            # inspect test audio
-            self._check_aud(self.wav_list)
-            # inspect training audio
-            self._check_aud(tr_wav_list, True)
+        raise NotImplementedError
 
     def _nxt_dir(self):
         """
         Get the next HMM directory
         """
-        # pass on the previously new one to the old one
-        self.cur_dir = self.nxt_dir
-        # increment
-        self.n += 1
-        # compute the path for the new one
-        self.nxt_dir = os.path.join(self.hmm_dir, str(self.n).zfill(3))
-        # make the new directory
-        os.mkdir(self.nxt_dir)
+        raise NotImplementedError
 
-    def train(self, niter):
+    def train(self, epochs):
         """
         Perform one or more rounds of estimation
         """
-        for _ in xrange(niter):
+        for _ in xrange(epochs):
             check_call(["HERest", "-C", self.HERest_cfg,
                                   "-S", self.train_scp,
                                   "-I", self.phon_mlf,
@@ -562,66 +421,79 @@ class TrainAligner(Aligner):
                        [self.phons], stdout=PIPE)
             self._nxt_dir()
 
+    def HTKbook_training_regime(self, epochs):
+        self.train(epochs)
+        logging.info("Modeling silence.")
+        self.small_pause()
+        logging.info("Additional training.")
+        self.train(epochs)
+        logging.info("Realigning.")
+        self.align()
+        logging.info("Final training.")
+        aligner.train(epochs)
+
     def small_pause(self):
         """
         Add in a tied-state small pause model
         """
-        # make a new hmmdf
-        source = open(os.path.join(self.cur_dir, HMMDEFS), "r+")
-        saved = ['~h "{}"\n'.format(SP)]  # store lines to append later
-        # pass until we find SIL
-        for line in source:
-            if line.startswith('~h "{}"'.format(SIL)):
-                break
-        # header for silence
-        saved.append("<BEGINHMM>\n<NUMSTATES> 3\n<STATE> 2\n")
-        # pass until we get to "SIL""s middle state
-        for line in source:
-            if line == "<STATE> 3\n":
-                break
-        # grab "SIL""s middle state
-        for line in source:
-            if line == "<STATE> 4\n":
-                break
-            saved.append(line)
-        # add in the TRANSP matrix (from VoxForge tutorial)
-        saved.append("<TRANSP> 3\n")
-        saved.append(" 0.0 1.0 0.0\n 0.0 0.9 0.1\n 0.0 0.0 0.0\n<ENDHMM>")
-        # go to the end of the file
-        source.seek(0, os.SEEK_END)
-        # append all the lines to the end of the file
-        source.writelines(saved)
-        source.close()
-        # tie the states together
-        hed = os.path.join(self.tmp_dir, TEMP)
-        print >> open(hed, "w"), """AT 2 4 0.2 {{{1}.transP}}
-AT 4 2 0.2 {{{1}.transP}}
-AT 1 3 0.3 {{{0}.transP}}
-TI silst {{{1}.state[3],{0}.state[2]}}
-""".format(SP, SIL)
-        check_call(["HHEd", "-H", os.path.join(self.cur_dir, MACROS),
-                            "-H", os.path.join(self.cur_dir, HMMDEFS),
-                            "-M", self.nxt_dir, hed, self.phons])
-        # FIXME this seems to not be necessary, but I"m not sure why.
-        """
-        # run HLEd
-        sink = open(temp, "w")
-        sink.write("EX\nIS {0} {0}\n".format(sil))
-        sink.close()
-        call(["HLEd", "-A", "-l", self.aud_dir, "-d", 
-              self.taskdict, "-i", self.phon_mlf, temp, self.word_mlf])
-        """
-        self._nxt_dir()  # increments dirs
+        raise NotImplementedError
+
+
+## helpers
+
+def resolve_opts(args):
+    try: 
+        with open(filename, "r") as source:
+            opts = yaml.load(source)
+    except (IOError, yaml.YAMLError) as error:
+        logging.error("Error reading configuration file '{}': {}".format(
+                      filename, error))
+        exit(1)
+    # fix up samplerate
+    if args.read:
+        return _resolve_opts_read(args, opts)
+    else:
+        return _resolve_opts(args, opts)
+
+
+def _resolve_opts_read(args, opts):
+    if opts["samplerate"] not in SAMPLERATES:
+        logging.error("Invalid archive samplerate ({} Hz).".format(
+                      opts["samplerate"]))
+        exit(1)
+    # FIXME do something about dictionary, which doesn't make sense
+    # FIXME do something about epochs, which doesn't make sense
+    return opts
+
+def _resolve_opts(args, opts):
+    opts["dictionary"] = args.dictionary if args.dictionary \
+                                         else opts["dictionary"]
+    samplerate = args.samplerate if args.samplerate else opts["samplerate"]
+    if samplerate not in SAMPLERATES:
+        i = bisect(SAMPLERATES, samplerate)
+        if i == 0:
+            pass
+        elif i == len(SRs):
+            i = -1
+        elif SAMPLERATES[i] - samplerate > samplerate - SAMPLERATES[i - 1]:
+            i = i - 1
+        # else keep `i` as is
+        samplerate = SAMPLERATES[i]
+        logging.warning("Using {} Hz as samplerate".format(samplerate))
+    opts["samplerate"] = samplerate
+    opts["epochs"] = args.epochs if args.epochs else opts["epochs"]
+    return opts
 
 
 if __name__ == "__main__":
     # parse arguments
     argparser = ArgumentParser(prog="align.py",
                                description="Prosodylab-Aligner")
-    argparser.add_argument("-c", "--configuration", default="en.yaml",
+    argparser.add_argument("-c", "--configuration", default=CONFIG,
                            help="Configuration file to use")
-    argparser.add_argument("-d", "--dictionary",
-                           help="dictionary file to use")
+    argparser.add_argument("-d", "--dictionary", default=DICT,
+                           help="dictionary file to use" + 
+                           " (default: {})".format(DICT))
     argparser.add_argument("-s", "--samplerate", type=int,
                            default=SAMPLERATE,
                            help="analysis samplerate in Hz" +
@@ -644,73 +516,52 @@ if __name__ == "__main__":
     argparser.add_argument("-V", "--really-verbose", action="store_true",
                            help="Even more verbose output")
     args = argparser.parse_args()
+
     # set up logging
     if args.really_verbose:
         logging.basicConfig(format=LOGGING_FMT, level=logging.DEBUG)
     elif args.verbose:
         logging.basicConfig(format=LOGGING_FMT, level=logging.INFO)
     else:
-        logging.basicConfig(format=LOGGING_FMT)
-    # parse configuration file and overwrite opts with args
-    try:
-        source = open(args.configuration, "r")
-        opts = yaml.load(source)
-    except (IOError, yaml.YAMLError) as err:
-        logging.error("Error reading config file '{}' ({}).".format(
-                      args.configuration, err))
-        exit(1)
-    # can just read this from opts: it has to already be there
-    phoneset = frozenset(opts["phoneset"])
-    # `dictionary` will be the full path, and `opts["dictionary"]` just
-    # the truncated name, since we'll copy it into the archive later
-    dictionary = os.path.abspath(args.dictionary if args.dictionary
-                                 else opts["dictionary"])
-    (_, opts["dictionary"]) = os.path.split(dictionary)
-    samplerate = args.samplerate if args.samplerate else opts["samplerate"]
-    if samplerate not in SAMPLERATES:
-        i = bisect(SAMPLERATES, samplerate)
-        if i == 0:
-            pass
-        elif i == len(SRs):
-            i = -1
-        elif SAMPLERATES[i] - samplerate > samplerate - SAMPLERATES[i - 1]:
-            i = i - 1
-        # else keep `i` as is
-        samplerate = SAMPLERATES[i]
-        logging.warning("Using {} Hz as samplerate".format(samplerate))
-    opts["samplerate"] = samplerate
-    opts["epochs"] = args.epochs if args.epochs else opts["epochs"]
-    # do the model
-    if args.read or args.write:
-        raise NotImplementedError
+        logging.basicConfig(format=LOGGING_FMT, level=logging.WARNING)
+
+    # combine opts and args
+    opts = resolve_opts(args)
+
+    ## input
+    if args.read:
+        logging.info("Initializing aligner from file.")
+        aligner = TrainAligner.from_archive(args, opts)
+    elif args.train:
+        logging.info("Training aligner.")
+        aligner = TrainAligner(args, opts)
+        aligner.HTKBook_training_regime(opts["epochs"])
+    # else unreachable
+
+    ## output
     if args.align:
-        args.align = os.path.abspath(args.align)
-    path_to_mlf = os.path.join(args.align, ALIGN_MLF)
-    if args.train:
-        args.train = os.path.abspath(args.train)
-        logging.info("Initializing.")
-        aligner = TrainAligner(args.align, args.train, dictionary,
-                               phoneset, opts["samplerate"],
-                               opts["PRUNING"],
-                               opts["HCopy"],
-                               opts["HCompV"],
-                               opts["HERest"],
-                               opts["HVite"])
-        logging.info("Training.")
-        aligner.train(opts["epochs"])
-        logging.info("Modeling silence.")
-        aligner.small_pause()
-        logging.info("Additional training.")
-        aligner.train(opts["epochs"])
-        logging.info("Realigning.")
-        aligner.align(aligner.phon_mlf)
-        logging.info("Final training.")
-        aligner.train(opts["epochs"])
-    else:
+        mlf = aligner.align_and_score()
+        logging.info("Making TextGrids.")
+        if MLF(mlf).write(args.align) < 1:
+            logging.error("No paths found!")
+            exit(1)
+    elif args.write:
         raise NotImplementedError
-    aligner.align_and_score(path_to_mlf, os.path.join(args.align,
-                                                      SCORES))
-    logging.info("Making TextGrids.")
-    if MLF(path_to_mlf).write(args.align) < 1:
-        logging.error("No paths found!")
-        exit(1)
+        """
+        archive = Archive(aligner.hmm_dir)
+        # copy dictionary to archive
+        copyfile(dictionary, os.path.join(archive.dirname, DICT))
+        # FIXME what should I do about the dictionary path?
+        # write config file to archive
+        filename = os.path.join(archive.dirname, CONFIG)
+        try:
+            with open(filename, "w") as sink:
+                print(yaml.dump(opts, default_flow_style=False), file=sink)
+        except (IOError, yaml.YAMLError) as err:
+            logging.error("Error writing config file '{}': {}.".format(
+                          filename, err))
+        # write full archive to disk
+        archiveout = archive.dump(args.write)
+        logging.info("Serialized model to '{}'.".format(archiveout))
+    # else unreachable
+        """

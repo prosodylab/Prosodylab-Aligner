@@ -1,5 +1,5 @@
 from tempfile import mkdtemp
-from os import environ, path, walk
+from os import getcwd, environ, path, walk
 from shutil import make_archive, unpack_archive
 
 
