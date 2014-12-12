@@ -1,0 +1,3 @@
+PyYAML==3.11
+TextGrid==1.0
+scipy==0.14.0
