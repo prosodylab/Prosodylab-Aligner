@@ -1,3 +1,5 @@
+**NB**: This README is currently out of date: the main branch is changing rapidly and will continue to do so until the end of December 2014; at this point, we will bring the README back up to date. Click [here](https://github.com/kylebgorman/Prosodylab-Aligner/archive/2204ee08a14ab91007155a09423da1d81d4be420.zip) to download the stable version of the aligner, which is described in the README below.
+
 # Prosodylab-Aligner, v. 1.0
 
 Scripts for alignment of laboratory speech production data
@@ -14,6 +16,12 @@ Scripts for alignment of laboratory speech production data
 ## License
 
 See included "LICENSE" 
+
+## Citation
+
+Please you use this tool, we would appreciate if you cited the following paper:
+
+Gorman, Kyle, Jonathan Howell and Michael Wagner. 2011. Prosodylab-Aligner: A Tool for Forced Alignment of Laboratory Speech. Canadian Acoustics. 39.3. 192–193.
 
 ## Usage
 
@@ -81,15 +89,11 @@ On Linux or similar POSIX-based systems, SoX can be obtained from the distributi
 
 #### Mac OS X
 
-On Mac OS X it may be obtained from Fink or DarwinPorts, though compiling by hand may be somewhat difficult. Fortunately, the SoX maintainers provide compiled binaries for Mac OS X. You can simply download these binaries from the following URL (click on the link after the text "Looking for the latest version?"):
-
-    http://sox.sourceforge.net
-
-The zip file can be expanded by double-clicking on it. The resulting files must be placed in your `$PATH`. A simple way to do this is to navigate to the resulting directory, and issue the following command:
+On Mac OS X it may be obtained via package managers like [http://brew.sh](Homebrew). The SoX maintainers also provide compiled binaries, which can be downloaded from [SourceForge](http://sox.sourceforge.net): click on the link after "Looking for the latest version?". The zip file can be expanded by double-clicking on it. The resulting files must be placed in your `$PATH`. A simple way to do this is to navigate to the resulting directory, and issue the following command:
 
     $ sudo mv rec play sox soxi /usr/local/bin
 
-This will prompt for your password; type it in (it will not "echo", as `***`), and hit Enter when you're done. 
+This will prompt for your password; type it in (it will not "echo", as `***`), and hit Enter when you're done.
 
 #### Checking installation
 
@@ -108,18 +112,21 @@ Note that you will have to make an account and agree to their restricted distrib
 
     $ tar -fvxz htk-3.4.1.tar.gz
 
+Note that if your browser automatically attempts to unpack compressed files upon download, you may get the following error:
+
+    tar: Must specify one of -c, -r, -t, -u, -x
+
+In this case, use the command (again adjusting for version number):
+
+    $ tar -xf htk-3.4.1.tar.gz
+
 Once you extract the application, navigate into the resulting directory:
 
     $ cd htk
 
 #### 64-bit x86 Linux 
 
-Edit the file `configure`, making the following changes:
-
-* On line 5507, replace `-m32` with `-s` (make 64-bit stripped binaries instead of 32-bit unstripped binaries)
-* On line 6788, replace `-O2` with `-O3` (make fully optimmized binaries)
-
-This will produce smaller, faster binaries than otherwise. Then run the following commands
+Run the following commands:
 
     $ ./configure --disable-hslab --disable-hlmtools
     ...
@@ -155,11 +162,7 @@ You can confirm that HTK is installed by issuing the following command in any di
 
 ### Obtaining a dictionary
 
-First, obtain an appropriate pronunciation dictionary. Since many of the intended users are American English speakers, I've provided a script (`get_dict.sh`) which will download the CMU pronunciation dictionary automatically.
-
-    ./get_dict.sh
-
-Other dictionaries can be found online, or written in the CMU format for specific tasks. If you're working with RP speakers, CELEX might be a good one.
+First, obtain an appropriate pronunciation dictionary. Currently, the aligner comes with a file "dictionary.txt" intended for use with American English. Some dictionaries we have created are available at the [`prosodylab.dictionaries` repository](https://github.com/prosodylab/prosodylab.dictionaries). Other dictionaries can be found online, or written for specific tasks. If you're working with RP speakers, [CELEX](http://catalog.ldc.upenn.edu/LDC96L14) might be a good choice. For languages with regular, transparent orthographies, you may want to create a simple rule-based grapheme-to-phoneme system as a series of ordered rules.
 
 ### Aligning one pair
 
@@ -207,9 +210,11 @@ Secondly, a word in your .lab files may be missing from the dictionary. Such wor
 
 If you call align.py with the argument -m, each word in outofdict.txt is paired with a list of .lab files where it occurs. This may be useful for fixing typos in the .lab files. 
 
+If you are transcribing new words using the CMU phone set, see [this page](http://www.csee.ogi.edu/~gormanky/papers/codes/) for IPA equivalents.
+
 #### SoX not installed
 
-Also, if SoX is not installed, but it needed because the audio is in a different format than the provided models (which are mono and sampled at 8000 Hz), an error will be raised.
+Also, if SoX is not installed, but it needed because the audio is in a different format than the provided models (sampled at 8000 Hz and mono), an error result.
 
 #### align.py not executable ("Permission denied")
 
@@ -222,7 +227,7 @@ On Linux or Mac OS X, the following command should do the trick:
 
     $ chmod +x ./align.py
 
-Then, run `align.py` like above.  
+Then, run `align.py` like above.
 
 #### Out of space errors
 
