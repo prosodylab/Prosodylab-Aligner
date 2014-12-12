@@ -7,8 +7,9 @@ URL: http://prosodylab.org/tools/aligner/
 # basic features
 samplerate: 10000 # in Hz
 dictionary: de.dict # based on the CMU pronunciation dictionary
-phoneset:  [a1, &0, W0, @0, q0,
-            g, l, m, n, r, s, t, z,]
+phoneset:  [a0, a1, &0, &1, i0, i1, I0, I1, e0, e1, E0, E1, @0, o0, o1, O0, O1, u0, u1, U0, U1, 
+            )0, )1, /0, /1, |0, |1, y0, y1, Y0, Y1, B0, B1, W0, W1, X0, X1, q0, ~1,
+            b, d, f, g, h, j, _, J, k, l, m, n, N, p, r, s, S, t, v, x, z, Z, =, +]
 epochs: 5
 
 # specs for feature extractor; change at your own risk
