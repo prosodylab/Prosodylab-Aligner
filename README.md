@@ -35,6 +35,7 @@ Gorman, Kyle, Jonathan Howell and Michael Wagner. 2011. Prosodylab-Aligner: A To
     -d dictionary       specify a dictionary file     [default: dictionary.txt]
 
     -h                  Display this message
+
     -m                  List files containing
                         out-of-dictionary words
 
@@ -46,6 +47,8 @@ Gorman, Kyle, Jonathan Howell and Michael Wagner. 2011. Prosodylab-Aligner: A To
                         (NB: available only with -t)
 
     -t training_data/   Perform model training
+
+    -c                  Specify a configuration file to use     [default: en.yaml]
 
 ## FAQ
 
