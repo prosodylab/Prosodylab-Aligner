@@ -29,9 +29,10 @@ Gorman, Kyle, Jonathan Howell and Michael Wagner. 2011. Prosodylab-Aligner: A To
 
     Option              Function
     
-    -c                  Specify a configuration file to use     [default: en.yaml]
+    -c config_file      Specify a configuration file to use     [default: en.yaml]
 
     -d dictionary       Specify a dictionary file               [default: dictionary.txt]
+                        (NB: available only with -t (Input Group))
 
     -h                  Display this message
 
@@ -39,6 +40,7 @@ Gorman, Kyle, Jonathan Howell and Michael Wagner. 2011. Prosodylab-Aligner: A To
                         (NB: available only with -t)
 
     -E                  Number of epochs in training per round  [default: EPOCHS]
+                        (NB: available only with -t (Input Group))
 
     -v                  Verbose output
 
@@ -46,15 +48,17 @@ Gorman, Kyle, Jonathan Howell and Michael Wagner. 2011. Prosodylab-Aligner: A To
 
     Input Group:        Only one of the following arguments may be selected
 
-        -r              Read in serialized acoustic model = TRUE
+    -r                  Read in serialized acoustic model
+                        (NB: Not Implemented)
 
-        -t              Perform model training 
+    -t training_data/   Perform model training 
 
     Output Group:       Only one of the following arguments may be selected
 
-        -a              Directory of data to be aligned
+    -a                  Directory of data to be aligned
 
-        -w              Location to write serialized model
+    -w                  Location to write serialized model
+                        (NB: Not Implemented)
 
 ## FAQ
 
