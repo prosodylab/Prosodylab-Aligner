@@ -80,13 +80,46 @@ HVITE_SCORE = r".+==  \[\d+ frames\] (-\d+\.\d+)"
 #     /\[Ac=-\d+\.\d+ LM=0.0\] \(Act=\d+\.\d+\)/
 
 
-def split_filename(path):
+## helpers
+
+def get_opts(filename):
+    try:
+        with open(filename.configuration, "r") as source:
+            return yaml.load(source)
+    except (IOError, yaml.YAMLError) as error:
+        logging.error("Error reading configuration file '{}': {}".format(
+                      filename, error))
+        exit(1)
+
+def resolve_opts(args, opts):
+    opts = get_opts(args.configuration)
+    opts["dictionary"] = args.dictionary if args.dictionary \
+                                         else opts["dictionary"]
+    samplerate = args.samplerate if args.samplerate else opts["samplerate"]
+    if samplerate not in SAMPLERATES:
+        i = bisect(SAMPLERATES, samplerate)
+        if i == 0:
+            pass
+        elif i == len(SRs):
+            i = -1
+        elif SAMPLERATES[i] - samplerate > samplerate - SAMPLERATES[i - 1]:
+            i = i - 1
+        # else keep `i` as is
+        samplerate = SAMPLERATES[i]
+        logging.warning("Using {} Hz as samplerate".format(samplerate))
+    opts["samplerate"] = samplerate
+    opts["epochs"] = args.epochs if args.epochs else opts["epochs"]
+    return opts
+
+def split_filename(fullname):
     """
     Split a filename into directory, basename, and extension
     """
-    (dirname, filename) = os.path.split(path)
+    (dirname, filename) = os.path.split(fullname)
     (basename, ext) = os.path.splitext(filename)
     return (dirname, basename, ext)
+
+
 
 
 class Aligner(object):
@@ -170,16 +203,17 @@ class Aligner(object):
         """
         Performs subclass-specific initialization operations
         """
-        self._check(args) # perform checks on data
-        self._HCopy(args) # extract audio features
+        self._prepare(args.align) # perform checks on data
 
-    def _check(self, args):
+    def _prepare(self, dirname):
         """
         Performs checks on .wav and .lab files in the folder indicated by
         ts_dir. If any problem arises, an error results.
         """
-        # check for missing, unpaired data
-        raise NotImplementedError
+        (wavfiles, labfiles) = self._lists(dirname)
+        self._prepare_lab(labfiles)
+        self._prepare_wav(wavfiles)
+        self._HCopy()
 
     def _lists(self, dirname):
         """
@@ -298,7 +332,7 @@ class Aligner(object):
         """
         check_call(["HCopy", "-C", self.HCopy_cfg, "-S", self.copy_scp])
 
-    def align(self):
+    def align(self, dirname):
         """
         Align using the models in self.cur_dir and MLF to path
         """
@@ -307,7 +341,7 @@ class Aligner(object):
                              "-y", "lab",
                              "-b", SIL,
                              "-i", mlf,
-                             "-L", self.lab_dir,
+                             "-L", self.labdir,
                              "-C", self.HERest_cfg,
                              "-S", self.test_scp,
                              "-H", os.path.join(self.cur_dir, MACROS),
@@ -317,9 +351,9 @@ class Aligner(object):
                              "-t"] + self.pruning +
                              [self.taskdict, self.phons])
 
-    def align_and_score(self):
+    def align_and_score(self, dirname):
         """
-        The same as self.align(mlf), but also generates a text file with 
+        The same as `self.align`, but also generates a text file with
         -log likelihood confidence scores for each audio file
         """
         proc = Popen(["HVite", "-a", "-m",
@@ -342,8 +376,8 @@ class Aligner(object):
             for line in proc.stdout:
                 m = match(HVITE_SCORE, line)
                 if m:
-                    print >> sink, "{}\t{}".format(self.wavlist[i],
-                                                   m.group(1))
+                    print("{}\t{}".format(self.wavlist[i], m.group(1)),
+                          file=sink)
                     i += 1
         # Popen equivalent to check_call...
         retcode = proc.wait()
@@ -359,58 +393,58 @@ class TrainAligner(Aligner):
     models
     """
 
-    def _subclass_specific_init(self, ts_dir, tr_dir):
+    def _subclass_specific_init(self, args):
         """
         Performs subclass-specific initialization operations
         """
-        # perform checks on data
-        self._check(ts_dir, tr_dir)
-        # run HCopy
-        self._HCopy()
+        if not args.train:
+            raise ValueError
+        self._prepare(args.train)
         # create the next HMM directory
         self.n = 0
-        self.cur_dir = os.path.join(self.hmm_dir, str(self.n).zfill(3))
+        self.curdir = os.path.join(self.hmmdir, str(self.n).zfill(3))
         # make the first directory
-        os.mkdir(self.cur_dir)
+        os.mkdir(self.curdir)
         # increment
         self.n = + 1
         # compute the path for the new one
-        self.nxt_dir = os.path.join(self.hmm_dir, str(self.n).zfill(3))
+        self.nxtdir = os.path.join(self.hmmdir, str(self.n).zfill(3))
         # make the new directory
-        os.mkdir(self.nxt_dir)  # from now on, just call self._nxt_dir()
+        os.mkdir(self.nxtdir)  # from now on, just call self._nxt_dir()
         # make `proto`
-        with open(self.proto, "w") as sink:
+        with open(self.proto, "w") as proto:
             # FIXME this is highly specific to the default acoustic 
             # features, but figuring out the number of means and variances
             # needed from the HCopy configuration file is not trivial.
             means = " ".join(["0.0" for _ in xrange(39)])
             varg = " ".join(["1.0" for _ in xrange(39)])
-            print >> sink, """~o <VECSIZE> 39 <MFCC_D_A_0>
+            print("""~o <VECSIZE> 39 <MFCC_D_A_0>
     ~h "proto"
 <BEGINHMM>
-<NUMSTATES> 5"""
+<NUMSTATES> 5""", file=proto)
             for i in xrange(2, 5):
-                print >> sink, "<STATE> {}\n<MEAN> 39\n{}".format(i, means)
-                print >> sink, "<VARIANCE> 39\n{}".format(varg)
-            print >> sink, """<TRANSP> 5
+                print("<STATE> {}\n<MEAN> 39\n{}".format(i, means), 
+                      file=proto)
+                print("<VARIANCE> 39\n{}".format(varg), file=proto)
+            print("""<TRANSP> 5
  0.0 1.0 0.0 0.0 0.0
  0.0 0.6 0.4 0.0 0.0
  0.0 0.0 0.6 0.4 0.0
  0.0 0.0 0.0 0.7 0.3
  0.0 0.0 0.0 0.0 0.0
-<ENDHMM>"""
+<ENDHMM>""", file=proto)
         # make `vFloors`
         check_call(["HCompV", "-f", str(self.HCompV_opts["F"]),
                               "-C", self.HERest_cfg,
                               "-S", self.train_scp,
-                              "-M", self.cur_dir, self.proto])
+                              "-M", self.curdir, self.proto])
         # make `macros`
         # get first three lines from local proto
-        with open(os.path.join(self.cur_dir, MACROS), "a") as macros:
-            with open(os.path.join(self.cur_dir, 
+        with open(os.path.join(self.curdir, MACROS), "a") as macros:
+            with open(os.path.join(self.curdir, 
                       os.path.split(self.proto)[1]), "r") as proto:
                 for _ in xrange(3):
-                    print >> macros, proto.readline(),
+                    print(proto.readline().strip(), file=macros)
             # get remaining lines from `vFloors`
             with open(os.path.join(self.cur_dir, VFLOORS), "r") as vfloors:
                 macros.writelines(vfloors.readlines())
@@ -420,23 +454,20 @@ class TrainAligner(Aligner):
                 protolines = proto.readlines()[2:]
             with open(self.phons, "r") as phons:
                 for phone in phons:
-                    # the header
-                    print >> hmmdefs, '~h "{}"'.format(phone.rstrip())
-                    # the rest
+                    print('~h "{}"'.format(phone.rstrip()), file=hmmdefs)
                     hmmdefs.writelines(protolines)
+        # FIXME what to do here to make this work?
+        #if args.align and args.train != args.align:
+        #    self._prepare(args.align)
 
-    def _check(self, ts_dir, tr_dir):
-        """
-        Performs checks on .wav and .lab files in the folders indicated by
-        dir1 and dir2, eliminating any redundant computations.
-        """
-        raise NotImplementedError
-
-    def _nxt_dir(self):
+    def _nxtdir(self):
         """
         Get the next HMM directory
         """
-        raise NotImplementedError
+        self.curdir = self.nxtdir
+        self.n += 1
+        self.nxtdir = os.path.join(self.hmmdir, str(self.n).zfill(3))
+        os.mkdir(self.nxtdir)
 
     def train(self, epochs):
         """
@@ -469,40 +500,49 @@ class TrainAligner(Aligner):
         """
         Add in a tied-state small pause model
         """
-        raise NotImplementedError
-
-
-## helpers
-
-
-def get_opts(filename):
-    try: 
-        with open(filename.configuration, "r") as source:
-            return yaml.load(source)
-    except (IOError, yaml.YAMLError) as error:
-        logging.error("Error reading configuration file '{}': {}".format(
-                      filename, error))
-        exit(1)
-
-def resolve_opts(args, opts):
-    opts = get_opts(args.configuration)
-    opts["dictionary"] = args.dictionary if args.dictionary \
-                                         else opts["dictionary"]
-    samplerate = args.samplerate if args.samplerate else opts["samplerate"]
-    if samplerate not in SAMPLERATES:
-        i = bisect(SAMPLERATES, samplerate)
-        if i == 0:
-            pass
-        elif i == len(SRs):
-            i = -1
-        elif SAMPLERATES[i] - samplerate > samplerate - SAMPLERATES[i - 1]:
-            i = i - 1
-        # else keep `i` as is
-        samplerate = SAMPLERATES[i]
-        logging.warning("Using {} Hz as samplerate".format(samplerate))
-    opts["samplerate"] = samplerate
-    opts["epochs"] = args.epochs if args.epochs else opts["epochs"]
-    return opts
+        # make new hmmdef 
+        saved = ['~h "{}"\n'.format(SP)]
+        with open(os.path.join(curdir, HMMDEFS), "r+") as hmmdefs:
+            # find SIL
+            for line in hmmdefs:
+                if line.startswith('~h "{}"'.format(SIL)):
+                    break
+            saved.append("<BEGINHMM>\n<NUMSTATES 3\n<STATE 2\n")
+            # pass until we get to SIL's middle state
+            for line in hmmdefs:
+                if line.startswith("<STATE> 4"):
+                    break
+            saved.append(line)
+            # add in the TRANSP matrix
+            saved.extend("<TRANSP> 3", " 0.0 1.0 0.0", " 0.0 0.9 0.1",
+                          " 0.0 0.0 0.0", "<ENDHMM>")
+            # write all the lines to the end of `hmmdefs`
+            hmmdefs.seek(0, os.SEEK_END)
+            hmmdefs.writelines(saved)
+        # tie states together
+        temp = os.path.join(self.tmpdir, TEMP)
+        with open(temp, "w") as hed:
+            print("""AT 2 4 0.2 {{{1}.transP}}
+AT 4 2 0.2 {{{1}.transP}}
+AT 1 3 0.3 {{{0}.transP}}
+TI silst {{{1}.state[3],{0}.state[2]}}""".format(SP, SIL), file=hed)
+        check_call(["HHEd", "-H", os.path.join(self.curdir, MACROS),
+                            "-H", os.path.join(self.curdir, HMMDEFS),
+                            "-M", self.nxtdir, 
+                            temp, self.phons])
+        # FIXME abandoned code for running HLEd. I don't quite remember 
+        # what this is good for (perhaps inserting initial silence? that's
+        # not necessary anymore, as I start the models like that), but 
+        # I'm going to keep it around for a while longer - KG, 2014-12-11
+        #with open(TEMP, "w") as led:
+        #    print("EX\nIS {0} {0}\n".format(SIL), file=led)
+        #check_call(["HLEd", "-A", 
+        #                    "-l", self.auddir,
+        #                    "-d", self.taskdir,
+        #                    "-i", self.phon_mlf,
+        #                    TEMP, self.word_mlf])
+        # /FIXME
+        self._nxtdir()
 
 
 if __name__ == "__main__":
