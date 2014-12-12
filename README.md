@@ -31,14 +31,14 @@ Gorman, Kyle, Jonathan Howell and Michael Wagner. 2011. Prosodylab-Aligner: A To
     
     -c                  Specify a configuration file to use     [default: en.yaml]
 
-    -d dictionary       Specify a dictionary file     [default: dictionary.txt]
+    -d dictionary       Specify a dictionary file               [default: dictionary.txt]
 
     -h                  Display this message
 
-    -s samplerate (Hz)  Samplerate for models         [default: SAMPLERATE]
+    -s samplerate (Hz)  Samplerate for models                   [default: SAMPLERATE]
                         (NB: available only with -t)
 
-    -E                  Number of epochs in training per round   [default: EPOCHS]
+    -E                  Number of epochs in training per round  [default: EPOCHS]
 
     -v                  Verbose output
 
