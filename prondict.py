@@ -41,19 +41,16 @@ class PronDict(object):
             (word, pron) = line.rstrip().split(None, 1)
             yield (i, word, pron.split())
 
-    def __init__(self, f, phoneset):
+    def __init__(self, filename, phoneset):
         # build up dictionary
-        source = f if hasattr(f, "read") else open(f, "r")
-        self.d = defaultdict(list)
-        for (i, word, pron) in PronDict.pronify(source):
-            for ph in pron:
-                if ph not in phoneset:
-                    logging.error("Unknown phone '{}' in".format(ph) +
-                                  " dictionary '{}'".format(source.name) +
-                                  " (ln. {}).".format(i))
-                    exit(1)
-            self.d[word].append(pron)
-        source.close()
+        with open(filename, "r") as source:
+            self.d = defaultdict(list)
+            for (i, word, pron) in PronDict.pronify(source):
+                for ph in pron:
+                    if ph not in phoneset:
+                        logging.error("Unknown phone '{}' in dictionary '{}' (ln. {}).".format(ph, filename, i))
+                        exit(1)
+                self.d[word].append(pron)
         # for later...
         self.oov = set()
 
