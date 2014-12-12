@@ -88,30 +88,8 @@ The [Penn Forced Aligner](http://www.ling.upenn.edu/phonetics/p2fa/) (P2FA) prov
 
 ## Installing
 
-The scripts require a version of Python no earlier than 2.6, a BASH-compatible shell located in `/bin/sh`, and `curl`. All these will be installed on recent Macintosh computers as well as most computers running Linux. The scripts included here also assume that HTK and SoX are installed on your system. While these scripts can also be made to work on Windows computers, it is non-trivial and not described here.
+The scripts require a version of Python no earlier than 2.6, a BASH-compatible shell located in `/bin/sh`, and `curl`. All these will be installed on recent Macintosh computers as well as most computers running Linux. The scripts included here also assume that HTK is installed on your system. While these scripts can also be made to work on Windows computers, it is non-trivial and not described here.
 
-### Installing SoX
-
-#### Linux
-
-On Linux or similar POSIX-based systems, SoX can be obtained from the distribution-specific package manager (`apt-get`, `yum`, etc.), or can be compiled from source without too much difficulty.
-
-#### Mac OS X
-
-On Mac OS X it may be obtained via package managers like [http://brew.sh](Homebrew). The SoX maintainers also provide compiled binaries, which can be downloaded from [SourceForge](http://sox.sourceforge.net): click on the link after "Looking for the latest version?". The zip file can be expanded by double-clicking on it. The resulting files must be placed in your `$PATH`. A simple way to do this is to navigate to the resulting directory, and issue the following command:
-
-    $ sudo mv rec play sox soxi /usr/local/bin
-
-This will prompt for your password; type it in (it will not "echo", as `***`), and hit Enter when you're done.
-
-#### Checking installation
-
-You can confirm that SoX is installed by issuing the following command in any directory:
-
-    $ sox --version
-    sox: SoX v14.3.2
-
-Note that your version may be different: `align.py` has been tested for this version, but it should work for both somewhat older versions as well as for the foreseeable future.
 
 ### Installing HTK
 
@@ -221,9 +199,6 @@ If you call align.py with the argument -m, each word in outofdict.txt is paired 
 
 If you are transcribing new words using the CMU phone set, see [this page](http://www.csee.ogi.edu/~gormanky/papers/codes/) for IPA equivalents.
 
-#### SoX not installed
-
-Also, if SoX is not installed, but it needed because the audio is in a different format than the provided models (sampled at 8000 Hz and mono), an error result.
 
 #### align.py not executable ("Permission denied")
 
@@ -257,7 +232,7 @@ Please note: THIS REQUIRES A LOT OF DATA to work well, and further takes a long 
     $ ./align.py -t data/ data/
     ...
 
-When `-t` is specified, a few other command-line options to `align.py` become available. The `-s` flag specifies samplerate for the models used, and if SoX is installed, both training and testing data will be resampled to this rate, if they do not match it. For instance, to use 44010 Hz models, you could say:
+When `-t` is specified, a few other command-line options to `align.py` become available. The `-s` flag specifies samplerate for the models used, both training and testing data will be resampled to this rate, if they do not match it. For instance, to use 44010 Hz models, you could say:
 
     $ ./align.py -s 44010 -t data data
     ...
