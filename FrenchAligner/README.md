@@ -32,7 +32,7 @@ Gorman, Kyle, Jonathan Howell and Michael Wagner. 2011. Prosodylab-Aligner: A To
     -c config_file      Specify a configuration file to use     [default: en.yaml]
 
     -d dictionary       Specify a dictionary file               [default: dictionary.txt]
-                        (NB: available only with -t (Input Group))
+                        (NB: available only with -t (See Input Group))
 
     -h                  Display this message
 
@@ -40,7 +40,7 @@ Gorman, Kyle, Jonathan Howell and Michael Wagner. 2011. Prosodylab-Aligner: A To
                         (NB: available only with -t)
 
     -E                  Number of epochs in training per round  [default: EPOCHS]
-                        (NB: available only with -t (Input Group))
+                        (NB: available only with -t (See Input Group))
 
     -v                  Verbose output
 
@@ -246,9 +246,9 @@ Note that the slash character </> is not obligatory in specifying directories: a
     $ ./align.py -d MY_DICTIONARY.txt -t data data
     ...
 
-Lastly, the `-n` flag may be used to specify the number of training iterations per "round": align.py performs three rounds of training, each of which take approximately the same time, so the effect of increasing this value by one is approximately 3-fold. By default, `-n` is 4 (so 12 iterations of training in all), but the following command would set it at 5 (or 15 rounds of training):
+Lastly, the `-E` flag may be used to specify the number of training iterations per "round": align.py performs three rounds of training, each of which take approximately the same time, so the effect of increasing this value by one is approximately 3-fold. By default, `-E` is 4 (so 12 iterations of training in all), but the following command would set it at 5 (or 15 rounds of training):
 
-    $ ./align.py -n 4 -t data data
+    $ ./align.py -E 5 -t data data
     ...
 
 Other options are documented above.
