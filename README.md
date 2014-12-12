@@ -19,7 +19,7 @@ See included "LICENSE"
 
 ## Citation
 
-Please you use this tool, we would appreciate if you cited the following paper:
+Please you use this tool; we would appreciate if you cited the following paper:
 
 Gorman, Kyle, Jonathan Howell and Michael Wagner. 2011. Prosodylab-Aligner: A Tool for Forced Alignment of Laboratory Speech. Canadian Acoustics. 39.3. 192–193.
 
@@ -28,27 +28,33 @@ Gorman, Kyle, Jonathan Howell and Michael Wagner. 2011. Prosodylab-Aligner: A To
     USAGE: ./align.py [OPTIONS] data_to_be_aligned/
 
     Option              Function
+    
+    -c                  Specify a configuration file to use     [default: en.yaml]
 
-    -a                  Perform speaker adaptation,
-                        w/ or w/o prior training
-
-    -d dictionary       specify a dictionary file     [default: dictionary.txt]
+    -d dictionary       Specify a dictionary file     [default: dictionary.txt]
 
     -h                  Display this message
 
-    -m                  List files containing
-                        out-of-dictionary words
-
-    -n n                Number of training iterations [default: 4]
-                        for each step of training
+    -s samplerate (Hz)  Samplerate for models         [default: SAMPLERATE]
                         (NB: available only with -t)
 
-    -s samplerate (Hz)  Samplerate for models         [default: 8000]
-                        (NB: available only with -t)
+    -E                  Number of epochs in training per round   [default: EPOCHS]
 
-    -t training_data/   Perform model training
+    -v                  Verbose output
 
-    -c                  Specify a configuration file to use     [default: en.yaml]
+    -V                  More verbose output
+
+    Input Group:        Only one of the following arguments may be selected
+
+        -r              Read in serialized acoustic model = TRUE
+
+        -t              Perform model training 
+
+    Output Group:       Only one of the following arguments may be selected
+
+        -a              Directory of data to be aligned
+
+        -w              Location to write serialized model
 
 ## FAQ
 
