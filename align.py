@@ -47,7 +47,7 @@ from prondict import PronDict
 
 # global vars
 
-LOGGING_FMT = "%(module)s: %(message)s"
+LOGGING_FMT = "%(message)s"
 
 SP = "sp"
 SIL = "sil"
@@ -60,7 +60,7 @@ HMMDEFS = "hmmdefs"
 VFLOORS = "vFloors"
 
 OOV = "OOV.txt"
-ALIGN = "align.mlf"
+ALIGN = "aligned.mlf"
 CONFIG = "config.yaml"
 SCORES = "scores.txt"
 MISSING = "missing.txt"
@@ -164,12 +164,12 @@ class Corpus(object):
         opts2cfg(self.HCopy_cfg, opts["HCopy"])
         self.audio_scp = os.path.join(self.tmpdir, "audio.scp")
         self.feature_scp = os.path.join(self.tmpdir, "feature.scp")
-        # actually prepare the data
+        # prepare the data for processing
         (audiofiles, labelfiles) = self._lists(dirname)
-        # most errors occur during the former, so we're doing it first
+        self.audiofiles = audiofiles
         self._prepare_label(labelfiles)
         self._prepare_audio(audiofiles)
-        self._HCopy()
+        self._extract_features()
 
     def _lists(self, dirname):
         """
@@ -210,8 +210,8 @@ class Corpus(object):
             print("#!MLF!#", file=word_mlf)
             for labelfile in labelfiles:
                 (dirname, filename) = os.path.split(labelfile)
-                word_labfile = os.path.join(self.labdir, filename)
                 phon_labfile = os.path.join(self.auddir, filename)
+                word_labfile = os.path.join(self.labdir, filename)
                 # header for each file in the .mlf
                 print('"{}"'.format(word_labfile), file=word_mlf)
                 # read in words from original .lab file
@@ -220,17 +220,17 @@ class Corpus(object):
                 found_words.update(words)
                 # write out new wordlab
                 with open(word_labfile, "w") as word_handle:
-                    print(" ".join(words), file=word_handle)
+                    print("\n".join(words), file=word_handle)
                 # get pronunciation and check for in-dictionary-hood
                 phons = []
                 for word in words:
                     try:
                         phons.extend(self.thedict[word][0])
-                    except KeyError as error:
+                    except (KeyError, IndexError):
                         pass
                 # write out new phonelab
                 with open(phon_labfile, "w") as phon_handle:
-                    print(" ".join(phons), file=phon_handle)
+                    print("\n".join(phons), file=phon_handle)
                 # append to word_mlf
                 print("\n".join(words), file=word_mlf)
                 print(".", file=word_mlf)
@@ -291,7 +291,7 @@ DE {1}
                       file=audio_scp)
                 print('"{}"'.format(featurefile), file=feature_scp)
 
-    def _HCopy(self):
+    def _extract_features(self):
         """
         Compute audio features
         """
@@ -368,7 +368,7 @@ class Aligner(object):
                     print(proto.readline().strip(), file=macros)
             # get remaining lines from `vFloors`
             with open(os.path.join(self.curdir, VFLOORS), "r") as vfloors:
-                print("\n".join(vfloors.readlines()), file=macros)
+                print("".join(vfloors.readlines()).rstrip(), file=macros)
         # make `hmmdefs`
         with open(os.path.join(self.curdir, HMMDEFS), "w") as hmmdefs:
             with open(self.proto, "r") as proto:
@@ -376,14 +376,14 @@ class Aligner(object):
             with open(corpus.phons, "r") as phons:
                 for phone in phons:
                     print('~h "{}"'.format(phone.rstrip()), file=hmmdefs)
-                    print("\n".join(protolines), file=hmmdefs)
+                    print("".join(protolines).rstrip(), file=hmmdefs)
 
     def train(self, corpus, epochs):
         """
         Perform one or more rounds of estimation
         """
         for _ in range(epochs):
-            logging.info("iteration.")
+            logging.debug("Training iteration {}.".format(self.epochs))
             check_call(["HERest", "-C", self.HERest_cfg,
                                   "-S", corpus.feature_scp,
                                   "-I", corpus.phon_mlf,
@@ -391,21 +391,8 @@ class Aligner(object):
                                   "-H", os.path.join(self.curdir, MACROS),
                                   "-H", os.path.join(self.curdir, HMMDEFS),
                                   "-t"] + self.pruning +
-                       [corpus.phons], stdout=PIPE)
+                                 [corpus.phons], stdout=PIPE)
             self._nxtdir()
-
-    def HTKbook_training_regime(self, corpus, epochs):
-        logging.info("Flat start training.")
-        self.flatstart(corpus)
-        self.train(corpus, epochs)
-        logging.info("Modeling silence.")
-        self.small_pause(corpus)
-        logging.info("Additional training.")
-        self.train(corpus, epochs)
-        logging.info("Realigning.")
-        self.align(corpus, corpus.phon_mlf)
-        logging.info("Final training.")
-        aligner.train(corpus, epochs)
 
     def small_pause(self, corpus):
         """
@@ -446,7 +433,8 @@ class Aligner(object):
             print("""AT 2 4 0.2 {{{1}.transP}}
 AT 4 2 0.2 {{{1}.transP}}
 AT 1 3 0.3 {{{0}.transP}}
-TI silst {{{1}.state[3],{0}.state[2]}}""".format(SP, SIL), file=hed)
+TI silst {{{1}.state[3],{0}.state[2]}}
+""".format(SP, SIL), file=hed)
         check_call(["HHEd", "-H", os.path.join(self.curdir, MACROS),
                             "-H", os.path.join(self.curdir, HMMDEFS),
                             "-M", self.nxtdir, 
@@ -460,6 +448,7 @@ IS {0} {0}
                             "-d", corpus.taskdict,
                             "-i", corpus.phon_mlf,
                             temp, corpus.word_mlf])
+        logging.debug("(Skipping an iteration number).")
         self._nxtdir()
 
     def align(self, corpus, mlf):
@@ -476,12 +465,20 @@ IS {0} {0}
                              "-I", corpus.word_mlf,
                              "-s", str(self.HVite_opts["SFAC"]),
                              "-t"] + self.pruning +
-                             [corpus.taskdict, corpus.phons])
+                             [corpus.taskdict, corpus.phons], stdout=PIPE)
 
-    def align_and_score(self, corpus, mlf):
+    def realign(self, corpus):
         """
-        The same as `self.align`, but also generates a text file with
-        -log likelihood confidence scores for each audio file
+        Align and then overwrite `corpus.word_mlf` with the result
+        """
+        temp = os.path.join(self.hmmdir, TEMP)
+        self.align(corpus, temp)
+        copyfile(temp, corpus.word_mlf)
+
+    def align_and_score(self, corpus, mlf, score):
+        """
+        The same as `self.align`, but also generates a text file `score`
+        with -log likelihood confidence scores for each audio file
         """
         proc = Popen(["HVite", "-a", "-m",
                                "-T", "1",
@@ -491,27 +488,39 @@ IS {0} {0}
                                "-i", mlf,
                                "-L", corpus.labdir,
                                "-C", self.HERest_cfg,
-                               "-S", corpus.run_scp,
+                               "-S", corpus.feature_scp,
                                "-H", os.path.join(self.curdir, MACROS),
                                "-H", os.path.join(self.curdir, HMMDEFS),
                                "-I", corpus.word_mlf,
                                "-s", str(self.HVite_opts["SFAC"]),
                                "-t"] + self.pruning + \
-                               [corpus.taskdict, corpus.phons], 
+                               [corpus.taskdict, corpus.phons],
                                                    stdout=PIPE)
         with open(score, "w") as sink:
             i = 0
             for line in proc.stdout:
-                m = match(HVITE_SCORE, line)
+                m = match(HVITE_SCORE, line.decode("UTF-8"))
                 if m:
-                    print("{}\t{}".format(corpus.wavlist[i], m.group(1)),
-                          file=sink)
+                    print('"{}",{}'.format(corpus.audiofiles[i], 
+                                           m.group(1)), file=sink)
                     i += 1
         # Popen equivalent to check_call...
         retcode = proc.wait()
         if retcode != 0:
             raise CalledProcessError(retcode, proc.args)
 
+    def HTKbook_training_regime(self, corpus, epochs):
+        logging.info("Flat start training.")
+        self.flatstart(corpus)
+        self.train(corpus, epochs)
+        logging.info("Modeling silence.")
+        self.small_pause(corpus)
+        logging.info("Additional training.")
+        self.train(corpus, epochs)
+        #logging.info("Realigning.")
+        #self.realign(corpus)
+        #logging.info("Final training.")
+        #aligner.train(corpus, epochs)
 
 if __name__ == "__main__":
     # parse arguments
@@ -522,10 +531,9 @@ if __name__ == "__main__":
     argparser.add_argument("-d", "--dictionary", default=DICT,
                            help="dictionary file to use (default: {})".format(DICT))
     argparser.add_argument("-s", "--samplerate", type=int,
-                           default=SAMPLERATE,
-                           help="analysis samplerate in Hz (default: {})".format(SAMPLERATE))
-    argparser.add_argument("-E", "--epochs", type=int, default=EPOCHS,
-                           help="# of epochs of training per round (default: {})".format(EPOCHS))
+                           help="analysis samplerate in Hz")
+    argparser.add_argument("-E", "--epochs", type=int,
+                           help="# of epochs of training per round")
     input_group = argparser.add_mutually_exclusive_group(required=True)
     input_group.add_argument("-r", "--read",
                              help="read in serialized acoustic model")
@@ -536,24 +544,26 @@ if __name__ == "__main__":
                               help="directory of data to align")
     output_group.add_argument("-w", "--write",
                               help="location to write serialized model")
-    argparser.add_argument("-v", "--verbose", action="store_true",
-                           help="Verbose output")
-    argparser.add_argument("-V", "--really-verbose", action="store_true",
-                           help="Even more verbose output")
+    verbosity_group = argparser.add_mutually_exclusive_group()
+    verbosity_group.add_argument("-v", "--verbose", action="store_true",
+                                 help="Verbose output")
+    verbosity_group.add_argument("-V", "--extra-verbose", 
+                                 action="store_true",
+                                 help="Even more verbose output")
     args = argparser.parse_args()
 
-    # set up logging
-    if args.really_verbose:
-        logging.basicConfig(format=LOGGING_FMT, level=logging.DEBUG)
+    ## set up logging
+    loglevel = logging.WARNING
+    if args.extra_verbose:
+        loglevel = logging.DEBUG
     elif args.verbose:
-        logging.basicConfig(format=LOGGING_FMT, level=logging.INFO)
-    else:
-        logging.basicConfig(format=LOGGING_FMT, level=logging.WARNING)
+        loglevel = logging.INFO
+    logging.basicConfig(format=LOGGING_FMT, level=loglevel)
 
     ## input: pick one
     if args.read:
-        logging.info("Initializing aligner from file.")
-        aligner = Aligner.from_archive(args.read)
+        logging.info("Reading aligner from '{}'.".format(args.read))
+        raise NotImplementedError
     elif args.train:
         logging.info("Preparing corpus '{}'.".format(args.train))
         opts = resolve_opts(args)
@@ -564,31 +574,21 @@ if __name__ == "__main__":
         aligner.HTKbook_training_regime(corpus, opts["epochs"])
     # else unreachable
 
-    exit("output not working yet; bye")
-    """
     ## output: pick one
     if args.align:
-        mlf = aligner.align_and_score()
-        logging.info("Making TextGrids.")
-        if MLF(mlf).write(args.align) < 1:
+        # check to make sure we're not aligning on the training data
+        if os.path.realpath(args.train) != os.path.realpath(args.align):
+            logging.info("Preparing corpus '{}'.".format(args.align))
+            corpus = Corpus(args.align, opts)
+        logging.info("Aligning corpus '{}'.".format(args.align))
+        aligner.align_and_score(corpus, ALIGN, SCORES)
+        logging.info("Writing likelihood scores to '{}'.".format(SCORES))
+        logging.info("Writing TextGrids.")
+        if MLF(ALIGN).write(args.align) < 1:
             logging.error("No paths found!")
             exit(1)
     elif args.write:
+        logging.info("Writing aligner to '{}'.".format(args.write))
         raise NotImplementedError
-        archive = Archive(aligner.hmm_dir)
-        # copy dictionary to archive
-        copyfile(dictionary, os.path.join(archive.dirname, DICT))
-        # FIXME what should I do about the dictionary path?
-        # write config file to archive
-        filename = os.path.join(archive.dirname, CONFIG)
-        try:
-            with open(filename, "w") as sink:
-                print(yaml.dump(opts, default_flow_style=False), file=sink)
-        except (IOError, yaml.YAMLError) as err:
-            logging.error("Error writing config file '{}': {}.".format(
-                          filename, err))
-        # write full archive to disk
-        archiveout = archive.dump(args.write)
-        logging.info("Serialized model to '{}'.".format(archiveout))
+    logging.info("Success!")
     # else unreachable
-        """

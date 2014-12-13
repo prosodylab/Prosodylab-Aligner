@@ -59,7 +59,7 @@ class PronDict(object):
 
     def __getitem__(self, key):
         getlist = self.d[key]
-        if getlist or key:
+        if getlist:
             return getlist
         else:
             self.oov.add(key)
