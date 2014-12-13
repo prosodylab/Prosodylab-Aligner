@@ -34,48 +34,13 @@ from .corpus import Corpus
 from .aligner import Aligner
 from .archive import Archive
 from .textgrid import MLF
-from .utilities import splitname, \
+from .utilities import splitname, resolve_opts, \
                        ALIGNED, CONFIG, HMMDEFS, MACROS, SCORES
 
 from argparse import ArgumentParser
 
-# global vars
 
 LOGGING_FMT = "%(message)s"
-
-
-# samplerates which appear to be HTK-compatible (all divisors of 1e7)
-SAMPLERATES = [4000, 8000, 10000, 12500, 15625, 16000, 20000, 25000,
-               31250, 40000, 50000, 62500, 78125, 80000, 100000, 125000,
-               156250, 200000]
-
-
-# helpers
-
-def get_opts(filename):
-    with open(filename, "r") as source:
-        return yaml.load(source)
-
-
-def resolve_opts(args):
-    opts = get_opts(args.configuration)
-    opts["dictionary"] = args.dictionary if args.dictionary \
-        else opts["dictionary"]
-    sr = args.samplerate if args.samplerate else opts["samplerate"]
-    if sr not in SAMPLERATES:
-        i = bisect(SAMPLERATES, sr)
-        if i == 0:
-            pass
-        elif i == len(SAMPLERATES):
-            i = -1
-        elif SAMPLERATES[i] - sr > sr - SAMPLERATES[i - 1]:
-            i = i - 1
-        # else keep `i` as is
-        sr = SAMPLERATES[i]
-        logging.warning("Using {} Hz as samplerate".format(sr))
-    opts["samplerate"] = sr
-    opts["epochs"] = args.epochs if args.epochs else opts["epochs"]
-    return opts
 
 
 # parse arguments
