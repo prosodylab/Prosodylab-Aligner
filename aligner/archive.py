@@ -32,7 +32,7 @@ from .utilities import mkdir_p
 
 
 # default format for output
-FORMAT = "gztar"
+FORMAT = "zip"
 
 
 class Archive(object):

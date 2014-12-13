@@ -249,7 +249,7 @@ IS {0} {0}
             for line in proc.stdout:
                 m = match(HVITE_SCORE, line.decode("UTF-8"))
                 if m:
-                    print("{!r},{!r}".format(corpus.audiofiles[i],
+                    print('"{!s}",{!s}'.format(corpus.audiofiles[i],
                                              m.group(1)), file=sink)
                     i += 1
         # Popen equivalent to check_call...
