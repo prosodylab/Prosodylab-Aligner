@@ -35,7 +35,7 @@ from .aligner import Aligner
 from .archive import Archive
 from .textgrid import MLF
 from .utilities import splitname, \
-                       ALIGNED, CONFIG, DICT, HMMDEFS, MACROS, SCORES
+                       ALIGNED, CONFIG, HMMDEFS, MACROS, SCORES
 
 from argparse import ArgumentParser
 
@@ -117,7 +117,21 @@ logging.basicConfig(format=LOGGING_FMT, level=loglevel)
 # input: pick one
 if args.read:
     logging.info("Reading aligner from '{}'.".format(args.read))
-    raise NotImplementedError
+    # warn about irrelevant flags
+    if args.configuration:
+        logging.warning("Ignoring config flag (-c).")
+        args.configuration = None
+    if args.samplerate:
+        logging.warning("Ignoring samplerate flag (-s).")
+        args.samplerate = None
+    # create archive from -r argument
+    archive = Archive(args.read)
+    # read configuration file therefrom, and resolve options with it
+    args.configuration = os.path.join(archive.dirname, CONFIG)
+    opts = resolve_opts(args)
+    # initialize aligner and set it to point to the archive data 
+    aligner = Aligner(opts)
+    aligner.curdir = archive.dirname
 elif args.train:
     logging.info("Preparing corpus '{}'.".format(args.train))
     opts = resolve_opts(args)
@@ -131,7 +145,8 @@ elif args.train:
 # output: pick one
 if args.align:
     # check to make sure we're not aligning on the training data
-    if os.path.realpath(args.train) != os.path.realpath(args.align):
+    if (not args.train) or (os.path.realpath(args.train) != 
+                            os.path.realpath(args.align)):
         logging.info("Preparing corpus '{}'.".format(args.align))
         corpus = Corpus(args.align, opts)
     logging.info("Aligning corpus '{}'.".format(args.align))
@@ -144,19 +159,19 @@ if args.align:
         exit(1)
     logging.debug("Wrote {} TextGrids.".format(size))
 elif args.write:
-    logging.info("Writing out aligner..".format(args.write))
     # create and populate archive
     (_, basename, _) = splitname(args.write)
     archive = Archive.empty(basename)
     archive.add(os.path.join(aligner.curdir, HMMDEFS))
     archive.add(os.path.join(aligner.curdir, MACROS))
-    archive.add(opts["dictionary"], DICT)
-    # adjust opts to reflect that last one
-    opts["dictionary"] = DICT
-    # write opts to config file inside archive
+    # whatever this is, it's not going to work once you move the data
+    if "dictionary" in opts:
+        del opts["dictionary"]
     with open(os.path.join(archive.dirname, CONFIG), "w") as sink:
         yaml.dump(opts, sink)
-    archive_path = os.path.relpath(archive.dump(args.write))
+    (basename, _) = os.path.splitext(args.write)
+    archive_path = os.path.relpath(archive.dump(basename))
     logging.info("Wrote aligner to '{}'.".format(archive_path))
 # else unreachable
+
 logging.info("Success!")

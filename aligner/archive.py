@@ -26,7 +26,7 @@ Serialization/deserialization functionality using `shutil`
 import os
 
 from tempfile import mkdtemp
-from shutil import copy, copyfile, rmtree, make_archive, unpack_archive
+from shutil import copy, rmtree, make_archive, unpack_archive
 
 from .utilities import mkdir_p
 
@@ -47,9 +47,7 @@ class Archive(object):
             self.dirname = os.path.abspath(source)
             self.is_tmpdir = is_tmpdir  # trust caller
         else:
-            # place to put the archive
             base = mkdtemp(dir=os.environ.get("TMPDIR", None))
-            # is an archive itself
             unpack_archive(source, base)
             (head, tail, _) = next(os.walk(base))
             if not tail:
@@ -69,14 +67,11 @@ class Archive(object):
         mkdir_p(source)
         return cls(source, True)
 
-    def add(self, source, dstfile=None):
+    def add(self, source):
         """
         Add file into archive
         """
-        if dstfile is None:
-            copy(source, self.dirname)
-        else:
-            copyfile(source, os.path.join(self.dirname, dstfile))
+        copy(source, self.dirname)
 
     def __repr__(self):
         return "{}(dirname={!r})".format(self.__class__.__name__,
