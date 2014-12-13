@@ -4,7 +4,7 @@
 
 from __future__ import division
 
-from textgrid import TextGrid
+from aligner import TextGrid
 
 from sys import argv, stderr
 from collections import namedtuple
