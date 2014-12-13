@@ -96,7 +96,7 @@ def resolve_opts(args):
         i = bisect(SAMPLERATES, samplerate)
         if i == 0:
             pass
-        elif i == len(SRs):
+        elif i == len(SAMPLERATES):
             i = -1
         elif SAMPLERATES[i] - samplerate > samplerate - SAMPLERATES[i - 1]:
             i = i - 1
@@ -144,7 +144,8 @@ class Corpus(object):
         self.phoneset = frozenset(opts["phoneset"])
         for phone in self.phoneset:
             if not match(VALID_PHONE, phone):
-                logging.error("Phone '{}': must match /^[a-zA-Z]\S+$/.".format(ph))
+                logging.error("Phone '{}': not /{}/.".format(ph,
+                                               VALID_PHONE.pattern))
                 exit(1)
         # dictionary
         self.dictionary = opts["dictionary"]
