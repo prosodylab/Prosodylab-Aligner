@@ -2,7 +2,7 @@
 Global variables and helpers for forced alignment
 """
 
-from os import makedirs
+import os
 
 # global variables
 
@@ -10,10 +10,16 @@ SP = "SP"
 SIL = "sil"
 TEMP = "temp"
 
+ALIGNED = "aligned.mlf"
+CONFIG = "config.yaml"
+DICT = "dict"
+HMMDEFS = "hmmdefs"
+MACROS = "macros"
+MISSING = "missing.txt"
+PROTO = "proto"
 OOV = "OOV.txt"
 SCORES = "scores.txt"
-ALIGNED = "aligned.mlf"
-MISSING = "missing.txt"
+VFLOORS = "vFloors"
 
 
 # helpers
@@ -32,4 +38,13 @@ def mkdir_p(dirname):
     Create a directory, recursively if necessary, and suceed
     silently if it already exists
     """
-    makedirs(dirname, exist_ok=True)
+    os.makedirs(dirname, exist_ok=True)
+
+
+def splitname(fullname):
+    """
+    Split a filename into directory, basename, and extension
+    """
+    (dirname, filename) = os.path.split(fullname)
+    (basename, ext) = os.path.splitext(filename)
+    return (dirname, basename, ext)

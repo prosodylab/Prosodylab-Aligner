@@ -29,25 +29,18 @@ import logging
 
 from re import match
 from glob import glob
+from shutil import rmtree
 from tempfile import mkdtemp
 from subprocess import check_call
 
 from .wavfile import WavFile
 from .prondict import PronDict
-from .utilities import opts2cfg, mkdir_p, MISSING, OOV, SIL, SP, TEMP
+from .utilities import splitname, mkdir_p, opts2cfg, \
+                       MISSING, OOV, SIL, SP, TEMP
 
 
 # regexp for inspecting phones
 VALID_PHONE = r"^[^\d\s]\S*$"
-
-
-def splitname(fullname):
-    """
-    Split a filename into directory, basename, and extension
-    """
-    (dirname, filename) = os.path.split(fullname)
-    (basename, ext) = os.path.splitext(filename)
-    return (dirname, basename, ext)
 
 
 class Corpus(object):
@@ -223,3 +216,6 @@ DE {1}
         Compute audio features
         """
         check_call(["HCopy", "-C", self.HCopy_cfg, "-S", self.audio_scp])
+
+    def __del__(self):
+        rmtree(self.tmpdir) 

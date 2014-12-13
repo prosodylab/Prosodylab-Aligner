@@ -27,17 +27,13 @@ import os
 import logging
 
 from re import match
-from shutil import copyfile
 from tempfile import mkdtemp
+from shutil import copyfile, rmtree
 from subprocess import check_call, Popen, CalledProcessError, PIPE
 
-from .utilities import opts2cfg, mkdir_p, SP, SIL, TEMP
+from .utilities import opts2cfg, mkdir_p, \
+                       HMMDEFS, MACROS, PROTO, SP, SIL, TEMP, VFLOORS
 
-# global vars
-PROTO = "proto"
-MACROS = "macros"
-HMMDEFS = "hmmdefs"
-VFLOORS = "vFloors"
 
 # regexp for parsing the HVite trace
 HVITE_SCORE = r".+==  \[\d+ frames\] (-\d+\.\d+)"
@@ -253,8 +249,8 @@ IS {0} {0}
             for line in proc.stdout:
                 m = match(HVITE_SCORE, line.decode("UTF-8"))
                 if m:
-                    print('"{}",{}'.format(corpus.audiofiles[i],
-                                           m.group(1)), file=sink)
+                    print('"{!r}",{!r}'.format(corpus.audiofiles[i],
+                                               m.group(1)), file=sink)
                     i += 1
         # Popen equivalent to check_call...
         retcode = proc.wait()
@@ -273,3 +269,6 @@ IS {0} {0}
         self.realign(corpus)
         logging.info("Final training.")
         self.train(corpus, epochs)
+
+    def __del__(self):
+        rmtree(self.hmmdir)

@@ -23,9 +23,12 @@
 Serialization/deserialization functionality using `shutil`
 """
 
+import os
+
 from tempfile import mkdtemp
-from os import getcwd, environ, path, walk
-from shutil import rmtree, make_archive, unpack_archive
+from shutil import copy, copyfile, rmtree, make_archive, unpack_archive
+
+from .utilities import mkdir_p
 
 
 # default format for output
@@ -39,22 +42,41 @@ class Archive(object):
     tar.gz/tgz)
     """
 
-    def __init__(self, source):
-        self.is_tmpdir = False
-        if path.isdir(source):
-            self.dirname = path.abspath(source)
+    def __init__(self, source, is_tmpdir=False):
+        if os.path.isdir(source):
+            self.dirname = os.path.abspath(source)
+            self.is_tmpdir = is_tmpdir  # trust caller
         else:
-            # place to put the archive once its unpacked
-            base = mkdtemp(dir=environ.get("TMPDIR", None))
-            # where it will be unpacked to
+            # place to put the archive
+            base = mkdtemp(dir=os.environ.get("TMPDIR", None))
+            # is an archive itself
             unpack_archive(source, base)
-            (head, tail, _) = next(walk(base))
+            (head, tail, _) = next(os.walk(base))
             if not tail:
                 raise ValueError("'{}' is empty.".format(source))
             if len(tail) > 1:
                 raise ValueError("'{}' is a bomb.".format(source))
-            self.dirname = path.join(head, tail[0])
-            self.is_tmpdir = True
+            self.dirname = os.path.join(head, tail[0])
+            self.is_tmpdir = True  # ignore caller
+
+    @classmethod
+    def empty(cls, head):
+        """
+        Initialize an archive using an empty directory
+        """
+        base = mkdtemp(dir=os.environ.get("TMPDIR", None))
+        source = os.path.join(base, head)
+        mkdir_p(source)
+        return cls(source, True)
+
+    def add(self, source, dstfile=None):
+        """
+        Add file into archive
+        """
+        if dstfile is None:
+            copy(source, self.dirname)
+        else:
+            copyfile(source, os.path.join(self.dirname, dstfile))
 
     def __repr__(self):
         return "{}(dirname={!r})".format(self.__class__.__name__,
@@ -64,8 +86,8 @@ class Archive(object):
         """
         Write archive to disk, and return the name of final archive
         """
-        (head, tail) = path.split(self.dirname)
-        return make_archive(sink, archive_fmt, head, tail)
+        return make_archive(sink, archive_fmt,
+                            *os.path.split(self.dirname))
 
     def __del__(self):
         if self.is_tmpdir:

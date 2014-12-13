@@ -23,18 +23,20 @@
 Command-line driver for the module
 """
 
+import os
 import yaml
 import logging
 
 from bisect import bisect
+from shutil import copyfile
 
 from .corpus import Corpus
 from .aligner import Aligner
 from .archive import Archive
 from .textgrid import MLF
-from .utilities import ALIGNED, SCORES
+from .utilities import splitname, \
+                       ALIGNED, CONFIG, DICT, HMMDEFS, MACROS, SCORES
 
-from os.path import realpath
 from argparse import ArgumentParser
 
 # global vars
@@ -129,7 +131,7 @@ elif args.train:
 # output: pick one
 if args.align:
     # check to make sure we're not aligning on the training data
-    if realpath(args.train) != realpath(args.align):
+    if os.path.realpath(args.train) != os.path.realpath(args.align):
         logging.info("Preparing corpus '{}'.".format(args.align))
         corpus = Corpus(args.align, opts)
     logging.info("Aligning corpus '{}'.".format(args.align))
@@ -142,7 +144,19 @@ if args.align:
         exit(1)
     logging.debug("Wrote {} TextGrids.".format(size))
 elif args.write:
-    logging.info("Writing aligner to '{}'.".format(args.write))
-    raise NotImplementedError
-logging.info("Success!")
+    logging.info("Writing out aligner..".format(args.write))
+    # create and populate archive
+    (_, basename, _) = splitname(args.write)
+    archive = Archive.empty(basename)
+    archive.add(os.path.join(aligner.curdir, HMMDEFS))
+    archive.add(os.path.join(aligner.curdir, MACROS))
+    archive.add(opts["dictionary"], DICT)
+    # adjust opts to reflect that last one
+    opts["dictionary"] = DICT
+    # write opts to config file inside archive
+    with open(os.path.join(archive.dirname, CONFIG), "w") as sink:
+        yaml.dump(opts, sink)
+    archive_path = os.path.relpath(archive.dump(args.write))
+    logging.info("Wrote aligner to '{}'.".format(archive_path))
 # else unreachable
+logging.info("Success!")
