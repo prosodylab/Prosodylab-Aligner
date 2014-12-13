@@ -52,18 +52,18 @@ argparser.add_argument("-d", "--dictionary",
                        help="dictionary file")
 argparser.add_argument("-s", "--samplerate", type=int,
                        help="analysis samplerate (in Hz)")
-argparser.add_argument("-E", "--epochs", type=int,
+argparser.add_argument("-e", "--epochs", type=int,
                        help="# of epochs of training per round")
 input_group = argparser.add_mutually_exclusive_group(required=True)
 input_group.add_argument("-r", "--read",
-                         help="read in serialized acoustic model")
+                         help="source for a precomputed acoustic model")
 input_group.add_argument("-t", "--train",
-                         help="directory of data to train on")
+                         help="directory containing data for training")
 output_group = argparser.add_mutually_exclusive_group(required=True)
 output_group.add_argument("-a", "--align",
-                          help="directory of data to align")
+                          help="directory containing data to align")
 output_group.add_argument("-w", "--write",
-                          help="location to write serialized model")
+                          help="destination for computed acoustic model")
 verbosity_group = argparser.add_mutually_exclusive_group()
 verbosity_group.add_argument("-v", "--verbose", action="store_true",
                              help="Verbose output")
@@ -115,10 +115,11 @@ if args.align:
         logging.info("Preparing corpus '{}'.".format(args.align))
         corpus = Corpus(args.align, opts)
     logging.info("Aligning corpus '{}'.".format(args.align))
-    aligner.align_and_score(corpus, ALIGNED, SCORES)
+    aligned = os.path.join(corpus.tmpdir, ALIGNED)
+    aligner.align_and_score(corpus, aligned, SCORES)
     logging.info("Writing likelihood scores to '{}'.".format(SCORES))
     logging.info("Writing TextGrids.")
-    size = MLF(ALIGNED).write(args.align)
+    size = MLF(aligned).write(args.align)
     if not size:
         logging.error("No paths found!")
         exit(1)
