@@ -89,7 +89,7 @@ On Linux or similar POSIX-based systems, SoX can be obtained from the distributi
 
 #### Mac OS X
 
-On Mac OS X it may be obtained via package managers like [http://brew.sh](Homebrew). The SoX maintainers also provide compiled binaries, which can be downloaded from [SourceForge](http://sox.sourceforge.net): click on the link after "Looking for the latest version?". The zip file can be expanded by double-clicking on it. The resulting files must be placed in your `$PATH`. A simple way to do this is to navigate to the resulting directory, and issue the following command:
+On Mac OS X it may be obtained via package managers like [Homebrew](http://brew.sh). The SoX maintainers also provide compiled binaries, which can be downloaded from [SourceForge](http://sox.sourceforge.net): click on the link after "Looking for the latest version?". The zip file can be expanded by double-clicking on it. The resulting files must be placed in your `$PATH`. A simple way to do this is to navigate to the resulting directory, and issue the following command:
 
     $ sudo mv rec play sox soxi /usr/local/bin
 
