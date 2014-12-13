@@ -19,10 +19,12 @@
 # TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
 # SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
+"""
+Pronunciation dictionary utilities
+"""
+
 
 import logging
-
-LOGGING_FMT = "%(module)s: %(message)s"
 
 from collections import defaultdict
 

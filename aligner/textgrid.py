@@ -18,15 +18,17 @@
 # CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
 # TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
 # SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-#
-# textgrid.py: classes for Praat TextGrid and HTK mlf files
+
+"""
+TextGrid and MLF utilities
+(This is a Python 3 port of the `textgrid.py` module available on GitHub.)
+"""
 
 
+import os
 import re
 import codecs
-import os.path
 
-from sys import stderr
 from bisect import bisect_left
 
 
@@ -49,27 +51,17 @@ class Point(object):
     >>> bar = Point(4.0, "bar")
     >>> foo < bar
     True
-    >>> foo == Point(3.0, "baz")
+    >>> foo == Point(3.0, "foo")
     True
     >>> bar > foo
     True
 
-    # Point/Value comparison
-    >>> foo < 4.0
-    True
-    >>> foo == 3.0
-    True
-    >>> foo > 5.0
-    False
-
     # Point/Interval comparison
-    >>> baz = Interval(3.0, 5.0, "baz")
+    >>> baz = Interval(3.5, 5.0, "baz")
     >>> foo < baz
     True
     >>> foo == baz
     False
-    >>> bar == baz 
-    True
     """
 
     def __init__(self, time, mark):
@@ -77,17 +69,22 @@ class Point(object):
         self.mark = mark
 
     def __repr__(self):
-        return "{}({!r}, {!r})".format(self.__class__.__name__, 
-                                       self.time,
-                                       self.mark)
+        return "{}({!r}, {!r})".format(self.__class__.__name__,
+                                       self.time, self.mark)
 
     def __lt__(self, other):
         if hasattr(other, "time"):
             return self.time < other.time
-        elif hasattr(other, "minTime") and hasattr(other, "maxTime"):
-            return self.time < self.minTime
+        elif hasattr(other, "minTime"):
+            return self.time < other.minTime
         else:  # hopefully numerical
             return self.time < other
+
+    def __eq__(self, other):
+        return hasattr(other, "time") and \
+               self.time == other.time and \
+               hasattr(other, "mark") and \
+               self.mark == other.mark
 
     def __iadd__(self, other):
         self.time += other
@@ -150,7 +147,15 @@ class Interval(object):
         elif hasattr(other, "time"):  # comparing Intervals and Points
             return self.minTime < other.time
         else:  # hopefully numeric
-            return self.minTime < other 
+            return self.minTime < other
+
+    def __eq__(self, other):
+        return hasattr(other, "minTime") and \
+               self.minTime == other.minTime and \
+               hasattr(other, "maxTime") and \
+               self.maxTime == other.maxTime and \
+               hasattr(other, "mark") and \
+               self.mark == other.mark
 
     def __iadd__(self, other):
         self.minTime += other
@@ -305,8 +310,9 @@ class IntervalTier(object):
 
     """ 
     Represents Praat IntervalTiers as list of sequence types of Intervals 
-    (e.g., for interval in intervaltier). An IntervalTier is used much like a 
-    Python set in that it has add/remove methods, not append/extend methods.
+    (e.g., for interval in intervaltier). An IntervalTier is used much 
+    like a Python set in that it has add/remove methods, not 
+    append/extend methods.
 
     >>> foo = IntervalTier("foo")
     >>> foo.add(0.0, 2.0, "bar")
@@ -323,8 +329,6 @@ class IntervalTier(object):
     Traceback (most recent call last):
         ...
     ValueError: (Interval(2.0, 2.5, 'baz'), Interval(1.0, 3.0, 'baz'))
-    >>> foo.intervalContaining(2.25)
-    Interval(2.0, 2.5, 'baz')
     >>> foo = IntervalTier("foo", maxTime=3.5)
     >>> foo.add(2.7, 3.7, "bar")
     Traceback (most recent call last):
@@ -348,7 +352,7 @@ class IntervalTier(object):
         self.intervals = []
 
     def __repr__(self):
-        return "{}({!r}, {!r})".format(self.__class__.__name__, 
+        return "{}({!r}, {!r})".format(self.__class__.__name__,
                                        self.name, self.intervals)
 
     def __iter__(self):
@@ -373,7 +377,7 @@ class IntervalTier(object):
         if interval.minTime < self.minTime:  # too early
             raise ValueError(self.minTime)
         if self.maxTime and interval.maxTime > self.maxTime:  # too late
-            #raise ValueError, self.maxTime
+            # raise ValueError, self.maxTime
             raise ValueError(self.maxTime)
         i = bisect_left(self.intervals, interval)
         if i != len(self.intervals) and self.intervals[i] == interval:
@@ -385,28 +389,6 @@ class IntervalTier(object):
 
     def removeInterval(self, interval):
         self.intervals.remove(interval)
-
-    def indexContaining(self, time):
-        """
-        Returns the index of the interval containing the given time point, 
-        or None if the time point is outside the bounds of this tier. The 
-        argument can be a numeric type, or a Point object.
-        """
-        i = bisect_left(self.intervals, time)
-        if i != len(self.intervals):
-            if self.intervals[i].minTime <= time <= \
-                    self.intervals[i].maxTime:
-                return i
-
-    def intervalContaining(self, time):
-        """
-        Returns the interval containing the given time point, or None if 
-        the time point is outside the bounds of this tier. The argument 
-        can be a numeric type, or a Point object.
-        """
-        i = self.indexContaining(time)
-        if i:
-            return self.intervals[i]
 
     def read(self, f):
         """
@@ -454,7 +436,7 @@ class IntervalTier(object):
         print('Object class = "IntervalTier"\n', file=sink)
         print("xmin = {}".format(self.minTime), file=sink)
         print("xmax = {}".format(self.maxTime if self.maxTime
-                                          else self.intervals[-1].maxTime), file=sink)
+                                 else self.intervals[-1].maxTime), file=sink)
         # compute the number of intervals and make the empty ones
         output = self._fillInTheGaps(null)
         # write it all out
@@ -522,7 +504,7 @@ class TextGrid(object):
         self.tiers = []
 
     def __repr__(self):
-        return "{}({!r}, {!r})".format(self.__class__.__name__, 
+        return "{}({!r}, {!r})".format(self.__class__.__name__,
                                        self.name, self.tiers)
 
     def __iter__(self):
@@ -683,15 +665,15 @@ class TextGrid(object):
                 # compute the number of intervals and make the empty ones
                 output = tier._fillInTheGaps(null)
                 print("\t\tintervals: size = {}".format(
-                                                           len(output)), file=sink)
+                    len(output)), file=sink)
                 for (j, interval) in enumerate(output, 1):
                     print("\t\t\tintervals [{}]:".format(j), file=sink)
                     print("\t\t\t\txmin = {}".format(
-                                                        interval.minTime), file=sink)
+                        interval.minTime), file=sink)
                     print("\t\t\t\txmax = {}".format(
-                                                        interval.maxTime), file=sink)
+                        interval.maxTime), file=sink)
                     print('\t\t\t\ttext = "{}"'.format(
-                                                          interval.mark), file=sink)
+                        interval.mark), file=sink)
             elif tier.__class__ == PointTier:  # PointTier
                 print('\t\tclass = "TextTier', file=sink)
                 print('\t\tname = "{}"'.format(tier.name), file=sink)
@@ -702,7 +684,7 @@ class TextGrid(object):
                     print("\t\t\tpoints [{}]:".format(k), file=sink)
                     print("\t\t\t\ttime = {}".format(point.time), file=sink)
                     print('\t\t\t\tmark = "{}"'.format(
-                                                           point.mark), file=sink)
+                        point.mark), file=sink)
         sink.close()
 
     # alternative constructor
@@ -805,8 +787,8 @@ class MLF(object):
         The number of TextGrids is returned.
         """
         for grid in self.grids:
-            (junk, tail) = os.path.split(grid.name)
-            (root, junk) = os.path.splitext(tail)
+            (_, tail) = os.path.split(grid.name)
+            (root, _) = os.path.splitext(tail)
             my_path = os.path.join(prefix, root + ".TextGrid")
             grid.write(codecs.open(my_path, "w", "UTF-8"))
         return len(self.grids)
