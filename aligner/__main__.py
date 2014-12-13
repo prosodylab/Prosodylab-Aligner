@@ -39,6 +39,7 @@ from .utilities import splitname, resolve_opts, \
 
 from argparse import ArgumentParser
 
+EPOCHS = 5
 
 LOGGING_FMT = "%(message)s"
 
@@ -52,7 +53,7 @@ argparser.add_argument("-d", "--dictionary",
                        help="dictionary file")
 argparser.add_argument("-s", "--samplerate", type=int,
                        help="analysis samplerate (in Hz)")
-argparser.add_argument("-e", "--epochs", type=int,
+argparser.add_argument("-e", "--epochs", type=int, default=EPOCHS,
                        help="# of epochs of training per round")
 input_group = argparser.add_mutually_exclusive_group(required=True)
 input_group.add_argument("-r", "--read",

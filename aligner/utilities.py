@@ -60,12 +60,16 @@ def splitname(fullname):
 def resolve_opts(args):
     with open(args.configuration, "r") as source:
         opts = yaml.load(source)
-    try:
-        opts["dictionary"] = args.dictionary if args.dictionary \
-                                             else opts["dictionary"]
-    except KeyError:
+    # command line only
+    if not args.dictionary:
         logging.error("Dictionary not specified.")
         exit(1)
+    opts["dictionary"] = args.dictionary
+    if not args.epochs:
+        logging.error("Epochs not specified.")
+        exit(1)
+    opts["epochs"] = args.epochs
+    # could be either, and the command line takes precedent.
     try:
         sr = args.samplerate if args.samplerate else opts["samplerate"]
     except KeyError:
@@ -83,9 +87,4 @@ def resolve_opts(args):
         sr = SAMPLERATES[i]
         logging.warning("Using {} Hz as samplerate".format(sr))
     opts["samplerate"] = sr
-    try:
-        opts["epochs"] = args.epochs if args.epochs else opts["epochs"]
-    except KeyError:
-        logging.error("Epochs not specified.")
-        exit(1)
     return opts
