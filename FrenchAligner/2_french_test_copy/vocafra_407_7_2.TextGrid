@@ -1,0 +1,108 @@
+File type = "ooTextFile"
+Object class = "TextGrid"
+
+xmin = 0.0
+xmax = 1.88
+tiers? <exists>
+size = 2
+item []:
+	item [1]:
+		class = "IntervalTier"
+		name = "phones"
+		xmin = 0.0
+		xmax = 1.88
+		intervals: size = 14
+			intervals [1]:
+				xmin = 0.0
+				xmax = 0.4
+				text = "sil"
+			intervals [2]:
+				xmin = 0.4
+				xmax = 0.48
+				text = "x0"
+			intervals [3]:
+				xmin = 0.48
+				xmax = 0.56
+				text = "a"
+			intervals [4]:
+				xmin = 0.56
+				xmax = 0.61
+				text = "d"
+			intervals [5]:
+				xmin = 0.61
+				xmax = 0.69
+				text = "y"
+			intervals [6]:
+				xmin = 0.69
+				xmax = 0.73
+				text = "l"
+			intervals [7]:
+				xmin = 0.73
+				xmax = 0.85
+				text = "x5"
+			intervals [8]:
+				xmin = 0.85
+				xmax = 0.9
+				text = "Z"
+			intervals [9]:
+				xmin = 0.9
+				xmax = 0.96
+				text = "a"
+			intervals [10]:
+				xmin = 0.96
+				xmax = 1.01
+				text = "l"
+			intervals [11]:
+				xmin = 1.01
+				xmax = 1.13
+				text = "a"
+			intervals [12]:
+				xmin = 1.13
+				xmax = 1.18
+				text = "v"
+			intervals [13]:
+				xmin = 1.18
+				xmax = 1.28
+				text = "e"
+			intervals [14]:
+				xmin = 1.28
+				xmax = 1.88
+				text = "sil"
+	item [2]:
+		class = "IntervalTier"
+		name = "words"
+		xmin = 0.0
+		xmax = 1.88
+		intervals: size = 8
+			intervals [1]:
+				xmin = 0.0
+				xmax = 0.4
+				text = "sil"
+			intervals [2]:
+				xmin = 0.4
+				xmax = 0.48
+				text = "on"
+			intervals [3]:
+				xmin = 0.48
+				xmax = 0.56
+				text = "a"
+			intervals [4]:
+				xmin = 0.56
+				xmax = 0.69
+				text = "du"
+			intervals [5]:
+				xmin = 0.69
+				xmax = 0.9
+				text = "linge"
+			intervals [6]:
+				xmin = 0.9
+				xmax = 0.96
+				text = "à"
+			intervals [7]:
+				xmin = 0.96
+				xmax = 1.28
+				text = "laver"
+			intervals [8]:
+				xmin = 1.28
+				xmax = 1.88
+				text = "sil"

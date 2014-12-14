@@ -1,0 +1,148 @@
+File type = "ooTextFile"
+Object class = "TextGrid"
+
+xmin = 0.0
+xmax = 2.39
+tiers? <exists>
+size = 2
+item []:
+	item [1]:
+		class = "IntervalTier"
+		name = "phones"
+		xmin = 0.0
+		xmax = 2.39
+		intervals: size = 23
+			intervals [1]:
+				xmin = 0.0
+				xmax = 0.54
+				text = "sil"
+			intervals [2]:
+				xmin = 0.54
+				xmax = 0.59
+				text = "Z"
+			intervals [3]:
+				xmin = 0.59
+				xmax = 0.62
+				text = "i"
+			intervals [4]:
+				xmin = 0.62
+				xmax = 0.65
+				text = "E"
+			intervals [5]:
+				xmin = 0.65
+				xmax = 0.72
+				text = "b"
+			intervals [6]:
+				xmin = 0.72
+				xmax = 0.77
+				text = "o"
+			intervals [7]:
+				xmin = 0.77
+				xmax = 0.86
+				text = "k"
+			intervals [8]:
+				xmin = 0.86
+				xmax = 0.92
+				text = "u"
+			intervals [9]:
+				xmin = 0.92
+				xmax = 0.95
+				text = "d"
+			intervals [10]:
+				xmin = 0.95
+				xmax = 0.98
+				text = "x2"
+			intervals [11]:
+				xmin = 0.98
+				xmax = 1.03
+				text = "f"
+			intervals [12]:
+				xmin = 1.03
+				xmax = 1.1
+				text = "R"
+			intervals [13]:
+				xmin = 1.1
+				xmax = 1.16
+				text = "i"
+			intervals [14]:
+				xmin = 1.16
+				xmax = 1.22
+				text = "g"
+			intervals [15]:
+				xmin = 1.22
+				xmax = 1.35
+				text = "o"
+			intervals [16]:
+				xmin = 1.35
+				xmax = 1.46
+				text = "a"
+			intervals [17]:
+				xmin = 1.46
+				xmax = 1.49
+				text = "R"
+			intervals [18]:
+				xmin = 1.49
+				xmax = 1.53
+				text = "e"
+			intervals [19]:
+				xmin = 1.53
+				xmax = 1.62
+				text = "p"
+			intervals [20]:
+				xmin = 1.62
+				xmax = 1.73
+				text = "a"
+			intervals [21]:
+				xmin = 1.73
+				xmax = 1.76
+				text = "R"
+			intervals [22]:
+				xmin = 1.76
+				xmax = 1.84
+				text = "e"
+			intervals [23]:
+				xmin = 1.84
+				xmax = 2.39
+				text = "sil"
+	item [2]:
+		class = "IntervalTier"
+		name = "words"
+		xmin = 0.0
+		xmax = 2.39
+		intervals: size = 9
+			intervals [1]:
+				xmin = 0.0
+				xmax = 0.54
+				text = "sil"
+			intervals [2]:
+				xmin = 0.54
+				xmax = 0.62
+				text = "j"
+			intervals [3]:
+				xmin = 0.62
+				xmax = 0.65
+				text = "ai"
+			intervals [4]:
+				xmin = 0.65
+				xmax = 0.92
+				text = "beaucoup"
+			intervals [5]:
+				xmin = 0.92
+				xmax = 0.98
+				text = "de"
+			intervals [6]:
+				xmin = 0.98
+				xmax = 1.35
+				text = "frigos"
+			intervals [7]:
+				xmin = 1.35
+				xmax = 1.46
+				text = "à"
+			intervals [8]:
+				xmin = 1.46
+				xmax = 1.84
+				text = "réparer"
+			intervals [9]:
+				xmin = 1.84
+				xmax = 2.39
+				text = "sil"

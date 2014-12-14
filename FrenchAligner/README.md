@@ -19,7 +19,7 @@ See included "LICENSE"
 
 ## Citation
 
-Please you use this tool; we would appreciate if you cited the following paper:
+Please you use this tool, we would appreciate if you cited the following paper:
 
 Gorman, Kyle, Jonathan Howell and Michael Wagner. 2011. Prosodylab-Aligner: A Tool for Forced Alignment of Laboratory Speech. Canadian Acoustics. 39.3. 192–193.
 
@@ -28,37 +28,24 @@ Gorman, Kyle, Jonathan Howell and Michael Wagner. 2011. Prosodylab-Aligner: A To
     USAGE: ./align.py [OPTIONS] data_to_be_aligned/
 
     Option              Function
-    
-    -c config_file      Specify a configuration file to use     [default: en.yaml]
 
-    -d dictionary       Specify a dictionary file               [default: dictionary.txt]
-                        (NB: available only with -t (See Input Group))
+    -a                  Perform speaker adaptation,
+                        w/ or w/o prior training
+
+    -d dictionary       specify a dictionary file     [default: dictionary.txt]
 
     -h                  Display this message
+    -m                  List files containing
+                        out-of-dictionary words
 
-    -s samplerate (Hz)  Samplerate for models                   [default: SAMPLERATE]
+    -n n                Number of training iterations [default: 4]
+                        for each step of training
                         (NB: available only with -t)
 
-    -E                  Number of epochs in training per round  [default: EPOCHS]
-                        (NB: available only with -t (See Input Group))
+    -s samplerate (Hz)  Samplerate for models         [default: 8000]
+                        (NB: available only with -t)
 
-    -v                  Verbose output
-
-    -V                  More verbose output
-
-    Input Group:        Only one of the following arguments may be selected
-
-    -r                  Read in serialized acoustic model
-                        (NB: Not Implemented)
-
-    -t training_data/   Perform model training 
-
-    Output Group:       Only one of the following arguments may be selected
-
-    -a                  Directory of data to be aligned
-
-    -w                  Location to write serialized model
-                        (NB: Not Implemented)
+    -t training_data/   Perform model training
 
 ## FAQ
 
@@ -92,8 +79,30 @@ The [Penn Forced Aligner](http://www.ling.upenn.edu/phonetics/p2fa/) (P2FA) prov
 
 ## Installing
 
-The scripts require a version of Python no earlier than 2.6, a BASH-compatible shell located in `/bin/sh`, and `curl`. All these will be installed on recent Macintosh computers as well as most computers running Linux. The scripts included here also assume that HTK is installed on your system. While these scripts can also be made to work on Windows computers, it is non-trivial and not described here.
+The scripts require a version of Python no earlier than 2.6, a BASH-compatible shell located in `/bin/sh`, and `curl`. All these will be installed on recent Macintosh computers as well as most computers running Linux. The scripts included here also assume that HTK and SoX are installed on your system. While these scripts can also be made to work on Windows computers, it is non-trivial and not described here.
 
+### Installing SoX
+
+#### Linux
+
+On Linux or similar POSIX-based systems, SoX can be obtained from the distribution-specific package manager (`apt-get`, `yum`, etc.), or can be compiled from source without too much difficulty.
+
+#### Mac OS X
+
+On Mac OS X it may be obtained via package managers like [Homebrew](http://brew.sh). The SoX maintainers also provide compiled binaries, which can be downloaded from [SourceForge](http://sox.sourceforge.net): click on the link after "Looking for the latest version?". The zip file can be expanded by double-clicking on it. The resulting files must be placed in your `$PATH`. A simple way to do this is to navigate to the resulting directory, and issue the following command:
+
+    $ sudo mv rec play sox soxi /usr/local/bin
+
+This will prompt for your password; type it in (it will not "echo", as `***`), and hit Enter when you're done.
+
+#### Checking installation
+
+You can confirm that SoX is installed by issuing the following command in any directory:
+
+    $ sox --version
+    sox: SoX v14.3.2
+
+Note that your version may be different: `align.py` has been tested for this version, but it should work for both somewhat older versions as well as for the foreseeable future.
 
 ### Installing HTK
 
@@ -203,6 +212,9 @@ If you call align.py with the argument -m, each word in outofdict.txt is paired 
 
 If you are transcribing new words using the CMU phone set, see [this page](http://www.csee.ogi.edu/~gormanky/papers/codes/) for IPA equivalents.
 
+#### SoX not installed
+
+Also, if SoX is not installed, but it needed because the audio is in a different format than the provided models (sampled at 8000 Hz and mono), an error result.
 
 #### align.py not executable ("Permission denied")
 
@@ -236,7 +248,7 @@ Please note: THIS REQUIRES A LOT OF DATA to work well, and further takes a long 
     $ ./align.py -t data/ data/
     ...
 
-When `-t` is specified, a few other command-line options to `align.py` become available. The `-s` flag specifies samplerate for the models used, both training and testing data will be resampled to this rate, if they do not match it. For instance, to use 44010 Hz models, you could say:
+When `-t` is specified, a few other command-line options to `align.py` become available. The `-s` flag specifies samplerate for the models used, and if SoX is installed, both training and testing data will be resampled to this rate, if they do not match it. For instance, to use 44010 Hz models, you could say:
 
     $ ./align.py -s 44010 -t data data
     ...
@@ -246,9 +258,9 @@ Note that the slash character </> is not obligatory in specifying directories: a
     $ ./align.py -d MY_DICTIONARY.txt -t data data
     ...
 
-Lastly, the `-E` flag may be used to specify the number of training iterations per "round": align.py performs three rounds of training, each of which take approximately the same time, so the effect of increasing this value by one is approximately 3-fold. By default, `-E` is 4 (so 12 iterations of training in all), but the following command would set it at 5 (or 15 rounds of training):
+Lastly, the `-n` flag may be used to specify the number of training iterations per "round": align.py performs three rounds of training, each of which take approximately the same time, so the effect of increasing this value by one is approximately 3-fold. By default, `-n` is 4 (so 12 iterations of training in all), but the following command would set it at 5 (or 15 rounds of training):
 
-    $ ./align.py -E 5 -t data data
+    $ ./align.py -n 4 -t data data
     ...
 
 Other options are documented above.

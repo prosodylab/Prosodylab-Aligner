@@ -1,0 +1,100 @@
+File type = "ooTextFile"
+Object class = "TextGrid"
+
+xmin = 0.0
+xmax = 1.88
+tiers? <exists>
+size = 2
+item []:
+	item [1]:
+		class = "IntervalTier"
+		name = "phones"
+		xmin = 0.0
+		xmax = 1.88
+		intervals: size = 12
+			intervals [1]:
+				xmin = 0.0
+				xmax = 0.38
+				text = "sil"
+			intervals [2]:
+				xmin = 0.38
+				xmax = 0.46
+				text = "x0"
+			intervals [3]:
+				xmin = 0.46
+				xmax = 0.54
+				text = "a"
+			intervals [4]:
+				xmin = 0.54
+				xmax = 0.59
+				text = "d"
+			intervals [5]:
+				xmin = 0.59
+				xmax = 0.73
+				text = "e"
+			intervals [6]:
+				xmin = 0.73
+				xmax = 0.82
+				text = "x2"
+			intervals [7]:
+				xmin = 0.82
+				xmax = 0.91
+				text = "a"
+			intervals [8]:
+				xmin = 0.91
+				xmax = 0.96
+				text = "b"
+			intervals [9]:
+				xmin = 0.96
+				xmax = 1.07
+				text = "a"
+			intervals [10]:
+				xmin = 1.07
+				xmax = 1.19
+				text = "t"
+			intervals [11]:
+				xmin = 1.19
+				xmax = 1.29
+				text = "R"
+			intervals [12]:
+				xmin = 1.29
+				xmax = 1.88
+				text = "sil"
+	item [2]:
+		class = "IntervalTier"
+		name = "words"
+		xmin = 0.0
+		xmax = 1.88
+		intervals: size = 8
+			intervals [1]:
+				xmin = 0.0
+				xmax = 0.38
+				text = "sil"
+			intervals [2]:
+				xmin = 0.38
+				xmax = 0.46
+				text = "on"
+			intervals [3]:
+				xmin = 0.46
+				xmax = 0.54
+				text = "a"
+			intervals [4]:
+				xmin = 0.54
+				xmax = 0.73
+				text = "des"
+			intervals [5]:
+				xmin = 0.73
+				xmax = 0.82
+				text = "oeufs"
+			intervals [6]:
+				xmin = 0.82
+				xmax = 0.91
+				text = "à"
+			intervals [7]:
+				xmin = 0.91
+				xmax = 1.29
+				text = "battre"
+			intervals [8]:
+				xmin = 1.29
+				xmax = 1.88
+				text = "sil"

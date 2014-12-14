@@ -1,0 +1,164 @@
+File type = "ooTextFile"
+Object class = "TextGrid"
+
+xmin = 0.0
+xmax = 5.69
+tiers? <exists>
+size = 2
+item []:
+	item [1]:
+		class = "IntervalTier"
+		name = "phones"
+		xmin = 0.0
+		xmax = 5.69
+		intervals: size = 26
+			intervals [1]:
+				xmin = 0.0
+				xmax = 2.39
+				text = "sil"
+			intervals [2]:
+				xmin = 2.39
+				xmax = 2.46
+				text = "x2"
+			intervals [3]:
+				xmin = 2.46
+				xmax = 2.49
+				text = "R"
+			intervals [4]:
+				xmin = 2.49
+				xmax = 2.54
+				text = "x2"
+			intervals [5]:
+				xmin = 2.54
+				xmax = 2.58
+				text = "z"
+			intervals [6]:
+				xmin = 2.58
+				xmax = 2.61
+				text = "~"
+			intervals [7]:
+				xmin = 2.61
+				xmax = 2.65
+				text = "m"
+			intervals [8]:
+				xmin = 2.65
+				xmax = 2.73
+				text = "@"
+			intervals [9]:
+				xmin = 2.73
+				xmax = 2.8
+				text = "k"
+			intervals [10]:
+				xmin = 2.8
+				xmax = 2.85
+				text = "x2"
+			intervals [11]:
+				xmin = 2.85
+				xmax = 2.91
+				text = "t"
+			intervals [12]:
+				xmin = 2.91
+				xmax = 2.94
+				text = "e"
+			intervals [13]:
+				xmin = 2.94
+				xmax = 2.98
+				text = "a"
+			intervals [14]:
+				xmin = 2.98
+				xmax = 3.05
+				text = "t"
+			intervals [15]:
+				xmin = 3.05
+				xmax = 3.14
+				text = "x0"
+			intervals [16]:
+				xmin = 3.14
+				xmax = 3.2
+				text = "l"
+			intervals [17]:
+				xmin = 3.2
+				xmax = 3.27
+				text = "x9"
+			intervals [18]:
+				xmin = 3.27
+				xmax = 3.3
+				text = "n"
+			intervals [19]:
+				xmin = 3.3
+				xmax = 3.33
+				text = "t"
+			intervals [20]:
+				xmin = 3.33
+				xmax = 3.37
+				text = "S"
+			intervals [21]:
+				xmin = 3.37
+				xmax = 3.41
+				text = "a"
+			intervals [22]:
+				xmin = 3.41
+				xmax = 3.46
+				text = "m"
+			intervals [23]:
+				xmin = 3.46
+				xmax = 3.59
+				text = "@"
+			intervals [24]:
+				xmin = 3.59
+				xmax = 3.67
+				text = "Z"
+			intervals [25]:
+				xmin = 3.67
+				xmax = 3.76
+				text = "e"
+			intervals [26]:
+				xmin = 3.76
+				xmax = 5.69
+				text = "sil"
+	item [2]:
+		class = "IntervalTier"
+		name = "words"
+		xmin = 0.0
+		xmax = 5.69
+		intervals: size = 10
+			intervals [1]:
+				xmin = 0.0
+				xmax = 2.39
+				text = "sil"
+			intervals [2]:
+				xmin = 2.39
+				xmax = 2.73
+				text = "heureusement"
+			intervals [3]:
+				xmin = 2.73
+				xmax = 2.85
+				text = "que"
+			intervals [4]:
+				xmin = 2.85
+				xmax = 2.94
+				text = "t"
+			intervals [5]:
+				xmin = 2.94
+				xmax = 2.98
+				text = "as"
+			intervals [6]:
+				xmin = 2.98
+				xmax = 3.14
+				text = "ton"
+			intervals [7]:
+				xmin = 3.14
+				xmax = 3.37
+				text = "lunch"
+			intervals [8]:
+				xmin = 3.37
+				xmax = 3.41
+				text = "à"
+			intervals [9]:
+				xmin = 3.41
+				xmax = 3.76
+				text = "manger"
+			intervals [10]:
+				xmin = 3.76
+				xmax = 5.69
+				text = "sil"

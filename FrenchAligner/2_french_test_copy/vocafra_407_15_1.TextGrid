@@ -1,0 +1,132 @@
+File type = "ooTextFile"
+Object class = "TextGrid"
+
+xmin = 0.0
+xmax = 2.81
+tiers? <exists>
+size = 2
+item []:
+	item [1]:
+		class = "IntervalTier"
+		name = "phones"
+		xmin = 0.0
+		xmax = 2.81
+		intervals: size = 19
+			intervals [1]:
+				xmin = 0.0
+				xmax = 0.39
+				text = "sil"
+			intervals [2]:
+				xmin = 0.39
+				xmax = 0.45
+				text = "Z"
+			intervals [3]:
+				xmin = 0.45
+				xmax = 0.51
+				text = "x2"
+			intervals [4]:
+				xmin = 0.51
+				xmax = 0.58
+				text = "v"
+			intervals [5]:
+				xmin = 0.58
+				xmax = 0.61
+				text = "x2"
+			intervals [6]:
+				xmin = 0.61
+				xmax = 0.68
+				text = "m"
+			intervals [7]:
+				xmin = 0.68
+				xmax = 0.78
+				text = "@"
+			intervals [8]:
+				xmin = 0.78
+				xmax = 0.83
+				text = "Z"
+			intervals [9]:
+				xmin = 0.83
+				xmax = 0.91
+				text = "e"
+			intervals [10]:
+				xmin = 0.91
+				xmax = 0.96
+				text = "d"
+			intervals [11]:
+				xmin = 0.96
+				xmax = 1.11
+				text = "e"
+			intervals [12]:
+				xmin = 1.11
+				xmax = 1.29
+				text = "x2"
+			intervals [13]:
+				xmin = 1.29
+				xmax = 1.4
+				text = ""
+			intervals [14]:
+				xmin = 1.4
+				xmax = 1.45
+				text = "l"
+			intervals [15]:
+				xmin = 1.45
+				xmax = 1.51
+				text = "a"
+			intervals [16]:
+				xmin = 1.51
+				xmax = 1.57
+				text = "b"
+			intervals [17]:
+				xmin = 1.57
+				xmax = 1.67
+				text = "a"
+			intervals [18]:
+				xmin = 1.67
+				xmax = 1.86
+				text = "t"
+			intervals [19]:
+				xmin = 1.86
+				xmax = 2.81
+				text = "sil"
+	item [2]:
+		class = "IntervalTier"
+		name = "words"
+		xmin = 0.0
+		xmax = 2.81
+		intervals: size = 9
+			intervals [1]:
+				xmin = 0.0
+				xmax = 0.39
+				text = "sil"
+			intervals [2]:
+				xmin = 0.39
+				xmax = 0.51
+				text = "je"
+			intervals [3]:
+				xmin = 0.51
+				xmax = 0.61
+				text = "veux"
+			intervals [4]:
+				xmin = 0.61
+				xmax = 0.91
+				text = "manger"
+			intervals [5]:
+				xmin = 0.91
+				xmax = 1.11
+				text = "des"
+			intervals [6]:
+				xmin = 1.11
+				xmax = 1.29
+				text = "oeufs"
+			intervals [7]:
+				xmin = 1.29
+				xmax = 1.4
+				text = "sp"
+			intervals [8]:
+				xmin = 1.4
+				xmax = 1.86
+				text = "labatte"
+			intervals [9]:
+				xmin = 1.86
+				xmax = 2.81
+				text = "sil"

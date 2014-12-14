@@ -1,0 +1,120 @@
+File type = "ooTextFile"
+Object class = "TextGrid"
+
+xmin = 0.0
+xmax = 1.79
+tiers? <exists>
+size = 2
+item []:
+	item [1]:
+		class = "IntervalTier"
+		name = "phones"
+		xmin = 0.0
+		xmax = 1.79
+		intervals: size = 18
+			intervals [1]:
+				xmin = 0.0
+				xmax = 0.31
+				text = "sil"
+			intervals [2]:
+				xmin = 0.31
+				xmax = 0.37
+				text = "Z"
+			intervals [3]:
+				xmin = 0.37
+				xmax = 0.4
+				text = "i"
+			intervals [4]:
+				xmin = 0.4
+				xmax = 0.45
+				text = "E"
+			intervals [5]:
+				xmin = 0.45
+				xmax = 0.52
+				text = "m"
+			intervals [6]:
+				xmin = 0.52
+				xmax = 0.56
+				text = "t"
+			intervals [7]:
+				xmin = 0.56
+				xmax = 0.63
+				text = "x0"
+			intervals [8]:
+				xmin = 0.63
+				xmax = 0.69
+				text = "b"
+			intervals [9]:
+				xmin = 0.69
+				xmax = 0.74
+				text = "y"
+			intervals [10]:
+				xmin = 0.74
+				xmax = 0.78
+				text = "R"
+			intervals [11]:
+				xmin = 0.78
+				xmax = 0.85
+				text = "o"
+			intervals [12]:
+				xmin = 0.85
+				xmax = 0.88
+				text = "l"
+			intervals [13]:
+				xmin = 0.88
+				xmax = 0.94
+				text = "o"
+			intervals [14]:
+				xmin = 0.94
+				xmax = 1.14
+				text = "R"
+			intervals [15]:
+				xmin = 1.14
+				xmax = 1.34
+				text = "@"
+			intervals [16]:
+				xmin = 1.34
+				xmax = 1.44
+				text = "Z"
+			intervals [17]:
+				xmin = 1.44
+				xmax = 1.55
+				text = "e"
+			intervals [18]:
+				xmin = 1.55
+				xmax = 1.79
+				text = "sil"
+	item [2]:
+		class = "IntervalTier"
+		name = "words"
+		xmin = 0.0
+		xmax = 1.79
+		intervals: size = 7
+			intervals [1]:
+				xmin = 0.0
+				xmax = 0.31
+				text = "sil"
+			intervals [2]:
+				xmin = 0.31
+				xmax = 0.4
+				text = "j"
+			intervals [3]:
+				xmin = 0.4
+				xmax = 0.52
+				text = "aime"
+			intervals [4]:
+				xmin = 0.52
+				xmax = 0.63
+				text = "ton"
+			intervals [5]:
+				xmin = 0.63
+				xmax = 0.85
+				text = "bureau"
+			intervals [6]:
+				xmin = 0.85
+				xmax = 1.55
+				text = "laurenger"
+			intervals [7]:
+				xmin = 1.55
+				xmax = 1.79
+				text = "sil"

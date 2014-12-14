@@ -1,0 +1,132 @@
+File type = "ooTextFile"
+Object class = "TextGrid"
+
+xmin = 0.0
+xmax = 2.26
+tiers? <exists>
+size = 2
+item []:
+	item [1]:
+		class = "IntervalTier"
+		name = "phones"
+		xmin = 0.0
+		xmax = 2.26
+		intervals: size = 20
+			intervals [1]:
+				xmin = 0.0
+				xmax = 0.41
+				text = "sil"
+			intervals [2]:
+				xmin = 0.41
+				xmax = 0.46
+				text = "j"
+			intervals [3]:
+				xmin = 0.46
+				xmax = 0.5
+				text = "a"
+			intervals [4]:
+				xmin = 0.5
+				xmax = 0.56
+				text = "b"
+			intervals [5]:
+				xmin = 0.56
+				xmax = 0.62
+				text = "o"
+			intervals [6]:
+				xmin = 0.62
+				xmax = 0.7
+				text = "k"
+			intervals [7]:
+				xmin = 0.7
+				xmax = 0.77
+				text = "u"
+			intervals [8]:
+				xmin = 0.77
+				xmax = 0.82
+				text = "d"
+			intervals [9]:
+				xmin = 0.82
+				xmax = 0.85
+				text = "x2"
+			intervals [10]:
+				xmin = 0.85
+				xmax = 0.89
+				text = "n"
+			intervals [11]:
+				xmin = 0.89
+				xmax = 0.97
+				text = "E"
+			intervals [12]:
+				xmin = 0.97
+				xmax = 1.03
+				text = "Z"
+			intervals [13]:
+				xmin = 1.03
+				xmax = 1.09
+				text = "a"
+			intervals [14]:
+				xmin = 1.09
+				xmax = 1.16
+				text = "p"
+			intervals [15]:
+				xmin = 1.16
+				xmax = 1.23
+				text = "E"
+			intervals [16]:
+				xmin = 1.23
+				xmax = 1.27
+				text = "l"
+			intervals [17]:
+				xmin = 1.27
+				xmax = 1.3
+				text = "~"
+			intervals [18]:
+				xmin = 1.3
+				xmax = 1.38
+				text = "t"
+			intervals [19]:
+				xmin = 1.38
+				xmax = 1.51
+				text = "e"
+			intervals [20]:
+				xmin = 1.51
+				xmax = 2.26
+				text = "sil"
+	item [2]:
+		class = "IntervalTier"
+		name = "words"
+		xmin = 0.0
+		xmax = 2.26
+		intervals: size = 8
+			intervals [1]:
+				xmin = 0.0
+				xmax = 0.41
+				text = "sil"
+			intervals [2]:
+				xmin = 0.41
+				xmax = 0.5
+				text = "ya"
+			intervals [3]:
+				xmin = 0.5
+				xmax = 0.77
+				text = "beaucoup"
+			intervals [4]:
+				xmin = 0.77
+				xmax = 0.85
+				text = "de"
+			intervals [5]:
+				xmin = 0.85
+				xmax = 1.03
+				text = "neige"
+			intervals [6]:
+				xmin = 1.03
+				xmax = 1.09
+				text = "à"
+			intervals [7]:
+				xmin = 1.09
+				xmax = 1.51
+				text = "pelleter"
+			intervals [8]:
+				xmin = 1.51
+				xmax = 2.26
+				text = "sil"

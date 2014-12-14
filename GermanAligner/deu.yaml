@@ -1,0 +1,50 @@
+# for human reading only
+authors: Kyle Gorman, Sarah Mihuc, Hannah Cohen
+language: German
+citation: "K. Gorman, J. Howell, and M. Wagner. 2011. Prosodylab-Aligner: A tool for forced alignment of laboratory speech. Canadian Acoustics, 39(3), 192-193."
+URL: http://prosodylab.org/tools/aligner/
+
+# basic features
+samplerate: 10000 # in Hz
+dictionary: deu.dict # based on the CMU pronunciation dictionary
+phoneset:  [a0, a1, &0, &1, i0, i1, I0, I1, e0, e1, E0, E1, @0, o0, o1, O0, O1, u0, u1, U0, U1, 
+            )0, )1, /0, /1, |0, |1, y0, y1, Y0, Y1, B0, B1, W0, W1, X0, X1, q0, ~1,
+            b, d, f, g, h, j, _, J, k, l, m, n, N, p, r, s, S, t, v, x, z, Z, =, +]
+epochs: 5
+
+# specs for feature extractor; change at your own risk
+HCopy:
+    SOURCEKIND: WAVEFORM
+    SOURCEFORMAT: WAVE
+    TARGETRATE: 100000.0
+    TARGETKIND: MFCC_D_A_0
+    WINDOWSIZE: 250000.0
+    PREEMCOEF: 0.97
+    USEHAMMING: T
+    ENORMALIZE: T
+    CEPLIFTER: 22
+    NUMCHANS: 20
+    NUMCEPS: 12
+
+# pruning parameters, to use globally; change at your own risk
+PRUNING: [250, 100, 4000]
+
+# specs for flat start; change at your own risk
+HCompV:
+    F: .01
+
+# specs for estimation; change at your own risk
+HERest:
+    TARGETRATE: 100000.0
+    TARGETKIND: MFCC_D_A_0
+    WINDOWSIZE: 250000.0
+    PREEMCOEF: 0.97
+    USEHAMMING: T
+    ENORMALIZE: T
+    CEPLIFTER: 22
+    NUMCHANS: 20
+    NUMCEPS: 12
+
+# specs for the decoder; change at your own risk
+HVite:
+    SFAC: 5
