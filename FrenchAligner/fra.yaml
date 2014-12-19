@@ -7,8 +7,8 @@ URL: http://prosodylab.org/tools/aligner/
 # basic features
 samplerate: 10000 # in Hz
 dictionary: fra.dict # based on the CMU pronunciation dictionary
-phoneset:  [a, E, e, neuf, deux, i, O, o, u, huit, ^, y, @, cinq, N,
-           b, d, f, g, G, j, k, l, m, n, p, R, s, S, t, v, w, x, z, Z]
+phoneset:  [a, AN, E, e, neuf, deux, i, O, o, u, huit, ^, y, cinq, N,
+           b, d, f, g, G, j, k, l, m, n, p, R, s, S, t, to, un, v, w, x, z, Z]
 epochs: 5
 
 # specs for feature extractor; change at your own risk
@@ -26,7 +26,7 @@ HCopy:
     NUMCEPS: 12
 
 # pruning parameters, to use globally; change at your own risk
-PRUNING: [250, 100, 4000]
+pruning: [250, 100, 4000]
 
 # specs for flat start; change at your own risk
 HCompV:
