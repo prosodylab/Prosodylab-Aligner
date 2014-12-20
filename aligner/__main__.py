@@ -39,23 +39,25 @@ from .utilities import splitname, resolve_opts, \
 
 from argparse import ArgumentParser
 
+DICTIONARY = "eng.dict"
+MODEL = "eng.zip"
 EPOCHS = 5
 
 LOGGING_FMT = "%(message)s"
 
 
 # parse arguments
-argparser = ArgumentParser(prog="align.py",
+argparser = ArgumentParser(prog="python3 -m aligner",
                            description="Prosodylab-Aligner")
 argparser.add_argument("-c", "--configuration",
                        help="config file")
-argparser.add_argument("-d", "--dictionary",
-                       help="dictionary file")
+argparser.add_argument("-d", "--dictionary", default=DICTIONARY,
+                       help="dictionary file (default: {})".format(DICTIONARY))
 argparser.add_argument("-s", "--samplerate", type=int,
                        help="analysis samplerate (in Hz)")
 argparser.add_argument("-e", "--epochs", type=int, default=EPOCHS,
                        help="# of epochs of training per round")
-input_group = argparser.add_mutually_exclusive_group(required=True)
+input_group = argparser.add_argument_group()
 input_group.add_argument("-r", "--read",
                          help="source for a precomputed acoustic model")
 input_group.add_argument("-t", "--train",
@@ -81,7 +83,17 @@ elif args.verbose:
 logging.basicConfig(format=LOGGING_FMT, level=loglevel)
 
 # input: pick one
-if args.read:
+if args.train:
+    logging.info("Preparing corpus '{}'.".format(args.train))
+    opts = resolve_opts(args)
+    corpus = Corpus(args.train, opts)
+    logging.info("Preparing aligner.")
+    aligner = Aligner(opts)
+    logging.info("Training aligner on corpus '{}'.".format(args.train))
+    aligner.HTKbook_training_regime(corpus, opts["epochs"])
+else:
+    if not args.read:
+        args.read = MODEL
     logging.info("Reading aligner from '{}'.".format(args.read))
     # warn about irrelevant flags
     if args.configuration:
@@ -98,15 +110,6 @@ if args.read:
     # initialize aligner and set it to point to the archive data 
     aligner = Aligner(opts)
     aligner.curdir = archive.dirname
-elif args.train:
-    logging.info("Preparing corpus '{}'.".format(args.train))
-    opts = resolve_opts(args)
-    corpus = Corpus(args.train, opts)
-    logging.info("Preparing aligner.")
-    aligner = Aligner(opts)
-    logging.info("Training aligner on corpus '{}'.".format(args.train))
-    aligner.HTKbook_training_regime(corpus, opts["epochs"])
-# else unreachable
 
 # output: pick one
 if args.align:

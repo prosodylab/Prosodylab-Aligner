@@ -40,7 +40,7 @@ from .utilities import splitname, mkdir_p, opts2cfg, \
 
 
 # regexp for inspecting phones
-VALID_PHONE = r"^[^\d\s]\S*$"
+VALID_PHONE = r"^[a-zA-Z\-\@\^]+[0-9]?$"
 
 
 class Corpus(object):
