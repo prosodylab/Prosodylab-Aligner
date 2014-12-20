@@ -84,6 +84,9 @@ logging.basicConfig(format=LOGGING_FMT, level=loglevel)
 
 # input: pick one
 if args.train:
+    if args.read:
+        logging.error("Cannot do training (-t) to persistent model (-r)".)
+        exit(1)
     logging.info("Preparing corpus '{}'.".format(args.train))
     opts = resolve_opts(args)
     corpus = Corpus(args.train, opts)
