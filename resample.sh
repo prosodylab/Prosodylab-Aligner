@@ -67,6 +67,5 @@ mkdir -p "$W" || fail `printf "Cannot create directory '%s'." "$W"`
 # actually do it (finally!)
 for SOURCEFILE in $R/*.$EXT; do
     SINKFILE=$W/`basename $SOURCEFILE`
-    `printf "$SOXCMD" "$SOURCEFILE" "$SINKFILE" "$S" ` &
+    `printf "$SOXCMD" "$SOURCEFILE" "$SINKFILE" "$S" `
 done
-wait
