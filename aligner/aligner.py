@@ -257,9 +257,10 @@ IS {0} {0}
         if retcode != 0:
             raise CalledProcessError(retcode, proc.args)
 
-    def HTKbook_training_regime(self, corpus, epochs):
-        logging.info("Flat start training.")
-        self.flatstart(corpus)
+    def HTKbook_training_regime(self, corpus, epochs, flatstart=True):
+        if flatstart:
+            logging.info("Flat start training.")
+            self.flatstart(corpus)
         self.train(corpus, epochs)
         logging.info("Modeling silence.")
         self.small_pause(corpus)

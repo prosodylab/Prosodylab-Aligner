@@ -58,22 +58,25 @@ def splitname(fullname):
 
 
 def resolve_opts(args):
+    if args.configuration is None:
+        logging.error("Configuration (-c) file not specified.")
+        exit(1)
     with open(args.configuration, "r") as source:
         opts = yaml.load(source)
     # command line only
     if not args.dictionary:
-        logging.error("Dictionary not specified.")
+        logging.error("Dictionary (-d) not specified.")
         exit(1)
     opts["dictionary"] = args.dictionary
     if not args.epochs:
-        logging.error("Epochs not specified.")
+        logging.error("Epochs (-e) not specified.")
         exit(1)
     opts["epochs"] = args.epochs
     # could be either, and the command line takes precedent.
     try:
         sr = args.samplerate if args.samplerate else opts["samplerate"]
     except KeyError:
-        logging.error("Samplerate not specified.")
+        logging.error("Samplerate (-s) not specified.")
         exit(1)
     if sr not in SAMPLERATES:
         i = bisect(SAMPLERATES, sr)

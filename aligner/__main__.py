@@ -85,7 +85,7 @@ logging.basicConfig(format=LOGGING_FMT, level=loglevel)
 # input: pick one
 if args.train:
     if args.read:
-        logging.error("Cannot do training (-t) to persistent model (-r).")
+        logging.error("Cannot train on persistent model.")
         exit(1)
     logging.info("Preparing corpus '{}'.".format(args.train))
     opts = resolve_opts(args)
@@ -93,7 +93,8 @@ if args.train:
     logging.info("Preparing aligner.")
     aligner = Aligner(opts)
     logging.info("Training aligner on corpus '{}'.".format(args.train))
-    aligner.HTKbook_training_regime(corpus, opts["epochs"])
+    aligner.HTKbook_training_regime(corpus, opts["epochs"],
+                                    flatstart=(args.read is None))
 else:
     if not args.read:
         args.read = MODEL
