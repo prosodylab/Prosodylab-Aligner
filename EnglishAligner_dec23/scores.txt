@@ -1,0 +1,8 @@
+"/Users/prosodylab/Desktop/en-test/AidenFontaineOConnellWL.wav",-70.2512
+"/Users/prosodylab/Desktop/en-test/AlexandreLamotheWL.wav",-70.9852
+"/Users/prosodylab/Desktop/en-test/AlexandriaProctorWL.wav",-70.9078
+"/Users/prosodylab/Desktop/en-test/AlexisFeferWL.wav",-72.9280
+"/Users/prosodylab/Desktop/en-test/AlexLahamWL.wav",-73.6328
+"/Users/prosodylab/Desktop/en-test/AlisonBaumWL.wav",-70.9413
+"/Users/prosodylab/Desktop/en-test/AllisonJonesWL.wav",-70.0686
+"/Users/prosodylab/Desktop/en-test/AmarNijhawanWL.wav",-74.5170
