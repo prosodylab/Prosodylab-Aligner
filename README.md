@@ -1,6 +1,6 @@
 **NB**: This README is currently out of date: the main branch is changing rapidly and will continue to do so until the end of December 2014; at this point, we will bring the README back up to date. Click [here](https://github.com/kylebgorman/Prosodylab-Aligner/archive/2204ee08a14ab91007155a09423da1d81d4be420.zip) to download the stable version of the aligner, which is described in the README below.
 
-# Prosodylab-Aligner, v. 1.0
+# Prosodylab-Aligner, v. 1.1
 
 Scripts for alignment of laboratory speech production data
 
@@ -147,6 +147,46 @@ You can confirm that HTK is installed by issuing the following command in any di
     HCopy      3.4.1      CUED   12/03/09  : $Id: HCopy.c,v 1.1.1.1 2006/10/11 09:54:59 jal58 Exp $
     ...
 
+### Installing SoX
+
+Installing SoX is not required for using the aligner. It does, however, speed up the process of creating models and aligning data by cutting down on resampling time. 
+
+#### Linux
+
+On Linux or similar POSIX-based systems, SoX can be obtained from the distribution-specific package manager (`apt-get`, `yum`, etc.), or can be compiled from source without too much difficulty.
+
+#### Mac OS X
+
+On Mac OS X it may be obtained via package managers like [http://brew.sh](Homebrew). The SoX maintainers also provide compiled binaries, which can be downloaded from [SourceForge](http://sox.sourceforge.net): click on the link after "Looking for the latest version?". The zip file can be expanded by double-clicking on it. The resulting files must be placed in your `$PATH`. A simple way to do this is to navigate to the resulting directory, and issue the following command:
+
+    $ sudo mv rec play sox soxi /usr/local/bin
+
+This will prompt for your password; type it in (it will not "echo", as `***`), and hit Enter when you're done.
+
+Alternatively, you can install 'homebrew', an application that makes it easier to install other software on your mac. 
+
+#### Installing Homebrew/SoX
+
+Launch 'Terminal.app' and type the prompt:
+        $ ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"
+
+    ...and then follow along with the instructions that will be displayed in the Terminal window.
+
+In the Terminal prompt type: 
+    
+        $ brew install sox
+    
+    This may take a few minutes.
+
+#### Checking installation
+
+You can confirm that SoX is installed by issuing the following command in any directory:
+
+    $ sox --version
+    sox: SoX v14.3.2
+
+Note that your version may be different: the aligner module has been tested for this version, but it should work for both somewhat older versions as well as for the foreseeable future.
+
 ## Tutorial
 
 ### Obtaining a dictionary
@@ -164,25 +204,18 @@ Imagine you simply want to align multiple audio files with their associated labe
     cat data/myexp_1_1_1.lab
     BARACK OBAMA WAS TALKING ABOUT HOW THERE'S A MISUNDERSTANDING THAT ONE MINORITY GROUP CAN'T GET ALONG WITH ANOTHER SUCH AS AFRICAN AMERICANS AND LATINOS AND HE'S SAID THAT HE HIMSELF HAS SEEN IT HAPPEN THAT THEY CAN AND HE'S BEEN INVOLVED WITH GROUPS OF OTHER MINORITIES
 
-If you'd like to align multiple .wav/.lab file pairs, and they're all in a single directory, aligning them is as simple as:
+If you'd like to align multiple .wav/.lab file pairs, and they're all in a single directory data/, aligning them is as simple as:
 
-    $ python3 -m aligner -r lang-mod.zip -a data/ -d dictionary 
+    $ python3 -m aligner -r lang-mod.zip -a data/ -d lang.dict 
     ...
 
-This will compute the best alignments, and then place then in Praat TextGrids in the data/ directory. 
+This will compute the best alignments, and then place the Praat TextGrids in the data/ directory. 
 
-* `-r fra-mod.zip` indicates the source of the acoustic model and settings to be used
-* `-a fra` indicates the source of data to be aligned.
+The `-r` flag indicates the source of the acoustic model and settings to be used. In the example, `lang-mod.zip` represents the zip directory containing the acoustic model to be used.
+
+`-a data/` indicates the directory containing the data to be aligned.
 
 ### Likely errors
-
-Several errors can occur at this stage. 
-
-#### Unpaired data
-
-First, if a .lab file in data/ is not paired with a .wav file in the same directory, or vis versa, then align.py will quit and report the unpaired data to unpaired.txt. You can read this file to figure out what files are missing, or use it to delete present, but unpaired, files. The following will delete unpaired files, after they are found by align.py and written to unpaired.txt.
-
-    $ rm `xargs -d '\n' < unpaired`
 
 #### Out of dictionary words
 
@@ -193,51 +226,41 @@ Secondly, a word in your .lab files may be missing from the dictionary. Such wor
 
 If you are transcribing new words using the CMU phone set, see [this page](http://www.csee.ogi.edu/~gormanky/papers/codes/) for IPA equivalents.
 
+#### Subprocess Process Error
 
-#### align.py not executable ("Permission denied")
+Sometimes there are processing errors that occur. These can often be fixed by enterring the following into Terminal:
 
-Lastly, the file `aligner.py` may not be marked as executable on your system, in which case you'll get an error like the following:
-
-    $ ./aligner.py data/ 
-    -bash: ./align.py: Permission denied
-
-On Linux or Mac OS X, the following command should do the trick:
-
-    $ chmod +x ./aligner.py
-
-Then, run `aligner.py` like above.
-
-#### Out of space errors
-
-The Aligner package makes prodigious use of "temporary" disk space. On Linux (in particular), it is possible that this space is limited by the OS, and the aligner will fail with number of cascading errors referring to disc space. A simple way to fix this is to use a temporary directory located somewhere else. If the environmental variable `$TMPDIR` is defined and it points to a writeable directory, `align.py` will use it.
-
-    $ mkdir ~/tmpdir
-    $ export TMPDIR=~/tmpdir
+    $ make clean
+    $ export CPPFLAGS=-UPHNALG
+    $ ./configure --disable-hlmtools --disable-hslab
+    $ make -j4
+    $ sudo make -j4 install 
+    
+Provide your password, if necessary.
 
 ### Training your own models
 
-The Aligner package also allows you to train your own models, 
+The aligner module also allows you to train your own models, 
 
-    $ python3 -m aligner -V -c fr.yaml -d fr.dict -e 10 -t lang -w lang-mod.zip
+    $ python3 -m aligner -c lang.yaml -d lang.dict -e 10 -t lang -w lang-mod.zip
     ...
-
-
-* `-V` stands for “full verbosity"
-* `-c fra.yaml` points to the configuration file to use. this also contains information about the phone set we’re using (Lexique) and will be used to “save the state” of the aligner for later
-* `-d fra.dict` indicates that I’m using a dictionary file called fra.dict: this is just Lexique with our tweaks
-* `-e 10` indicates ten “epochs” of training for each round of training the system does (there are 3 rounds, usually)
-* `-t fr` indicates the source of the training data, a directory called `fra/`
-* `-w fr-model.zip` indicates that the resulting acoustic model and settings will be written to a file of the same name
 
 Please note: THIS REQUIRES A LOT OF DATA to work well, and further takes a long time when there is a lot of data. 
 
-When `-t` is specified, a few other command-line options to `align.py` become available. The `-s` flag specifies samplerate for the models used, both training and testing data will be resampled to this rate, if they do not match it. For instance, to use 44010 Hz models, you could say:
+When the `-v` or `-V` flags are specified, output is verbose. `-v` indicates verbose output while `-V` indicates more verbose output.
 
+The `-c` flag points to the configuration file to use. In the example above, this file is `lang.yaml`. This file contains information about the setting preferences and phone set and is used to save the state of the aligner.
 
-Lastly, the `-e` flag may be used to specify the number of training iterations per "round": align.py performs three rounds of training, each of which take approximately the same time, so the effect of increasing this value by one is approximately 3-fold. By default, `-E` is 4 (so 12 iterations of training in all), but the following command would set it at 5 (or 15 rounds of training):
+The `-d` flag points to the dictionary containing the words to be aligned. 
 
-    $ ./align.py -e 5 -t data data
+The `-w` flag indicates that the resulting acoustic model and settings will be written to a file of the name following. In the example, the acoustic model and settings will be written to `lang-mod.zip`.
+
+The `-t` flag indicates the source of the training data. In the example, this is a directory called `lang/`. When `-t` is specified, a few other command-line options to `align.py` become available. The `-s` flag specifies samplerate for the models used, both training and testing data will be resampled to this rate, if they do not match it. For instance, to use 44010 Hz models, you could say:
+
+    $ python3 -m aligner -c lang.yaml -d lang.dict -e 10 -t lang -w lang-mod.zip -s 44010
     ...
+
+Lastly, the `-e` flag is used to specify the number of training iterations per "round": the aligner performs three rounds of training, each of which take approximately the same time, so the effect of increasing this value by one is approximately 3-fold. 
 
 Other options are documented above.
 
