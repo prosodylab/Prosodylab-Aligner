@@ -12,7 +12,9 @@ SP = "SP"
 SIL = "sil"
 TEMP = "temp"
 
-ALIGNED = "aligned.mlf"
+EPOCHS = 5
+
+ALIGNED = ".aligned.mlf"
 CONFIG = "config.yaml"
 DICT = "dict"
 HMMDEFS = "hmmdefs"
@@ -69,8 +71,7 @@ def resolve_opts(args):
         exit(1)
     opts["dictionary"] = args.dictionary
     if not args.epochs:
-        logging.error("Epochs (-e) not specified.")
-        exit(1)
+        args.epochs = EPOCHS
     opts["epochs"] = args.epochs
     # could be either, and the command line takes precedent.
     try:

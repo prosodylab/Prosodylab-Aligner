@@ -41,7 +41,6 @@ from argparse import ArgumentParser
 
 DICTIONARY = "eng.dict"
 MODEL = "eng.zip"
-EPOCHS = 5
 
 LOGGING_FMT = "%(message)s"
 
@@ -55,7 +54,7 @@ argparser.add_argument("-d", "--dictionary", default=DICTIONARY,
                        help="dictionary file (default: {})".format(DICTIONARY))
 argparser.add_argument("-s", "--samplerate", type=int,
                        help="analysis samplerate (in Hz)")
-argparser.add_argument("-e", "--epochs", type=int, default=EPOCHS,
+argparser.add_argument("-e", "--epochs", type=int,
                        help="# of epochs of training per round")
 input_group = argparser.add_argument_group()
 input_group.add_argument("-r", "--read",
@@ -101,10 +100,12 @@ else:
     logging.info("Reading aligner from '{}'.".format(args.read))
     # warn about irrelevant flags
     if args.configuration:
-        logging.warning("Ignoring config flag (-c).")
+        logging.warning("Ignoring config flag (-c/--configuration).")
         args.configuration = None
+    if args.epochs:
+        logging.warning("Ignoring epochs flag (-e/--epochs).")
     if args.samplerate:
-        logging.warning("Ignoring samplerate flag (-s).")
+        logging.warning("Ignoring samplerate flag (-s/--samplerate).")
         args.samplerate = None
     # create archive from -r argument
     archive = Archive(args.read)
@@ -123,7 +124,7 @@ if args.align:
         logging.info("Preparing corpus '{}'.".format(args.align))
         corpus = Corpus(args.align, opts)
     logging.info("Aligning corpus '{}'.".format(args.align))
-    aligned = os.path.join(corpus.tmpdir, ALIGNED)
+    aligned = os.path.join(args.align, ALIGNED)
     scores = os.path.join(args.align, SCORES)
     aligner.align_and_score(corpus, aligned, scores)
     logging.debug("Writing likelihood scores to '{}'.".format(scores))
