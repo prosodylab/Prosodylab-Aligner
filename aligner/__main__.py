@@ -124,8 +124,9 @@ if args.align:
         corpus = Corpus(args.align, opts)
     logging.info("Aligning corpus '{}'.".format(args.align))
     aligned = os.path.join(corpus.tmpdir, ALIGNED)
-    aligner.align_and_score(corpus, aligned, SCORES)
-    logging.info("Writing likelihood scores to '{}'.".format(SCORES))
+    scores = os.path.join(args.align, SCORES)
+    aligner.align_and_score(corpus, aligned, scores)
+    logging.debug("Writing likelihood scores to '{}'.".format(scores))
     logging.info("Writing TextGrids.")
     size = MLF(aligned).write(args.align)
     if not size:

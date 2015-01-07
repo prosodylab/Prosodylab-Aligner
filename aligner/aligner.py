@@ -223,7 +223,7 @@ IS {0} {0}
         self.align(corpus, temp)
         copyfile(temp, corpus.word_mlf)
 
-    def align_and_score(self, corpus, mlf, score):
+    def align_and_score(self, corpus, mlf, scores):
         """
         The same as `self.align`, but also generates a text file `score`
         with -log likelihood confidence scores for each audio file
@@ -244,13 +244,13 @@ IS {0} {0}
                                "-t"] + self.pruning +
                      [corpus.taskdict, corpus.phons],
                      stdout=PIPE)
-        with open(score, "w") as sink:
+        with open(scores, "w") as sink:
             i = 0
             for line in proc.stdout:
                 m = match(HVITE_SCORE, line.decode("UTF-8"))
                 if m:
                     print('"{!s}",{!s}'.format(corpus.audiofiles[i],
-                                             m.group(1)), file=sink)
+                                               m.group(1)), file=sink)
                     i += 1
         # Popen equivalent to check_call...
         retcode = proc.wait()

@@ -20,7 +20,7 @@ MACROS = "macros"
 MISSING = "missing.txt"
 PROTO = "proto"
 OOV = "OOV.txt"
-SCORES = "scores.txt"
+SCORES = ".scores.csv"
 VFLOORS = "vFloors"
 
 # samplerates which appear to be HTK-compatible (all divisors of 1e7)
