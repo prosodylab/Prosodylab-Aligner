@@ -23,7 +23,7 @@ Gorman, Kyle, Jonathan Howell and Michael Wagner. 2011. Prosodylab-Aligner: A To
 
 ## Usage
 
-    USAGE: ./align.py [OPTIONS] data_to_be_aligned/
+    USAGE: python3 -m aligner [OPTIONS]
 
     Option              Function
     
@@ -170,11 +170,11 @@ Launch 'Terminal.app' and type the prompt:
 
     ...and then follow along with the instructions that will be displayed in the Terminal window.
 
-In the Terminal prompt type: 
+To install SoX useing Homebrew, in the Terminal prompt type: 
     
         $ brew install sox
     
-    This may take a few minutes.
+This may take a few minutes.
 
 #### Checking installation
 
@@ -240,7 +240,7 @@ Provide your password, if necessary.
 
 The aligner module also allows you to train your own models, 
 
-    $ python3 -m aligner -c lang.yaml -d lang.dict -e 10 -t lang -w lang-mod.zip
+    $ python3 -m aligner -c lang.yaml -d lang.dict -e 10 -t lang/ -w lang-mod.zip
     ...
 
 Please note: THIS REQUIRES A LOT OF DATA to work well, and further takes a long time when there is a lot of data. 
@@ -253,12 +253,28 @@ The `-d` flag points to the dictionary containing the words to be aligned.
 
 The `-w` flag indicates that the resulting acoustic model and settings will be written to a file of the name following. In the example, the acoustic model and settings will be written to `lang-mod.zip`.
 
-The `-t` flag indicates the source of the training data. In the example, this is a directory called `lang/`. When `-t` is specified, a few other command-line options to `align.py` become available. The `-s` flag specifies samplerate for the models used, both training and testing data will be resampled to this rate, if they do not match it. For instance, to use 44010 Hz models, you could say:
+The `-e` flag is used to specify the number of training iterations per "round": the aligner performs three rounds of training, each of which take approximately the same time, so the effect of increasing this value by one is approximately 3-fold. 
+
+Lastly, the `-t` flag indicates the source of the training data. In the example, this is a directory called `lang/`. When `-t` is specified, a few other command-line options become available. The `-s` flag specifies samplerate for the models used, both training and testing data will be resampled to this rate, if they do not match it. For instance, to use 44010 Hz models, you could say:
 
     $ python3 -m aligner -c lang.yaml -d lang.dict -e 10 -t lang -w lang-mod.zip -s 44010
     ...
 
-Lastly, the `-e` flag is used to specify the number of training iterations per "round": the aligner performs three rounds of training, each of which take approximately the same time, so the effect of increasing this value by one is approximately 3-fold. 
+Resampling this way can take a long time, especially with large sets of data. It is therefore recommended that samplerate specifications are made using `resample.sh`. This requires installing SoX (see above installation instructions).
 
-Other options are documented above.
+### Resampling Data Files
+
+To be more efficient, it is recommended that `resample.sh` is used to resample data. To do this, enter the following into your Terminal while in the aligner directory: 
+
+    $ bash resample.sh -s 16000 -r data/ -w newDirectory/ 
+
+The `-s` flag specifies the desired sample rate (Hz). 16000 Hz is the default for the aligner, an therefore recommended as a sample rate. Alternatively, a different sample rate can be specified for `resample.sh` and aligner module.
+
+The `-r` flag points to the directory containing the files to be resampled. 
+
+The `-w` flag indicates the name of a directory where the new, resampled files should be written. 
+
+
+
+
 
