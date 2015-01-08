@@ -249,15 +249,10 @@ Resampling this way can take a long time, especially with large sets of data. It
 
 To be more efficient, it is recommended that `resample.sh` is used to resample data. To do this, enter the following into your Terminal while in the aligner directory: 
 
-    $ bash resample.sh -s 16000 -r data/ -w newDirectory/ 
+    $ ./resample.sh -s 16000 -r data/ -w newDirectory/ 
 
 The `-s` flag specifies the desired sample rate (Hz). 16000 Hz is the default for the aligner, an therefore recommended as a sample rate. Alternatively, a different sample rate can be specified for `resample.sh` and aligner module.
 
 The `-r` flag points to the directory containing the files to be resampled. 
 
 The `-w` flag indicates the name of a directory where the new, resampled files should be written. 
-
-
-
-
-
