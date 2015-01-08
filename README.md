@@ -64,7 +64,7 @@ Forced alignment can be thought of as the process of finding the times at which 
 
 ### What is forced alignment good for?
 
-The primary use of forced alignment is to eliminate the need for human annotation of time-boundaries for acoustic events of interest. Perhaps you are interested in sound change: forced alignment can be used to locate individual vowels in a sociolinguistic interview for formant measurement. Perhaps you are interested in laboratoy speech production: forced alignment can be used to locate the target word for pitch measurement.
+The primary use of forced alignment is to eliminate the need for human annotation of time-boundaries for acoustic events of interest. Perhaps you are interested in sound change: forced alignment can be used to locate individual vowels in a sociolinguistic interview for formant measurement. Perhaps you are interested in laboratory speech production: forced alignment can be used to locate the target word for pitch measurement.
 
 ### Can I use Prosodylab-Aligner for languages other than English?
 
@@ -196,6 +196,8 @@ The `-r` flag indicates the source of the acoustic model and settings to be used
 
 `-a data/` indicates the directory containing the data to be aligned.
 
+`-d lang.dict` points to the dictionary to be used in aligning the data.
+
 ### Likely errors
 
 #### Out of dictionary words
@@ -251,7 +253,7 @@ To be more efficient, it is recommended that `resample.sh` is used to resample d
 
     $ ./resample.sh -s 16000 -r data/ -w newDirectory/ 
 
-The `-s` flag specifies the desired sample rate (Hz). 16000 Hz is the default for the aligner, an therefore recommended as a sample rate. Alternatively, a different sample rate can be specified for `resample.sh` and aligner module.
+The `-s` flag specifies the desired sample rate (Hz). 16000 Hz is the default for the aligner, and therefore recommended as a sample rate. Alternatively, a different sample rate can be specified for `resample.sh` and aligner module.
 
 The `-r` flag points to the directory containing the files to be resampled. 
 
