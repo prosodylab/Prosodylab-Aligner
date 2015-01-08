@@ -91,7 +91,20 @@ The [Penn Forced Aligner](http://www.ling.upenn.edu/phonetics/p2fa/) (P2FA) prov
 The scripts require a version of Python no earlier than 3.3, a BASH-compatible shell located in `/bin/sh`, and `curl`. All these will be installed on recent Macintosh computers as well as most computers running Linux. The scripts included here also assume that HTK is installed on your system. While these scripts can also be made to work on Windows computers, it is non-trivial and not described here.
 
 
-### Installing HTK
+## Installation Instructions for Mac Users
+
+### 1. Install xcode
+
+By default, no C compiler is installed on Mac OS X. There are a few quick ways to get one. You can get a full set of compilers by downloading [Xcode](http://itunes.apple.com/us/app/xcode/id497799835?ls=1&mt=12) from the Mac 'App Store.app' (this is an application on your mac). This package is really quite large and may take a while to download (see alternative below). 
+
+Once you've downloaded it, you should install the command line tools (you may need to redo this when you update XCode). Launch the application 'Terminal.app', and the type the following at the prompt (do not type the '$') and hit return:
+
+    $ xcode-select --install
+
+A good alternative to install the full XCode package is to download the new [Command Line Tools for Xcode](http://developer.apple.com/downloads) package on the Mac App Store, which is much smaller. You will need a free registration to download either package.
+
+
+### 2. Install HTK (Hidden Markov Tool-Kit)
 
 You will need first to download [HTK's source code](http://htk.eng.cam.ac.uk/download.shtml).
 
@@ -111,79 +124,52 @@ Once you extract the application, navigate into the resulting directory:
 
     $ cd htk
 
-#### 64-bit x86 Linux 
+### 3. Install 'homebrew' 
+    (This is an application that makes it easy to install the other software on your mac)
 
-Run the following commands:
-
-    $ ./configure --disable-hslab --disable-hlmtools
-    ...
-    $ make all
-    ...
-    $ sudo make install
-    ...
-
-#### Mac OS X
-
-By default, no C compiler is installed on Mac OS X. There are a few quick ways to get one. You can get a full set of compilers by downloading [Xcode](http://itunes.apple.com/us/app/xcode/id497799835?ls=1&mt=12) from the Mac App Store. This package is really quite large and may take days(!) to download. A good alternative is to download the new [Command Line Tools for Xcode](http://developer.apple.com/downloads) package on the Mac App Store, which is much smaller. You will need a free registration to download either package.
-
-Once that's taken care of, execute the following commands in the "htk/" directory you just navigated to:
-
-    $ ./configure --disable-hslab --disable-hlmtools
-    ...
-    $ make all
-    ...
-    $ sudo make install
-    ...
-
-#### Checking installation
-
-You can confirm that HTK is installed by issuing the following command in any directory:
-
-    $ HCopy -V
-    HTK Version Information
-    Module     Version    Who    Date      : CVS Info
-    HCopy      3.4.1      CUED   12/03/09  : $Id: HCopy.c,v 1.1.1.1 2006/10/11 09:54:59 jal58 Exp $
-    ...
-
-### Installing SoX
-
-Installing SoX is not required for using the aligner. It does, however, speed up the process of creating models and aligning data by cutting down on resampling time. 
-
-#### Linux
-
-On Linux or similar POSIX-based systems, SoX can be obtained from the distribution-specific package manager (`apt-get`, `yum`, etc.), or can be compiled from source without too much difficulty.
-
-#### Mac OS X
-
-On Mac OS X it may be obtained via package managers like [http://brew.sh](Homebrew). The SoX maintainers also provide compiled binaries, which can be downloaded from [SourceForge](http://sox.sourceforge.net): click on the link after "Looking for the latest version?". The zip file can be expanded by double-clicking on it. The resulting files must be placed in your `$PATH`. A simple way to do this is to navigate to the resulting directory, and issue the following command:
-
-    $ sudo mv rec play sox soxi /usr/local/bin
-
-This will prompt for your password; type it in (it will not "echo", as `***`), and hit Enter when you're done.
-
-Alternatively, you can install 'homebrew', an application that makes it easier to install other software on your mac. 
-
-#### Installing Homebrew/SoX
-
-Launch 'Terminal.app' and type the prompt:
+    Launch 'Terminal.app' and type the prompt:
         $ ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"
 
     ...and then follow along with the instructions that will be displayed in the Terminal window.
 
-To install SoX useing Homebrew, in the Terminal prompt type: 
+### 4. Install Python3:
+    
+    Type at the Terminal prompt: 
+    
+        $ brew install python3
+
+    (this may take a few minutes)
+    
+### 5. Install sox:
+    
+    Type at the Terminal prompt: 
     
         $ brew install sox
     
-This may take a few minutes.
+    (this may take a few minutes)
+    
+    
+### 6. Get the actual aligner
 
-#### Checking installation
+    The aligner lives on github.com, a repository for open-source code. You may want to create an account, and  the github.app from their website, which makes using github much easier. You should have the command line tool installed already. You can test like this:
+    
+    Type at the Terminal prompt:
+    $ git --version
 
-You can confirm that SoX is installed by issuing the following command in any directory:
+    To install the aligner:
+    
+    Type at the Terminal prompt:
+    (This will 'clone'--that is, create a local of--the aligner on your computer. You can use git to keep it up to date)
+    
+        $ git clone https://github.com/prosodylab/Prosodylab-Aligner
 
-    $ sox --version
-    sox: SoX v14.3.2
+    This will only work if you have git installed. You can also clone it using the github.app if you've installed that.
+    
+### 7. Install other requirements:
 
-Note that your version may be different: the aligner module has been tested for this version, but it should work for both somewhat older versions as well as for the foreseeable future.
+    pip3 install -r requirements.txt    
+    
+    (pip3 is a tool that makes it easy to install python3 packages)
 
 ## Tutorial
 
