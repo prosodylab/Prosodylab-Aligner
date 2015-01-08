@@ -86,90 +86,87 @@ The [Hidden Markov Model Toolkit](http://htk.eng.cam.ac.uk) (HTK) is a set of pr
 
 The [Penn Forced Aligner](http://www.ling.upenn.edu/phonetics/p2fa/) (P2FA) provides forced alignment for American English using an acoustic model derived from audio of US Supreme Court oral arguments. Prosodylab-Aligner has a number of additional capabilities, most importantly acoustic model training, and it is possible in theory to use Prosodylab-Aligner to simulate P2FA.
 
-## Installing
+## Installations instructions for Mac Users
 
-The scripts require a version of Python no earlier than 3.3, a BASH-compatible shell located in `/bin/sh`, and `curl`. All these will be installed on recent Macintosh computers as well as most computers running Linux. The scripts included here also assume that HTK is installed on your system. While these scripts can also be made to work on Windows computers, it is non-trivial and not described here.
+NB: when you are instructed to type in a command, do not type the '$' symbol; it just indicates the start of the prompt.
 
+NB: most of these commands will produce significant text output. You can safely ignore it unless it explicitly is marked as an 'error'.
 
-## Installation Instructions for Mac Users
+### Install XCode
 
-### 1. Install xcode
-
-By default, no C compiler is installed on Mac OS X. There are a few quick ways to get one. You can get a full set of compilers by downloading [Xcode](http://itunes.apple.com/us/app/xcode/id497799835?ls=1&mt=12) from the Mac 'App Store.app' (this is an application on your mac). This package is really quite large and may take a while to download (see alternative below). 
-
-Once you've downloaded it, you should install the command line tools (you may need to redo this when you update XCode). Launch the application 'Terminal.app', and the type the following at the prompt (do not type the '$') and hit return:
+XCode is a free application that contains of all the tools you need to compile most software on Mac OS X. You can get it from the Mac App Store) or you can start the download from the Terminal. To do the latter, launch the application 'Terminal.app', then type the following at the prompt, then hit return:
 
     $ xcode-select --install
+Note that this is a large download and will take a while. Start it now! An alternative option that is somewhat smaller is Command Line Tools for Xcode.
 
-A good alternative to install the full XCode package is to download the new [Command Line Tools for Xcode](http://developer.apple.com/downloads) package on the Mac App Store, which is much smaller. You will need a free registration to download either package.
+### Install HTK (Hidden Markov ToolKit)
 
+HTK is the "backend" that powers the aligner. It is available only as uncompiled code. First, go to the HTK website and register. Then click on 'Download' on the left panel, and then click on 'HTK source code (tar+gzip archive)' under 'Linux/Unix downloads'.
 
-### 2. Install HTK (Hidden Markov Tool-Kit)
+Once this is downloaded, you may have to unpack the "tarball". Launch the application 'Terminal.app' (if you haven't already), and then navigate to your downloads directory (cd ~/Downloads will probably work). Then unpack the tarball like so:
 
-You will need first to download [HTK's source code](http://htk.eng.cam.ac.uk/download.shtml).
+    $ tar -xvzf HTK-3.4.1.tar.gz
 
-Note that you will have to make an account and agree to their restricted distribution license. Once you obtain the "tarball", the following command (adjusting for version number) should unpack it:
+Some browsers automatically unpack compressed files that they download. If you get an error when you execute the above command, try the following instead:
 
-    $ tar -fvxz htk-3.4.1.tar.gz
-
-Note that if your browser automatically attempts to unpack compressed files upon download, you may get the following error:
-
-    tar: Must specify one of -c, -r, -t, -u, -x
-
-In this case, use the command (again adjusting for version number):
-
-    $ tar -xf htk-3.4.1.tar.gz
+    $ tar -xvf HTK-3.4.1.tar
 
 Once you extract the application, navigate into the resulting directory:
 
     $ cd htk
 
-### 3. Install 'homebrew' 
-    (This is an application that makes it easy to install the other software on your mac)
+Once this is complete, the next step is to compile HTK. Execute the following commands inside the htk directory:
 
-    Launch 'Terminal.app' and type the prompt:
-        $ ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"
+    $ make clean
+    $ export CPPFLAGS=-UPHNALG
+    $ ./configure --disable-hlmtools --disable-hslab
+    $ make -j4 all
+    $ sudo make -j4 install
 
-    ...and then follow along with the instructions that will be displayed in the Terminal window.
+(This will take a few minutes.)
 
-### 4. Install Python3:
-    
-    Type at the Terminal prompt: 
-    
-        $ brew install python3
+At the last step, you may be asked to provide your system password; do so and then hit return. Note that your password will not echo (i.e., no '*' will be produced when you type).
 
-    (this may take a few minutes)
-    
-### 5. Install sox:
-    
-    Type at the Terminal prompt: 
-    
-        $ brew install sox
-    
-    (this may take a few minutes)
-    
-    
-### 6. Get the actual aligner
+### Install Homebrew
 
-    The aligner lives on github.com, a repository for open-source code. You may want to create an account, and  the github.app from their website, which makes using github much easier. You should have the command line tool installed already. You can test like this:
-    
-    Type at the Terminal prompt:
-    $ git --version
+Homebrew is a command-line application for installing software on your Macintosh. It is the easiest way to get the remaining dependencies to run the aligner. To install Homebrew, launch the application 'Terminal.app' (if you haven't already) and type the following:
 
-    To install the aligner:
-    
-    Type at the Terminal prompt:
-    (This will 'clone'--that is, create a local of--the aligner on your computer. You can use git to keep it up to date)
-    
-        $ git clone https://github.com/prosodylab/Prosodylab-Aligner
+    $ ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"
 
-    This will only work if you have git installed. You can also clone it using the github.app if you've installed that.
-    
-### 7. Install other requirements:
+and then follow along with the instructions that are displayed in the terminal window. Once again, you may need to enter your system password, and once again, your password will not echo.
 
-    pip3 install -r requirements.txt    
-    
-    (pip3 is a tool that makes it easy to install python3 packages)
+### Install Python 3
+
+Homebrew makes it easy to install the newest version of Python programming language that powers the aligner. To install it, launch the application 'Terminal.app' (if you haven't already) and type the following:
+
+    $ brew install python3
+
+(This will take a few minutes.)
+
+### Install SoX
+
+SoX is the "Swiss Army knife of sound processing programs", and can be used to do fast batch of your audio files (though it is possible to run the aligner without using SoX). Once again, Homebrew makes it easy to install SoX. Launch the application 'Terminal.app' (if you haven't already) and type the following:
+
+    $ brew install sox
+
+(This may take a few minutes.)
+
+### Install the actual aligner
+
+Prosodylab-Aligner lives on GitHub, a repository for open-source software. You may want to create an account there, and perhaps install 'GitHub.app', which makes it easier to interact with GitHub. But for the purposes of installing the aligner, all you need is the git command-line tool, which is part of Xcode (and so should already be installed). Launch the application 'Terminal.app' (if you haven't already) and type the following:
+
+    $ git clone http://github.com/prosodylab/Prosodylab-Aligner
+
+Finally, you need to install a few additional dependencies for Python. Enter the following commands to take care of this:
+
+    $ cd Prosodylab-Aligner 
+    $ pip3 install -r requirements.txt
+
+At this point, you can test your installation by running:
+
+    $ python3 -m aligner --help
+
+which should print out some information about how to use the aligner.
 
 ## Tutorial
 
