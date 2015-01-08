@@ -8,22 +8,25 @@ import logging
 
 # global variables
 
-SP = "SP"
+SP = "sp"
 SIL = "sil"
 TEMP = "temp"
 
 EPOCHS = 5
 
-ALIGNED = ".aligned.mlf"
+MISSING = "missing.txt"
+OOV = "OOV.txt"
+
 CONFIG = "config.yaml"
 DICT = "dict"
 HMMDEFS = "hmmdefs"
 MACROS = "macros"
-MISSING = "missing.txt"
 PROTO = "proto"
-OOV = "OOV.txt"
-SCORES = ".scores.csv"
 VFLOORS = "vFloors"
+
+ALIGNED = ".aligned.mlf"
+SCORES = ".scores.csv"
+
 
 # samplerates which appear to be HTK-compatible (all divisors of 1e7)
 SAMPLERATES = [4000, 8000, 10000, 12500, 15625, 16000, 20000, 25000,

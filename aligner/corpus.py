@@ -201,8 +201,9 @@ DE {1}
                 (_, filename) = os.path.split(audiofile)
                 (basename, _) = os.path.splitext(filename)
                 featurefile = os.path.join(self.auddir, basename + ".mfc")
-                w = WavFile.from_file(audiofile)
-                if w.Fs != self.samplerate:
+                Fs = WavFile.samplerate(audiofile)
+                if Fs != self.samplerate:
+                    w = WavFile.from_file(audiofile)
                     new_wav = os.path.join(self.auddir, filename)
                     logging.warning("Resampling '{}'.".format(audiofile))
                     w.resample_bang(self.samplerate)

@@ -31,6 +31,8 @@ import codecs
 
 from bisect import bisect_left
 
+from .utilities import SP
+
 
 def readFile(f):
     """
@@ -756,7 +758,7 @@ class MLF(object):
                     elif len(line) == 3:  # just phone
                         pmin = round(float(line[0]) / samplerate, 5)
                         pmax = round(float(line[1]) / samplerate, 5)
-                        if line[2] == "sp" and pmin != pmax:
+                        if line[2] == SP and pmin != pmax:
                             if wmrk:
                                 word.add(wsrt, wend, wmrk)
                             wmrk = unmangle(line[2])

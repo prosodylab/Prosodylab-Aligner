@@ -127,7 +127,8 @@ if args.align:
     aligned = os.path.join(args.align, ALIGNED)
     scores = os.path.join(args.align, SCORES)
     aligner.align_and_score(corpus, aligned, scores)
-    logging.debug("Writing likelihood scores to '{}'.".format(scores))
+    logging.debug("Wrote MLF file to '{}'.".format(aligned))
+    logging.debug("Wrote likelihood scores to '{}'.".format(scores))
     logging.info("Writing TextGrids.")
     size = MLF(aligned).write(args.align)
     if not size:
