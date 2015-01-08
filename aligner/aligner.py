@@ -103,7 +103,8 @@ class Aligner(object):
  0.0 0.0 0.0 0.0 0.0
 <ENDHMM>""", file=proto)
         # make `vFloors`
-        check_call(["HCompV", "-f", str(self.HCompV_opts["F"]),
+        check_call(["HCompV", "-m",
+                              "-f", str(self.HCompV_opts["F"]),
                               "-C", self.HERest_cfg,
                               "-S", corpus.feature_scp,
                               "-M", self.curdir, self.proto])
@@ -119,8 +120,8 @@ class Aligner(object):
                 print("".join(vfloors.readlines()).rstrip(), file=macros)
         # make `hmmdefs`
         with open(os.path.join(self.curdir, HMMDEFS), "w") as hmmdefs:
-            with open(self.proto, "r") as proto:
-                protolines = proto.readlines()[2:]
+            with open(os.path.join(self.curdir, PROTO), "r") as proto:
+                protolines = proto.readlines()[4:]
             with open(corpus.phons, "r") as phons:
                 for phone in phons:
                     print('~h "{}"'.format(phone.rstrip()), file=hmmdefs)
@@ -192,7 +193,7 @@ TI silst {{{1}.state[3],{0}.state[2]}}
             print("""EX
 IS {0} {0}
 """.format(SIL), file=led)
-        check_call(["HLEd", "-l", corpus.labdir,
+        check_call(["HLEd", "-l", corpus.auddir,
                             "-d", corpus.taskdict,
                             "-i", corpus.phon_mlf,
                             temp, corpus.word_mlf])
@@ -210,9 +211,10 @@ IS {0} {0}
                              "-S", corpus.feature_scp,
                              "-H", os.path.join(self.curdir, MACROS),
                              "-H", os.path.join(self.curdir, HMMDEFS),
-                             "-I", corpus.word_mlf,
-                             "-s", str(self.HVite_opts["SFAC"]),
-                             "-t"] + self.pruning +
+                             "-I", corpus.word_mlf,] +
+                             #FIXME(kg) do we want this?
+                             #"-s", str(self.HVite_opts["SFAC"]), 
+                             #"-t"] + self.pruning +
                    [corpus.taskdict, corpus.phons], stdout=PIPE)
 
     def realign(self, corpus):
@@ -239,9 +241,10 @@ IS {0} {0}
                                "-S", corpus.feature_scp,
                                "-H", os.path.join(self.curdir, MACROS),
                                "-H", os.path.join(self.curdir, HMMDEFS),
-                               "-I", corpus.word_mlf,
-                               "-s", str(self.HVite_opts["SFAC"]),
-                               "-t"] + self.pruning +
+                               "-I", corpus.word_mlf,] +
+                               #FIXME(kg) do we want this?
+                               #"-s", str(self.HVite_opts["SFAC"]),
+                               #"-t"] + self.pruning +
                      [corpus.taskdict, corpus.phons],
                      stdout=PIPE)
         with open(scores, "w") as sink:

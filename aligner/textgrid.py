@@ -597,8 +597,8 @@ class TextGrid(object):
         source.readline()  # header junk
         source.readline()  # header junk
         source.readline()  # header junk
-        self.minTime = round(float(source.readline().split()[2]), 5)
-        self.maxTime = round(float(source.readline().split()[2]), 5)
+        self.minTime = round(float(source.readline().split()[2]), 8)
+        self.maxTime = round(float(source.readline().split()[2]), 8)
         source.readline()  # more header junk
         m = int(source.readline().rstrip().split()[2])  # will be self.n
         source.readline()
@@ -607,16 +607,16 @@ class TextGrid(object):
             if source.readline().rstrip().split()[2] == '"IntervalTier"':
                 inam = source.readline().rstrip().split(" = ")[1].strip('"')
                 imin = round(float(
-                             source.readline().rstrip().split()[2]), 5)
+                             source.readline().rstrip().split()[2]), 8)
                 imax = round(float(
-                             source.readline().rstrip().split()[2]), 5)
+                             source.readline().rstrip().split()[2]), 8)
                 itie = IntervalTier(inam)
                 for j in range(int(source.readline().rstrip().split()[3])):
                     source.readline().rstrip().split()  # header junk
                     jmin = round(float(
-                                 source.readline().rstrip().split()[2]), 5)
+                                 source.readline().rstrip().split()[2]), 8)
                     jmax = round(float(
-                                 source.readline().rstrip().split()[2]), 5)
+                                 source.readline().rstrip().split()[2]), 8)
                     jmrk = self._getMark(source)
                     if jmin < jmax:  # non-null
                         itie.addInterval(Interval(jmin, jmax, jmrk))
@@ -624,15 +624,15 @@ class TextGrid(object):
             else:  # pointTier
                 inam = source.readline().rstrip().split(" = ")[1].strip('"')
                 imin = round(float(
-                             source.readline().rstrip().split()[2]), 5)
+                             source.readline().rstrip().split()[2]), 8)
                 imax = round(float(
-                             source.readline().rstrip().split()[2]), 5)
+                             source.readline().rstrip().split()[2]), 8)
                 itie = PointTier(inam)
                 n = int(source.readline().rstrip().split()[3])
                 for j in range(n):
                     source.readline().rstrip()  # header junk
                     jtim = round(float(
-                                 source.readline().rstrip().split()[2]), 5)
+                                 source.readline().rstrip().split()[2]), 8)
                     jmrk = source.readline().rstrip().split()[2][1:-1]
                     itie.addPoint(Point(jtim, jmrk))
                 self.append(itie)
@@ -745,8 +745,8 @@ class MLF(object):
                 while 1:  # loop over the lines in each grid
                     line = source.readline().rstrip().split()
                     if len(line) == 4:  # word on this baby
-                        pmin = round(float(line[0]) / samplerate, 5)
-                        pmax = round(float(line[1]) / samplerate, 5)
+                        pmin = round(float(line[0]) / samplerate, 8)
+                        pmax = round(float(line[1]) / samplerate, 8)
                         if pmin == pmax:
                             raise ValueError("null duration interval")
                         phon.add(pmin, pmax, line[2])
@@ -756,8 +756,8 @@ class MLF(object):
                         wsrt = pmin
                         wend = pmax
                     elif len(line) == 3:  # just phone
-                        pmin = round(float(line[0]) / samplerate, 5)
-                        pmax = round(float(line[1]) / samplerate, 5)
+                        pmin = round(float(line[0]) / samplerate, 8)
+                        pmax = round(float(line[1]) / samplerate, 8)
                         if line[2] == SP and pmin != pmax:
                             if wmrk:
                                 word.add(wsrt, wend, wmrk)

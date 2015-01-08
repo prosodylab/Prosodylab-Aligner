@@ -167,7 +167,8 @@ class Corpus(object):
         temp = os.path.join(self.tmpdir, TEMP)
         # run HDMan
         with open(temp, "w") as ded:
-            print("AS {0}\nMP {1} {1} {0}".format(SP, SIL), file=ded)
+            print("""AS {0}\nMP {1} {1} {0}
+""".format(SP, SIL), file=ded)
         check_call(["HDMan", "-m",
                              "-g", temp,
                              "-w", self.words,
