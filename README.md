@@ -205,7 +205,7 @@ The `-r` flag indicates the source of the acoustic model and settings to be used
 Secondly, a word in your .lab files may be missing from the dictionary. Such words are written to OOV.txt. You can transcribe these in outofdict.txt using a text editor, then mix them back in like so:
 
     $ ./sort.py lang.dict OOV.txt > tmp; 
-    $ mv tmp lang.dict.txt
+    $ mv tmp lang.dict
 
 If you are transcribing new words using the CMU phone set, see [this page](http://www.csee.ogi.edu/~gormanky/papers/codes/) for IPA equivalents.
 
