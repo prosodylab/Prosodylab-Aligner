@@ -117,9 +117,9 @@ Once you extract the application, navigate into the resulting directory:
 
 Once this is complete, the next step is to compile HTK. Execute the following commands inside the htk directory:
 
-    $ make clean
     $ export CPPFLAGS=-UPHNALG
     $ ./configure --disable-hlmtools --disable-hslab
+    $ make clean    # necessary if you're not starting from scratch
     $ make -j4 all
     $ sudo make -j4 install
 
