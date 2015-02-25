@@ -185,12 +185,12 @@ Imagine you simply want to align multiple audio files with their associated labe
     cat data/myexp_1_1_1.lab
     BARACK OBAMA WAS TALKING ABOUT HOW THERE'S A MISUNDERSTANDING THAT ONE MINORITY GROUP CAN'T GET ALONG WITH ANOTHER SUCH AS AFRICAN AMERICANS AND LATINOS AND HE'S SAID THAT HE HIMSELF HAS SEEN IT HAPPEN THAT THEY CAN AND HE'S BEEN INVOLVED WITH GROUPS OF OTHER MINORITIES
 
-If you'd like to align multiple .wav/.lab file pairs, and they're all in a single directory data/, aligning them is as simple as:
+If you'd like to align multiple .wav/.lab file pairs, and they're all in a single directory `data/`, aligning them is as simple as:
 
     $ python3 -m aligner -r lang-mod.zip -a data/ -d lang.dict 
     ...
 
-This will compute the best alignments, and then place the Praat TextGrids in the data/ directory. 
+This will compute the best alignments, and then place the Praat TextGrids in the `data/` directory. 
 
 The `-r` flag indicates the source of the acoustic model and settings to be used. In the example, `lang-mod.zip` represents the zip directory containing the acoustic model to be used.
 
@@ -202,12 +202,12 @@ The `-r` flag indicates the source of the acoustic model and settings to be used
 
 #### Out of dictionary words
 
-Secondly, a word in your .lab files may be missing from the dictionary. Such words are written to OOV.txt. You can transcribe these in outofdict.txt using a text editor, then mix them back in like so:
+Secondly, a word in your .lab files may be missing from the dictionary. Such words are written to `OOV.txt`. You can transcribe these using a text editor, then mix them back in like so:
 
     $ ./sort.py lang.dict OOV.txt > tmp; 
     $ mv tmp lang.dict
 
-If you are transcribing new words using the CMU phone set, see [this page](http://www.csee.ogi.edu/~gormanky/papers/codes/) for IPA equivalents.
+If you are transcribing new words using the CMU phone set, see [this page](http://cslu.ohsu.edu/~gormanky/papers/codes/) for IPA equivalents.
 
 #### Subprocess Process Error
 
