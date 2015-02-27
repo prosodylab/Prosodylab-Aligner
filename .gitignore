@@ -1,6 +1,8 @@
+__pycache__/
+*.py[co]
+*.log
+*.sh
+*.txt
 *.wav
 *.lab
 *.TextGrid
-.DS_Store
-*.pyc
-*.pyo

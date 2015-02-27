@@ -1,1 +1,0 @@
-"/Users/prosodylab/work_aligner/prosodylab-alignermodels/FrenchQuEu/testfile/confre_fr_447_3_3.wav",-103.5485
