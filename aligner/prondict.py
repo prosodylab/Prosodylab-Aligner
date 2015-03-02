@@ -40,7 +40,11 @@ class PronDict(object):
         for (i, line) in enumerate(source, 1):
             if line.startswith(";"):
                 continue
-            (word, pron) = line.rstrip().split(None, 1)
+            try:
+                (word, pron) = line.rstrip().split(None, 1)
+            except ValueError:
+                logging.error("Formatting error in dictionary '{}' (ln. {}).".format(source.name, i))
+                exit(1)
             yield (i, word, pron.split())
 
     def __init__(self, filename, phoneset):
