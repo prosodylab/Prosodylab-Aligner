@@ -172,7 +172,7 @@ which should print out some information about how to use the aligner.
 
 ### Obtaining a dictionary
 
-First, obtain an appropriate pronunciation dictionary. Currently, the aligner comes with a file "dictionary.txt" intended for use with American English. Some dictionaries we have created are available at the [`prosodylab.dictionaries` repository](https://github.com/prosodylab/prosodylab.dictionaries). Other dictionaries can be found online, or written for specific tasks. If you're working with RP speakers, [CELEX](http://catalog.ldc.upenn.edu/LDC96L14) might be a good choice. For languages with regular, transparent orthographies, you may want to create a simple rule-based grapheme-to-phoneme system as a series of ordered rules.
+The aligner comes with an (American) English dictionary file `eng.dict`. Some additional dictionaries we have created are available at [`prosodylab.dictionaries` repository](https://github.com/prosodylab/prosodylab.dictionaries). Other dictionaries can be found online, or written for specific tasks. If you're working with RP speakers, [CELEX](http://catalog.ldc.upenn.edu/LDC96L14) might be a good choice. For languages with highly regular, transparent orthographies (e.g., Spanish or Tagalog), you may want to create a simple rule-based grapheme-to-phoneme system using a cascade of ordered rules.
 
 ### Aligning files
 
