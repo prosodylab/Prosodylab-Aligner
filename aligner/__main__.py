@@ -44,7 +44,6 @@ MODEL = "eng.zip"
 
 LOGGING_FMT = "%(message)s"
 
-
 # parse arguments
 argparser = ArgumentParser(prog="python3 -m aligner",
                            description="Prosodylab-Aligner")

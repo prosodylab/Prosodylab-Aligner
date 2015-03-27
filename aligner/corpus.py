@@ -31,7 +31,7 @@ from re import match
 from glob import glob
 from shutil import rmtree
 from tempfile import mkdtemp
-from subprocess import check_call
+from subprocess import check_call, Popen, PIPE, CalledProcessError
 
 from .wavfile import WavFile
 from .prondict import PronDict
@@ -41,7 +41,6 @@ from .utilities import splitname, mkdir_p, opts2cfg, \
 
 # regexp for inspecting phones
 VALID_PHONE = r"^[^\d\s]+[0-9]?$"
-
 
 class Corpus(object):
 
@@ -88,8 +87,22 @@ class Corpus(object):
         (audiofiles, labelfiles) = self._lists(dirname)
         self.audiofiles = audiofiles
         self._prepare_label(labelfiles)
-        self._prepare_audio(audiofiles)
+        if self._has_sox():
+            self._prepare_audio_sox(audiofiles)
+        else:
+            while True:
+                continueInPython = input("No SoX! Press 'y' to continue (very slow); press 'n' to quit and resample using resample.sh manually: \n")
+                if continueInPython == 'y': break
+                elif continueInPython == 'n': exit(1)
+            self._prepare_audio(audiofiles)
         self._extract_features()
+
+    def _has_sox(self):
+        for path in os.environ['PATH'].split(os.pathsep):
+            fpath = os.path.join(path, 'sox')
+            if os.path.exists(fpath) and os.access(fpath, os.X_OK):
+                return True
+        return False
 
     def _lists(self, dirname):
         """
@@ -213,6 +226,34 @@ DE {1}
                       file=audio_scp)
                 print('"{}"'.format(featurefile), file=feature_scp)
 
+    def _prepare_audio_sox(self, audiofiles):
+        """ resample audio files with SoX """
+        print("Resampling using SoX (welcome to the future!)")
+        
+        with open(self.audio_scp, "w") as audio_scp, \
+                open(self.feature_scp, "w") as feature_scp:
+            for audiofile in audiofiles:
+                (_, filename) = os.path.split(audiofile)
+                (basename, _) = os.path.splitext(filename)
+                featurefile = os.path.join(self.auddir, basename + ".mfc")
+                Fs = WavFile.samplerate(audiofile)
+                pids = []
+                if Fs != self.samplerate:
+                    w = WavFile.from_file(audiofile)
+                    new_wav = os.path.join(self.auddir, filename)
+                    pids.append(Popen(['sox', '-G', audiofile, '-b', '16',
+                                       new_wav, 'remix', '-',
+                                       'rate', str(self.samplerate),
+                                       'dither', '-s'], stderr=PIPE))
+                    w.write(new_wav)
+                for pid in pids:
+                    retcode = pid.wait()
+                    if retcode != 0:
+                        raise CalledProcessError(retcode, 'sox')
+                print('"{}" "{}"'.format(audiofile, featurefile),
+                      file=audio_scp)
+                print('"{}"'.format(featurefile), file=feature_scp)
+#                w.close()
     def _extract_features(self):
         """
         Compute audio features
