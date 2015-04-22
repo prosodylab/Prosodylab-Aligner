@@ -168,6 +168,10 @@ At this point, you can test your installation by running:
 
 which should print out some information about how to use the aligner.
 
+## Installation for Linux users
+
+The instructions are the same as for Mac users, with the exception that there is no direct analogue to XCode. Instead, you will probably need to use your distribution's package manager to install a C compiler; on Ubuntu, for instance, the relevant package is called `libc-dev`.
+
 ## Tutorial
 
 ### Obtaining a dictionary
