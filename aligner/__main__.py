@@ -23,17 +23,18 @@
 Command-line driver for the module
 """
 
-import os
-import yaml
 import logging
+import os
+import sys
+import yaml
 
 from bisect import bisect
 from shutil import copyfile
+from textgrid import MLF
 
 from .corpus import Corpus
 from .aligner import Aligner
 from .archive import Archive
-from .textgrid import MLF
 from .utilities import splitname, resolve_opts, \
                        ALIGNED, CONFIG, HMMDEFS, MACROS, SCORES
 
@@ -46,8 +47,8 @@ LOGGING_FMT = "%(message)s"
 
 
 # parse arguments
-argparser = ArgumentParser(prog="python3 -m aligner",
-                           description="Prosodylab-Aligner")
+argparser = ArgumentParser(prog="{} -m aligner".format(sys.executable,
+                           __name__), description="Prosodylab-Aligner")
 argparser.add_argument("-c", "--configuration",
                        help="config file")
 argparser.add_argument("-d", "--dictionary", default=DICTIONARY,
@@ -112,14 +113,14 @@ else:
     # read configuration file therefrom, and resolve options with it
     args.configuration = os.path.join(archive.dirname, CONFIG)
     opts = resolve_opts(args)
-    # initialize aligner and set it to point to the archive data 
+    # initialize aligner and set it to point to the archive data
     aligner = Aligner(opts)
     aligner.curdir = archive.dirname
 
 # output: pick one
 if args.align:
     # check to make sure we're not aligning on the training data
-    if (not args.train) or (os.path.realpath(args.train) != 
+    if (not args.train) or (os.path.realpath(args.train) !=
                             os.path.realpath(args.align)):
         logging.info("Preparing corpus '{}'.".format(args.align))
         corpus = Corpus(args.align, opts)

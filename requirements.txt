@@ -1,3 +1,4 @@
+numpy==1.10.0
 PyYAML==3.11
-numpy==1.9.1
 scipy==0.14.0
+TextGrid==1.0
