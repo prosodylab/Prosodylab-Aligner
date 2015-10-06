@@ -2,9 +2,10 @@
 Global variables and helpers for forced alignment
 """
 
+import bisect
+import logging
 import os
 import yaml
-import logging
 
 # global variables
 
@@ -83,7 +84,7 @@ def resolve_opts(args):
         logging.error("Samplerate (-s) not specified.")
         exit(1)
     if sr not in SAMPLERATES:
-        i = bisect(SAMPLERATES, sr)
+        i = bisect.bisect(SAMPLERATES, sr)
         if i == 0:
             pass
         elif i == len(SAMPLERATES):
