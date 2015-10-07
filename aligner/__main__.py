@@ -47,8 +47,8 @@ LOGGING_FMT = "%(message)s"
 
 
 # parse arguments
-argparser = ArgumentParser(prog="{} -m aligner".format(sys.executable,
-                           __name__), description="Prosodylab-Aligner")
+argparser = ArgumentParser(prog="{} -m aligner".format(sys.executable),
+                           description="Prosodylab-Aligner")
 argparser.add_argument("-c", "--configuration",
                        help="config file")
 argparser.add_argument("-d", "--dictionary", default=DICTIONARY,
