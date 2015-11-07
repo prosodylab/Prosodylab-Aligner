@@ -68,7 +68,11 @@ def resolve_opts(args):
         logging.error("Configuration (-c) file not specified.")
         exit(1)
     with open(args.configuration, "r") as source:
-        opts = yaml.load(source)
+        try:
+            opts = yaml.load(source)
+        except yaml.YAMLError as err:
+            logging.error("Error in configuration file: %s", err)
+            exit(1)
     # command line only
     if not args.dictionary:
         logging.error("Dictionary (-d) not specified.")
