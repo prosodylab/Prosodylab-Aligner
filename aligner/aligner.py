@@ -139,8 +139,7 @@ class Aligner(object):
                         "-M", self.nxtdir,
                         "-H", os.path.join(self.curdir, MACROS),
                         "-H", os.path.join(self.curdir, HMMDEFS),
-                        "-t"] + self.pruning + [corpus.phons],
-                       stdout=PIPE)
+                        "-t"] + self.pruning + [corpus.phons])
             self._nxtdir()
 
     def small_pause(self, corpus):
