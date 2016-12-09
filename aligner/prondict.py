@@ -28,12 +28,16 @@ import logging
 
 from collections import defaultdict
 
+from .utilities import SIL, SP
+
 
 class PronDict(object):
 
     """
     A wrapper for a normal pronunciation dictionary in the CMU style
     """
+
+    SILENT_PHONES = frozenset([SIL, SP])
 
     @staticmethod
     def pronify(source):
@@ -53,7 +57,7 @@ class PronDict(object):
             self.d = defaultdict(list)
             for (i, word, pron) in PronDict.pronify(source):
                 for ph in pron:
-                    if ph not in phoneset | set(['sil','sp']):
+                    if ph not in phoneset | self.SILENT_PHONES:
                         logging.error("Unknown phone '{}' in dictionary '{}' (ln. {}).".format(ph, filename, i))
                         exit(1)
                 self.d[word].append(pron)
