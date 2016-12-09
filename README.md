@@ -195,6 +195,141 @@ which should print out some information about how to use the aligner.
 
 The instructions are the same as for Mac users, with the exception that there is no direct analogue to XCode. Instead, you will probably need to use your distribution's package manager to install a C compiler; on Ubuntu, for instance, the relevant package is called `libc-dev`.
 
+## Installation for Windows 10 (Ubuntu on Windows)
+
+This method requires Windows 10 64-bit with the Anniversary edition update (Ubuntu on Windows is not available in 32 bit installations). If you are running Windows 10 but have not yet had the update rolled out to you, you can force the update by visiting https://www.microsoft.com/en-us/software-download/windows10 and selecting the corresponding option.
+
+### Installing Ubuntu on Windows
+
+Go to Windows Settings > Update & Security > For developers. Make sure Developer mode is on (in my instance it required a reboot). Push the start button and type "Turn Windows features on" and select the option in the menu. Check the option for Windows Subsystem for Linux (beta), and again reboot if you are told to do so. Afterward, find "bash" under the Start Menu (I normally just mash the Windows key and type bash). When starting, the system will ask if you want to install Ubuntu from the Windows Store. Do so and wait for it to finish. You will need to set up a username and password. The password will have to be entered several times during this process.
+
+### Setting up folders
+
+One quirk about the Ubuntu on Windows system is that it doesn't seem to like you monkeying around with files inside its root file system. After installation you will see the prompt indicate your current folder is /mnt/c, which is indeed your C: drive. You will probably want to set up a folder inside there to transfer files into and out of Ubuntu. In my case I used
+
+    mkdir Voice
+
+In this folder I could drop files from Windows Explorer, and then later transfer them into Ubuntu's home folder.
+
+Now we will set up a folder in your home directory. This will bring you to your home folder, and I made a folder in here as well
+
+    cd ~
+	mkdir Voice
+	cd Voice
+	
+### Get the HTK
+
+The Hidden Markov Toolkit cannot be distributed by anyone other than Cambridge, so visit http://htk.eng.cam.ac.uk/download.shtml and set up an account. Download the latest stable version of HTK (not the newest beta). This was 3.4.1 at the time of this writing. Move the file from your downloads folder to your c:\Voice folder, and then copy it into your Linux directory
+
+    cp /mnt/c/Voice/* ~/Voice
+	
+### Step 4: Compile the HTK
+
+Unpack the HTK and go to it using
+
+    tar -xvzf HTK-3.4.1.tar.gz
+    cd htk
+
+This will create a HTK folder inside your ~/Voice folder. We now need to compile the HTK. First, execute
+
+    export CPPFLAGS=-UPHNALG
+    ./configure --disable-hlmtools --disable-hslab
+
+You now need to modify the configure file. I used vim
+
+    vim configure
+
+We want to change the line that says -m32 to say -m64 instead, which will compile the HTK for 64 bit architectures. To find the line type forward slash followed by m32. This should jump down to the correct line. Press a to enter editing mode and modify the text. Hit escape to exit editing mode, then type colon, x, and enter to get out of VIM and save the file.
+
+We also need the cross-architecture c++ libraries, so
+
+    sudo apt-get install g++-multilib
+
+You should be prompted for a password, so type it in (or paste it in by right clicking the window bar and select Edit > Paste). 
+
+    make clean
+    make -j4 all
+    sudo make -j4 install
+
+The HTK should now compile and install (the second command will take awhile).
+
+### Getting the other dependencies
+
+The base Ubuntu comes with Python3, but not with pip, so install it now
+
+    sudo apt-get install python3-pip
+
+We need to install Python numerical packages SciPy and NumPy. This will be done automatically later, but they depend on the BLAS and ATLAS projects, which can't be installed automatically (for whatever reason) under Ubuntu. You need to install these packages separately:
+
+    sudo apt-get install libblas-dev liblapack-dev libatlas-base-dev gfortran
+
+To install SOX audio tools, we first grab Ruby, then install LinuxBrew
+
+    sudo apt-get install ruby
+    ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Linuxbrew/install/master/install)" PATH="$HOME/.linuxbrew/bin:$PATH"
+
+Note that the second command is all one line. To use LinuxBrew, and for a step further on, we need to modify our path variable (the folders the shell will search when we ask it to start a program). Navigate to the root of your home directory and get a file listing
+
+    cd ~
+    ls -a
+
+You should see a file called .bash_profile. Whether or not you do, we'll edit this file (if it doesn't exist, VIM will create it)
+
+    vim .bash_profile
+
+Enter the following lines, substituting "Voice" for whatever folder you set up for your installation. Press a and enter
+
+    export PATH="$HOME/.linuxbrew/bin:$PATH"
+    export PATH="$HOME/Voice/htk/HTKTools:$PATH"
+
+Again, to save and quit, hit escape, colon, x, enter. To make sure this worked, type
+
+    cat .bash_profile
+
+You should see the lines you entered print to the screen. If all is well, execute this now by typing
+
+    source ~/.bash_profile
+
+The file will automatically execute every time you start bash, so you only need to do this once.
+
+Now to install SOX, we just type
+
+    brew install sox
+
+### Getting Prosody-Align and its Python dependencies
+
+Install git from the package manager, go into your voice directory, and then grab the Prosodylab-Aligner project
+
+    cd Voice
+    sudo apt-get install git
+    git clone https://github.com/prosodylab/Prosodylab-Aligner
+
+You should have a folder called Prosodylab-Aligner. Enter this folder
+
+    cd Prosodylab-Aligner
+
+(Note that after typing the first two or so letters you can type press tab to autocomplete). Now for the part that's the biggest pain, installing the Python numerical packages.
+
+    sudo pip3 install -r requirements.txt
+
+This will install NumPy and SciPy, along with a couple of other packages. Using these instructions, you should not encounter any errors. Note that these are massive packages and people have difficulty installing them all the time (as I certainly did). If you encounter errors, you will find numerous helpful posts on getting them working under Ubuntu by Googling.
+
+### Testing
+
+While in the Prosodylab-Aligner folder, you can test your installation
+
+    python3 -m aligner --help
+
+This should return text about how to use aligner. To process files, you can add them to your C:\Voice folder along with their corresponding LAB file (a text file with a transcript of the WAV file with no punctuation in all uppercase)
+
+    python3 -m aligner -a /mnt/c/Voice/
+
+As long as all the words are in the dictionary, and as long as the WAV file is something normal, this should generate a TextGrid. If the words are not in the dictionary, you will get an OOV error, which generates an OOV.txt file. *Resist the temptation* to edit this from a Windows text editor like Notepad++. I found that doing that kills the permissions and in some cases made the file invisible to Ubuntu. Instead, either use VIM to enter the phonemes after the word, or transfer the file out to your C:\ folder, edit that in Notepad++, and then transfer it back.
+
+    ./sort.py lang.dict OOV.txt > tmp; 
+    mv tmp lang.dict
+
+
 ## Tutorial
 
 ### Obtaining a dictionary
