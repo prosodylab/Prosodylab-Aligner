@@ -53,7 +53,7 @@ class PronDict(object):
             self.d = defaultdict(list)
             for (i, word, pron) in PronDict.pronify(source):
                 for ph in pron:
-                    if ph not in phoneset:
+                    if ph not in phoneset | set(['sil','sp']):
                         logging.error("Unknown phone '{}' in dictionary '{}' (ln. {}).".format(ph, filename, i))
                         exit(1)
                 self.d[word].append(pron)
