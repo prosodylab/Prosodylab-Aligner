@@ -238,7 +238,7 @@ If you are transcribing new words using the CMU phone set, see [this page](http:
 
 #### Subprocess Process Error
 
-Sometimes there are processing errors that occur. These can often be fixed by enterring the following into Terminal:
+Sometimes there are processing errors that occur. These can often be fixed by entering the following into Terminal:
 
     $ make clean
     $ export CPPFLAGS=-UPHNALG
