@@ -197,7 +197,7 @@ The instructions are the same as for Mac users, with the exception that there is
 
 ## Installation for Windows users
 
-While Prosodylab-Aligner is not designed for Windows support, the appendix of [Yun et al. 2016] contains detailed Windows installation instructions. Note that while you may find these useful, they are are third-party instructions and we make no promises to their correctness.
+While Prosodylab-Aligner is not designed for Windows support, the appendix of [Yun et al. 2016](https://linguistics.stonybrook.edu/jiwonyun/papers/Yun_et_al_2016_AH26.pdf) contains detailed Windows installation instructions. Note that while you may find these useful, they are are third-party instructions and we make no promises to their correctness.
 
 ## Tutorial
 
