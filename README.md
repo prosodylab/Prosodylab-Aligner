@@ -195,6 +195,10 @@ which should print out some information about how to use the aligner.
 
 The instructions are the same as for Mac users, with the exception that there is no direct analogue to XCode. Instead, you will probably need to use your distribution's package manager to install a C compiler; on Ubuntu, for instance, the relevant package is called `libc-dev`.
 
+## Installation for Windows users
+
+While Prosodylab-Aligner is not designed for Windows support, the appendix of [Yun et al. 2016] contains detailed Windows installation instructions. Note that while you may find these useful, they are are third-party instructions and we make no promises to their correctness.
+
 ## Tutorial
 
 ### Obtaining a dictionary
