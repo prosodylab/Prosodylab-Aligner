@@ -1,4 +1,4 @@
-numpy==1.12.0
-PyYAML==3.12
-scipy==0.18.1
-TextGrid==1.4
+numpy>=1.12.0
+pyyaml>=4.2b1
+scipy>=0.18.1
+TextGrid>=1.4
