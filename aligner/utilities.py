@@ -69,7 +69,7 @@ def resolve_opts(args):
         exit(1)
     with open(args.configuration, "r") as source:
         try:
-            opts = yaml.load(source)
+            opts = yaml.load(source, Loader=yaml.FullLoader)
         except yaml.YAMLError as err:
             logging.error("Error in configuration file: %s", err)
             exit(1)
