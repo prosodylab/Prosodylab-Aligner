@@ -69,7 +69,7 @@ class WavFile(object):
 
     def _resample(self, Fs_out):
         ratio = Fs_out / self.Fs
-        resampled_signal = resample(self.signal, ratio * len(self))
+        resampled_signal = resample(self.signal, int(ratio * len(self)))
         return resampled_signal
 
     def resample(self, Fs_out):
