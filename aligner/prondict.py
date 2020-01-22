@@ -51,16 +51,21 @@ class PronDict(object):
                 exit(1)
             yield (i, word, pron.split())
 
-    def __init__(self, filename, phoneset):
+    def add(self, filename):
         # build up dictionary
         with open(filename, "r") as source:
-            self.d = defaultdict(list)
             for (i, word, pron) in PronDict.pronify(source):
                 for ph in pron:
-                    if ph not in phoneset | self.SILENT_PHONES:
+                    if ph not in self.ps | self.SILENT_PHONES:
                         logging.error("Unknown phone '{}' in dictionary '{}' (ln. {}).".format(ph, filename, i))
                         exit(1)
                 self.d[word].append(pron)
+
+    def __init__(self, phoneset, filename=None):
+        self.ps = phoneset
+        self.d = defaultdict(list)
+        if filename:
+            self.add(filename)
         # for later...
         self.oov = set()
 

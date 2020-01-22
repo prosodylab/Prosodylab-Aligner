@@ -51,8 +51,8 @@ argparser = ArgumentParser(prog="{} -m aligner".format(sys.executable),
                            description="Prosodylab-Aligner")
 argparser.add_argument("-c", "--configuration",
                        help="config file")
-argparser.add_argument("-d", "--dictionary", default=DICTIONARY,
-                       help="dictionary file (default: {})".format(DICTIONARY))
+argparser.add_argument("-d", "--dictionary", metavar="DICT", action="append",
+                       help="dictionary file (default: {}) (can specify multiple)".format(DICTIONARY))
 argparser.add_argument("-s", "--samplerate", type=int,
                        help="analysis samplerate (in Hz)")
 argparser.add_argument("-e", "--epochs", type=int,
@@ -73,6 +73,10 @@ verbosity_group.add_argument("-v", "--verbose", action="store_true",
 verbosity_group.add_argument("-V", "--extra-verbose", action="store_true",
                              help="Even more verbose output")
 args = argparser.parse_args()
+
+# hack to allow proper override of default dictionary
+if not args.dictionary:
+    args.dictionary = [DICTIONARY]
 
 # set up logging
 loglevel = logging.WARNING

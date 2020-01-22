@@ -67,9 +67,14 @@ class Corpus(object):
                 logging.error("Phone '{}': not /{}/.".format(phone,
                                                       VALID_PHONE))
                 exit(1)
-        # dictionary
-        self.dictionary = opts["dictionary"]
-        self.thedict = PronDict(self.dictionary, self.phoneset)
+        # dictionaries
+        self.dictionary = []
+        if "dictionary" in opts and opts["dictionary"]:
+            assert type(opts["dictionary"]) is list
+            self.dictionary.extend(opts["dictionary"])
+        self.thedict = PronDict(self.phoneset)
+        for dic in self.dictionary:
+            self.thedict.add(dic)
         #self.thedict[SIL] = [SIL]
         self.taskdict = os.path.join(self.tmpdir, "taskdict")
         # word and phone lists
@@ -173,8 +178,8 @@ class Corpus(object):
                              "-g", temp,
                              "-w", self.words,
                              "-n", self.phons,
-                             self.taskdict,
-                             self.dictionary])
+                             self.taskdict] +
+                   self.dictionary)
         # add SIL to phone list
         with open(self.phons, "a") as phons:
             print(SIL, file=phons)
