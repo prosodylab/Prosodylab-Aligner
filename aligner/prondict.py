@@ -42,10 +42,11 @@ class PronDict(object):
     @staticmethod
     def pronify(source):
         for (i, line) in enumerate(source, 1):
-            if line.startswith(";"):
+            line = line.strip()
+            if not line or line.startswith("#"):
                 continue
             try:
-                (word, pron) = line.rstrip().split(None, 1)
+                (word, pron) = line.split(None, 1)
             except ValueError:
                 logging.error("Formatting error in dictionary '{}' (ln. {}).".format(source.name, i))
                 exit(1)
