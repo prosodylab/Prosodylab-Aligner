@@ -193,7 +193,7 @@ which should print out some information about how to use the aligner.
 
 ## Installation for Linux users
 
-The instructions are the same as for Mac users, with the exception that there is no direct analogue to XCode. Instead, you will probably need to use your distribution's package manager to install a C compiler; on Ubuntu, for instance, the relevant package is called `libc-dev`.
+The instructions are the same as for Mac users, with the exception that there is no direct analogue to XCode. Instead, you will probably need to use your distribution's package manager to install a C compiler; on Ubuntu, for instance, the relevant packages are `gcc-multilib` and `libc-dev`.
 
 ## Installation for Windows users
 
