@@ -48,7 +48,7 @@ def opts2cfg(filename, opts):
 
 def mkdir_p(dirname):
     """
-    Create a directory, recursively if necessary, and suceed
+    Create a directory, recursively if necessary, and succeed
     silently if it already exists
     """
     os.makedirs(dirname, exist_ok=True)
